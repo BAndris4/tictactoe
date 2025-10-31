@@ -10,7 +10,7 @@ function Table() {
                 <tr key={row}>
                     {Array(3).fill(0).map((_, col) => (
                     <td key={col} className={`p-0 ${col < 2 ? 'border-r-4' : ''} ${row < 2 ? 'border-b-4' : ''} border-slate-800`}>
-                        <SmallTable blockRow={row} blockCol={col} />
+                        <SmallTable blockRow={row} blockCol={col}/>
                     </td>
                     ))}
                 </tr>
