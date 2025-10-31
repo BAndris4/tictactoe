@@ -1,7 +1,7 @@
 import type { Coord } from "../models/Coord";
 import { useGame } from "../context/GameContext";
 import type { Move } from "../models/Move";
-import { isMoveValid } from "../rules/gameRule";
+import { isFull, isMoveValid } from "../rules/gameRule";
 import { formatMove, toGlobalCoord } from "../utils";
 import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
 
@@ -11,12 +11,17 @@ function SmallTable({ blockRow, blockCol }: { blockRow: number; blockCol: number
 
   const handleCellClick = (row: number, col: number) => {
     
+    if (game.winner) {
+      console.log("Game Over");
+      return;
+    }
+    
     const { row: globalRow, col: globalCol } = toGlobalCoord({row: blockRow, col: blockCol}, {row, col});
 
     const move: Move = {
       block: { row: blockRow, col: blockCol } as Coord,
       cell: { row, col } as Coord
-    };
+    }
 
     try {
         isMoveValid(game.cells, move, game.previousMove);
@@ -47,10 +52,22 @@ function SmallTable({ blockRow, blockCol }: { blockRow: number; blockCol: number
 
     game.setPreviousMove(move);
     game.switchPlayer();
-  };
+  }
 
   return (
-    <table className={`border-collapse ${game.previousMove?.cell.row === blockRow && game.previousMove?.cell.col === blockCol ? ' bg-blue-100' : ''}` }>
+    <table className={`border-collapse ${ (game.previousMove && isFull(game.cells, { row: game.previousMove.cell.row, col: game.previousMove.cell.col })) || (!game.winner && game.previousMove?.cell.row === blockRow && game.previousMove?.cell.col === blockCol) ? ' bg-green-100' : ''}` }>
+    <div className="absolute pointer-events-none">
+      {getSmallTableWinner(game.cells, { row: blockRow, col: blockCol }) === 'X' && (
+      <>
+        <div className="absolute w-[12.5rem] h-[0.5rem] -left-4 top-20 bg-red-200 rotate-45 origin-center opacity-50"></div>
+        <div className="absolute w-[12.5rem] h-[0.5rem] -left-4 top-20 bg-red-200 -rotate-45 origin-center opacity-50"></div>
+      </>
+      )}
+      {getSmallTableWinner(game.cells, { row: blockRow, col: blockCol }) === 'O' && (
+        <div className="w-[10.5rem] h-[10.5rem] rounded-full border-8 opacity-50 border-blue-200 mx-auto my-auto"></div>
+      )}
+    </div>
+
       <tbody>
         {Array(3).fill(0).map((_, row) => (
           <tr key={row}>
