@@ -25,17 +25,12 @@ function SmallTable({ blockRow, blockCol }: { blockRow: number; blockCol: number
     newCells[globalRow][globalCol] = game.currentPlayer;
     game.setCells(newCells);
 
-    console.log(
-      `Move: ${move.block.row}, ${move.block.col} | ${move.cell.row}, ${move.cell.col} | ${game.currentPlayer}`
-    );
-
     game.setPreviousMove(move);
-    console.log(game.previousMove);
     game.switchPlayer();
   };
 
   return (
-    <table className="border-collapse">
+    <table className={`border-collapse ${game.previousMove?.cell.row === blockRow && game.previousMove?.cell.col === blockCol ? ' bg-blue-100' : ''}` }>
       <tbody>
         {Array(3).fill(0).map((_, row) => (
           <tr key={row}>
