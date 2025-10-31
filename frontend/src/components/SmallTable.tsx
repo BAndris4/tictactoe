@@ -1,5 +1,7 @@
-import { Coord } from "../models/Coord";
+import type { Coord } from "../models/Coord";
 import { useGame } from "../context/GameContext";
+import type { Move } from "../models/Move";
+import { isMoveValid } from "../rules/gameRule";
 
 function SmallTable({ blockRow, blockCol }: { blockRow: number; blockCol: number }) {
 
@@ -10,19 +12,25 @@ function SmallTable({ blockRow, blockCol }: { blockRow: number; blockCol: number
     const globalRow = blockRow * 3 + row;
     const globalCol = blockCol * 3 + col;
 
-    if (game.cells[globalRow][globalCol]) return;
+    const move: Move = {
+      block: { row: blockRow, col: blockCol } as Coord,
+      cell: { row, col } as Coord
+    };
+
+    if (!isMoveValid(game.cells, move, game.previousMove)) return;
+
+    console.log(`Valid Move: ${move.block.row}, ${move.block.col} | ${move.cell.row}, ${move.cell.col}. Previous Move: ${game.previousMove?.block.row}, ${game.previousMove?.block.col} | ${game.previousMove?.cell.row}, ${game.previousMove?.cell.col}`);
 
     const newCells = game.cells.map((r) => [...r]);
     newCells[globalRow][globalCol] = game.currentPlayer;
     game.setCells(newCells);
 
-    const blockCoord = new Coord(blockRow, blockCol);
-    const cellCoord = new Coord(row, col);
-
     console.log(
-      `Block: ${blockCoord.toString()} | Cell: ${cellCoord.toString()} `
+      `Move: ${move.block.row}, ${move.block.col} | ${move.cell.row}, ${move.cell.col} | ${game.currentPlayer}`
     );
 
+    game.setPreviousMove(move);
+    console.log(game.previousMove);
     game.switchPlayer();
   };
 
