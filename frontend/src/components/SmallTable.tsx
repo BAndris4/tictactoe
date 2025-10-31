@@ -31,12 +31,17 @@ function SmallTable({ blockRow, blockCol }: { blockRow: number; blockCol: number
     newCells[globalRow][globalCol] = game.currentPlayer;
     game.setCells(newCells);
 
-    const SmallTableWinner = getSmallTableWinner(newCells, move.block);
-    if (SmallTableWinner) {
-        console.info(`Small Table Winner: ${SmallTableWinner}`);
-        const winner = getWinner(newCells);
+    const smallTableWinner = getSmallTableWinner(newCells, move.block);
+    if (smallTableWinner) {
+        console.info(`Small Table Winner: ${smallTableWinner}`);
+        const newSmallWinners = game.smallWinners.map((r) => [...r]);
+        newSmallWinners[move.block.row][move.block.col] = smallTableWinner;
+        game.setSmallWinners(newSmallWinners);
+
+        const winner = getWinner(newSmallWinners);
         if (winner) {
             console.info(`Winner: ${winner}`);
+            game.setWinner(winner);
         }
     }
 
