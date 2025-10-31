@@ -2,6 +2,7 @@ import type { Coord } from "../models/Coord";
 import { useGame } from "../context/GameContext";
 import type { Move } from "../models/Move";
 import { isMoveValid } from "../rules/gameRule";
+import { formatMove, toGlobalCoord } from "../utils";
 
 function SmallTable({ blockRow, blockCol }: { blockRow: number; blockCol: number }) {
 
@@ -9,17 +10,21 @@ function SmallTable({ blockRow, blockCol }: { blockRow: number; blockCol: number
 
   const handleCellClick = (row: number, col: number) => {
     
-    const globalRow = blockRow * 3 + row;
-    const globalCol = blockCol * 3 + col;
+    const { row: globalRow, col: globalCol } = toGlobalCoord({row: blockRow, col: blockCol}, {row, col});
 
     const move: Move = {
       block: { row: blockRow, col: blockCol } as Coord,
       cell: { row, col } as Coord
     };
 
-    if (!isMoveValid(game.cells, move, game.previousMove)) return;
+    try {
+        isMoveValid(game.cells, move, game.previousMove);
+    } catch (err) {
+        console.error(err);
+        return;
+    }
 
-    console.log(`Valid Move: ${move.block.row}, ${move.block.col} | ${move.cell.row}, ${move.cell.col}. Previous Move: ${game.previousMove?.block.row}, ${game.previousMove?.block.col} | ${game.previousMove?.cell.row}, ${game.previousMove?.cell.col}`);
+    console.info(`Valid Move: ${formatMove(move)}. Previous Move: ${formatMove(game.previousMove)}`);
 
     const newCells = game.cells.map((r) => [...r]);
     newCells[globalRow][globalCol] = game.currentPlayer;
@@ -35,8 +40,7 @@ function SmallTable({ blockRow, blockCol }: { blockRow: number; blockCol: number
         {Array(3).fill(0).map((_, row) => (
           <tr key={row}>
             {Array(3).fill(0).map((_, col) => {
-              const globalRow = blockRow * 3 + row;
-              const globalCol = blockCol * 3 + col;
+              const { row: globalRow, col: globalCol } = toGlobalCoord({ row: blockRow, col: blockCol }, { row, col });
               return (
                 <td
                   key={col}

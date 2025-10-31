@@ -9,8 +9,8 @@ interface GameContextType {
   switchPlayer: () => void;
   cells: (string | null)[][];
   setCells: React.Dispatch<React.SetStateAction<(string | null)[][]>>;
-  previousMove: Move | null;
-  setPreviousMove: React.Dispatch<React.SetStateAction<Move | null>>;
+  previousMove: Move | undefined;
+  setPreviousMove: React.Dispatch<React.SetStateAction<Move | undefined>>;
 }
 
 export const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -20,7 +20,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [cells, setCells] = useState<(string | null)[][]>(
     Array(9).fill(null).map(() => Array(9).fill(null))
   );
-  const [previousMove, setPreviousMove] = useState<Move | null>(null);
+  const [previousMove, setPreviousMove] = useState<Move | undefined>(undefined);
 
   const switchPlayer = () => {
     setCurrentPlayer((prev) => (prev === "X" ? "O" : "X"));
