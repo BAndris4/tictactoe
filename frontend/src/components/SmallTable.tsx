@@ -3,6 +3,7 @@ import { useGame } from "../context/GameContext";
 import type { Move } from "../models/Move";
 import { isMoveValid } from "../rules/gameRule";
 import { formatMove, toGlobalCoord } from "../utils";
+import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
 
 function SmallTable({ blockRow, blockCol }: { blockRow: number; blockCol: number }) {
 
@@ -29,6 +30,15 @@ function SmallTable({ blockRow, blockCol }: { blockRow: number; blockCol: number
     const newCells = game.cells.map((r) => [...r]);
     newCells[globalRow][globalCol] = game.currentPlayer;
     game.setCells(newCells);
+
+    const SmallTableWinner = getSmallTableWinner(newCells, move.block);
+    if (SmallTableWinner) {
+        console.info(`Small Table Winner: ${SmallTableWinner}`);
+        const winner = getWinner(newCells);
+        if (winner) {
+            console.info(`Winner: ${winner}`);
+        }
+    }
 
     game.setPreviousMove(move);
     game.switchPlayer();
