@@ -1,8 +1,11 @@
 import Table from "./components/Table";
+import { GameProvider } from "./context/GameContext";
 
 function App() {
   return (
-    <Table/>
+    <GameProvider>
+      <Table/>
+    </GameProvider>
   );
 }
 
