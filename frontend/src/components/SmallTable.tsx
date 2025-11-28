@@ -6,7 +6,7 @@ import { isFull, isMoveValid } from "../rules/gameRule";
 import { formatMove, toGlobalCoord } from "../utils";
 import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
 
-function SmallTable({
+export default function SmallTable({
   blockRow,
   blockCol,
 }: {
@@ -23,13 +23,13 @@ function SmallTable({
 
     const prev = game.previousMove.cell;
 
-    if (isFull(game.cells, prev)) return false;
+    if (isFull(game.cells, prev)) return true;
 
     return prev.row === blockRow && prev.col === blockCol;
-  }, [game.previousMove, blockRow, blockCol, game.cells, game.winner]);
+  }, [game.previousMove, game.cells, blockRow, blockCol, game.winner]);
 
   const handleCellClick = (row: number, col: number) => {
-    if (game.winner) return console.log("Game Over");
+    if (game.winner) return;
 
     const { row: globalRow, col: globalCol } = toGlobalCoord(
       { row: blockRow, col: blockCol },
@@ -48,12 +48,6 @@ function SmallTable({
       return;
     }
 
-    console.info(
-      `Valid Move: ${formatMove(move)}. Previous Move: ${formatMove(
-        game.previousMove
-      )}`
-    );
-
     const newCells = game.cells.map((r) => [...r]);
     newCells[globalRow][globalCol] = game.currentPlayer;
     game.setCells(newCells);
@@ -61,17 +55,12 @@ function SmallTable({
     const smallWinner = getSmallTableWinner(newCells, move.block);
     if (smallWinner) {
       const newSmallWinners = game.smallWinners.map((r) => [...r]);
+      newSmallWinners[blockRow][blockCol] = smallWinner;
 
-      if (!newSmallWinners[blockRow][blockCol]) {
-        newSmallWinners[blockRow][blockCol] = smallWinner;
-        game.setSmallWinners(newSmallWinners);
+      game.setSmallWinners(newSmallWinners);
 
-        const bigWinner = getWinner(newSmallWinners);
-        if (bigWinner) {
-          console.info(`Winner: ${bigWinner}`);
-          game.setWinner(bigWinner);
-        }
-      }
+      const bigWinner = getWinner(newSmallWinners);
+      if (bigWinner) game.setWinner(bigWinner);
     }
 
     game.setPreviousMove(move);
@@ -79,30 +68,53 @@ function SmallTable({
   };
 
   return (
-    <div className="relative">
-      <table
-        className={`border-collapse ${isActiveBlock ? "bg-green-100" : ""}`}
-      >
+    <div
+      className={`relative ${isActiveBlock ? "animate-pulseHighlight" : ""}`}
+    >
+      <table className="border-collapse">
         <tbody>
           {rows.map((_, row) => (
             <tr key={row}>
               {cols.map((_, col) => {
-                const { row: globalRow, col: globalCol } = toGlobalCoord(
+                const { row: gRow, col: gCol } = toGlobalCoord(
                   { row: blockRow, col: blockCol },
                   { row, col }
                 );
+
+                const isPreviousMoveCell =
+                  game.previousMove &&
+                  game.previousMove.block.row === blockRow &&
+                  game.previousMove.block.col === blockCol &&
+                  game.previousMove.cell.row === row &&
+                  game.previousMove.cell.col === col;
+
+                const value = game.cells[gRow][gCol];
 
                 return (
                   <td
                     key={col}
                     onClick={() => handleCellClick(row, col)}
-                    className="
-                      w-14 h-14 border border-slate-300 
-                      text-center text-2xl font-bold cursor-pointer select-none
-                      hover:bg-blue-50 active:bg-blue-100
-                    "
+                    className={`
+                      relative
+                      w-14 h-14 border border-slate-200 
+                      text-center text-3xl font-bold cursor-pointer select-none
+                      hover:bg-gray-50 active:bg-gray-100 transition-all duration-200
+                      ${
+                        isPreviousMoveCell
+                          ? "ring-2 ring-mint/70 bg-mint/10"
+                          : ""
+                      }
+                    `}
                   >
-                    {game.cells[globalRow][globalCol]}
+                    {value && (
+                      <span className="relative z-10 animate-fadeScaleIn font-paytone">
+                        {value === "X" ? (
+                          <span className="text-coral">X</span>
+                        ) : (
+                          <span className="text-sunshine">O</span>
+                        )}
+                      </span>
+                    )}
                   </td>
                 );
               })}
@@ -111,20 +123,23 @@ function SmallTable({
         </tbody>
       </table>
 
-      <div className="absolute inset-0 pointer-events-none">
-        {game.smallWinners[blockRow][blockCol] === "X" && (
-          <>
-            <div className="absolute w-[12.5rem] h-[0.5rem] -left-4 top-20 bg-red-200 rotate-45 origin-center opacity-50"></div>
-            <div className="absolute w-[12.5rem] h-[0.5rem] -left-4 top-20 bg-red-200 -rotate-45 origin-center opacity-50"></div>
-          </>
-        )}
-
-        {game.smallWinners[blockRow][blockCol] === "O" && (
-          <div className="w-[10.5rem] h-[10.5rem] rounded-full border-8 opacity-50 border-blue-200 mx-auto my-auto"></div>
-        )}
-      </div>
+      {game.smallWinners[blockRow][blockCol] && (
+        <div
+          className="
+            absolute inset-0 flex -translate-y-1.5 items-center justify-center pointer-events-none 
+          "
+        >
+          {game.smallWinners[blockRow][blockCol] === "X" ? (
+            <span className="font-paytone text-[8rem] text-coral opacity-30 leading-none">
+              X
+            </span>
+          ) : (
+            <span className="font-paytone text-[8rem] text-sunshine opacity-60 leading-none">
+              O
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
-
-export default SmallTable;
