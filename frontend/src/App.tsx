@@ -1,11 +1,13 @@
-import Table from "./components/Table";
-import { GameProvider } from "./context/GameContext";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Game from "./views/Game";
 
 function App() {
   return (
-    <GameProvider>
-      <Table/>
-    </GameProvider>
+    <BrowserRouter>
+        <Routes>
+          <Route path="/game" element={<Game />} />
+        </Routes>
+    </BrowserRouter>
   );
 }
 

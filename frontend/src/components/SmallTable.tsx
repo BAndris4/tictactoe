@@ -1,83 +1,121 @@
-import type { Coord } from "../models/Coord";
+import { useMemo } from "react";
 import { useGame } from "../context/GameContext";
 import type { Move } from "../models/Move";
 import { isFull, isMoveValid } from "../rules/gameRule";
-import { formatMove, toGlobalCoord } from "../utils";
+import { toGlobalCoord } from "../utils";
 import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
+import SmallTableWinningLine from "./SmallTableWinningLine";
 
-function SmallTable({ blockRow, blockCol }: { blockRow: number; blockCol: number }) {
-
+export default function SmallTable({
+  blockRow,
+  blockCol,
+}: {
+  blockRow: number;
+  blockCol: number;
+}) {
   const game = useGame();
 
+  const rows = useMemo(() => Array(3).fill(0), []);
+  const cols = useMemo(() => Array(3).fill(0), []);
+
+  const isActiveBlock = useMemo(() => {
+    if (!game.previousMove || game.winner) return false;
+
+    const prev = game.previousMove.cell;
+
+    if (isFull(game.cells, prev)) return true;
+
+    return prev.row === blockRow && prev.col === blockCol;
+  }, [game.previousMove, game.cells, blockRow, blockCol, game.winner]);
+
   const handleCellClick = (row: number, col: number) => {
-    
-    if (game.winner) {
-      console.log("Game Over");
-      return;
-    }
-    
-    const { row: globalRow, col: globalCol } = toGlobalCoord({row: blockRow, col: blockCol}, {row, col});
+    if (game.winner) return;
+
+    const global = toGlobalCoord(
+      { row: blockRow, col: blockCol },
+      { row, col }
+    );
 
     const move: Move = {
-      block: { row: blockRow, col: blockCol } as Coord,
-      cell: { row, col } as Coord
-    }
+      block: { row: blockRow, col: blockCol },
+      cell: { row, col },
+    };
 
     try {
-        isMoveValid(game.cells, move, game.previousMove);
+      isMoveValid(game.cells, move, game.previousMove);
     } catch (err) {
-        console.error(err);
-        return;
+      game.triggerFlash();
+      game.triggerShake();
+      return;
     }
 
-    console.info(`Valid Move: ${formatMove(move)}. Previous Move: ${formatMove(game.previousMove)}`);
-
     const newCells = game.cells.map((r) => [...r]);
-    newCells[globalRow][globalCol] = game.currentPlayer;
+    newCells[global.row][global.col] = game.currentPlayer;
     game.setCells(newCells);
 
-    const smallTableWinner = getSmallTableWinner(newCells, move.block);
-    if (smallTableWinner) {
-        console.info(`Small Table Winner: ${smallTableWinner}`);
-        const newSmallWinners = game.smallWinners.map((r) => [...r]);
-        if (newSmallWinners[move.block.row][move.block.col] === undefined) {
-          newSmallWinners[move.block.row][move.block.col] = smallTableWinner;
-          game.setSmallWinners(newSmallWinners);
-        }
+    const smallWinner = getSmallTableWinner(newCells, move.block);
+    if (smallWinner) {
+      const newSmallWinners = game.smallWinners.map((r) => [...r]);
+      newSmallWinners[blockRow][blockCol] = smallWinner;
 
-        const winner = getWinner(newSmallWinners);
-        if (winner) {
-            console.info(`Winner: ${winner}`);
-            game.setWinner(winner);
-        }
+      game.setSmallWinners(newSmallWinners);
+
+      const bigWinner = getWinner(newSmallWinners);
+      if (bigWinner) game.setWinner(bigWinner);
     }
 
     game.setPreviousMove(move);
     game.switchPlayer();
-  }
+  };
 
   return (
-    <div className="relative">
-      <table
-        className={`border-collapse ${
-          (game.previousMove && isFull(game.cells, { row: game.previousMove.cell.row, col: game.previousMove.cell.col })) ||
-          (!game.winner && game.previousMove?.cell.row === blockRow && game.previousMove?.cell.col === blockCol)
-            ? ' bg-green-100'
-            : ''
-        }`}
-      >
+    <div
+      className={`relative ${isActiveBlock ? "animate-pulseHighlight" : ""}`}
+    >
+      <table className="border-collapse">
         <tbody>
-          {Array(3).fill(0).map((_, row) => (
+          {rows.map((_, row) => (
             <tr key={row}>
-              {Array(3).fill(0).map((_, col) => {
-                const { row: globalRow, col: globalCol } = toGlobalCoord({ row: blockRow, col: blockCol }, { row, col });
+              {cols.map((_, col) => {
+                const global = toGlobalCoord(
+                  { row: blockRow, col: blockCol },
+                  { row, col }
+                );
+
+                const isPreviousMoveCell =
+                  game.previousMove &&
+                  game.previousMove.block.row === blockRow &&
+                  game.previousMove.block.col === blockCol &&
+                  game.previousMove.cell.row === row &&
+                  game.previousMove.cell.col === col;
+
+                const value = game.cells[global.row][global.col];
+
                 return (
                   <td
                     key={col}
                     onClick={() => handleCellClick(row, col)}
-                    className="w-14 h-14 border border-slate-300 text-center text-2xl font-bold cursor-pointer select-none hover:bg-blue-50 active:bg-blue-100"
+                    className={`
+                      relative
+                      w-14 h-14 border border-slate-200 
+                      text-center text-3xl font-bold cursor-pointer select-none
+                      hover:bg-gray-50 active:bg-gray-100 transition-all duration-200
+                      ${
+                        isPreviousMoveCell
+                          ? "ring-2 ring-mint/70 bg-mint/10"
+                          : ""
+                      }
+                    `}
                   >
-                    {game.cells[globalRow][globalCol]}
+                    {value && (
+                      <span className="relative z-10 animate-fadeScaleIn font-paytone">
+                        {value === "X" ? (
+                          <span className="text-coral">X</span>
+                        ) : (
+                          <span className="text-sunshine">O</span>
+                        )}
+                      </span>
+                    )}
                   </td>
                 );
               })}
@@ -85,20 +123,7 @@ function SmallTable({ blockRow, blockCol }: { blockRow: number; blockCol: number
           ))}
         </tbody>
       </table>
-
-      <div className="absolute inset-0 pointer-events-none">
-        {game.smallWinners[blockRow][blockCol] === 'X' && (
-          <>
-            <div className="absolute w-[12.5rem] h-[0.5rem] -left-4 top-20 bg-red-200 rotate-45 origin-center opacity-50"></div>
-            <div className="absolute w-[12.5rem] h-[0.5rem] -left-4 top-20 bg-red-200 -rotate-45 origin-center opacity-50"></div>
-          </>
-        )}
-        {game.smallWinners[blockRow][blockCol] === 'O' && (
-          <div className="w-[10.5rem] h-[10.5rem] rounded-full border-8 opacity-50 border-blue-200 mx-auto my-auto"></div>
-        )}
-      </div>
+      <SmallTableWinningLine blockRow={blockRow} blockCol={blockCol} />
     </div>
   );
 }
-
-export default SmallTable;
