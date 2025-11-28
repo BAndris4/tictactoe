@@ -1,9 +1,8 @@
 import { useMemo } from "react";
-import type { Coord } from "../models/Coord";
 import { useGame } from "../context/GameContext";
 import type { Move } from "../models/Move";
 import { isFull, isMoveValid } from "../rules/gameRule";
-import { formatMove, toGlobalCoord } from "../utils";
+import { toGlobalCoord } from "../utils";
 import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
 
 export default function SmallTable({
@@ -44,7 +43,8 @@ export default function SmallTable({
     try {
       isMoveValid(game.cells, move, game.previousMove);
     } catch (err) {
-      console.error(err);
+      game.triggerFlash();
+      game.triggerShake();
       return;
     }
 

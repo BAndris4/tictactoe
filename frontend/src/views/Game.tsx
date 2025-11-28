@@ -1,21 +1,17 @@
 import Table from "../components/Table";
-import { useSearchParams } from "react-router-dom";
 import { GameProvider, useGame } from "../context/GameContext";
 import OShape from "../assets/O.svg";
 import XShape from "../assets/X.svg";
 
 function GameContent() {
   const game = useGame();
-  const prev = game.previousMove
-    ? `(${game.previousMove.block.row + 1},${
-        game.previousMove.block.col + 1
-      }) → (${game.previousMove.cell.row + 1},${
-        game.previousMove.cell.col + 1
-      })`
-    : "—";
 
   return (
-    <div className="min-h-screen w-full bg-white relative flex items-center justify-center overflow-hidden font-inter">
+    <div
+      className={`min-h-screen w-full bg-white relative flex items-center justify-center overflow-hidden font-inter ${
+        game.flash ? "animate-flash-red" : ""
+      }`}
+    >
       <div className="absolute -translate-x-1/4 -translate-y-1/3 left-[-8%] pointer-events-none transition-all duration-300">
         <img
           src={OShape}
