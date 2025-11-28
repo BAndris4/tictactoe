@@ -25,11 +25,39 @@ export default {
             transform: "scale(1.07)",
           },
         },
+        "strike-row": {
+          "0%": { transform: "translateY(-50%) scaleX(0)" },
+          "100%": { transform: "translateY(-50%) scaleX(1)" },
+        },
+        "strike-col": {
+          "0%": { transform: "translateX(-50%) scaleY(0)" },
+          "100%": { transform: "translateX(-50%) scaleY(1)" },
+        },
+        "strike-diag-main": {
+          "0%": {
+            transform: "translate(-50%, -50%) rotate(45deg) scaleX(0)",
+          },
+          "100%": {
+            transform: "translate(-50%, -50%) rotate(45deg) scaleX(1)",
+          },
+        },
+        "strike-diag-anti": {
+          "0%": {
+            transform: "translate(-50%, -50%) rotate(-45deg) scaleX(0)",
+          },
+          "100%": {
+            transform: "translate(-50%, -50%) rotate(-45deg) scaleX(1)",
+          },
+        },
       },
       animation: {
         glowPulse: "glowPulse 1.2s ease-in-out infinite",
         shake: "shake 0.3s ease",
         "flash-red": "flashred 0.25s ease",
+        "strike-row": "strike-row 220ms ease-out forwards",
+        "strike-col": "strike-col 220ms ease-out forwards",
+        "strike-diag-main": "strike-diag-main 240ms ease-out forwards",
+        "strike-diag-anti": "strike-diag-anti 240ms ease-out forwards",
       },
       fontFamily: {
         inter: ["Inter", "sans-serif"],

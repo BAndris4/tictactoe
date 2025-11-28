@@ -4,6 +4,7 @@ import type { Move } from "../models/Move";
 import { isFull, isMoveValid } from "../rules/gameRule";
 import { toGlobalCoord } from "../utils";
 import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
+import SmallTableWinningLine from "./SmallTableWinningLine";
 
 export default function SmallTable({
   blockRow,
@@ -30,7 +31,7 @@ export default function SmallTable({
   const handleCellClick = (row: number, col: number) => {
     if (game.winner) return;
 
-    const { row: globalRow, col: globalCol } = toGlobalCoord(
+    const global = toGlobalCoord(
       { row: blockRow, col: blockCol },
       { row, col }
     );
@@ -49,7 +50,7 @@ export default function SmallTable({
     }
 
     const newCells = game.cells.map((r) => [...r]);
-    newCells[globalRow][globalCol] = game.currentPlayer;
+    newCells[global.row][global.col] = game.currentPlayer;
     game.setCells(newCells);
 
     const smallWinner = getSmallTableWinner(newCells, move.block);
@@ -76,7 +77,7 @@ export default function SmallTable({
           {rows.map((_, row) => (
             <tr key={row}>
               {cols.map((_, col) => {
-                const { row: gRow, col: gCol } = toGlobalCoord(
+                const global = toGlobalCoord(
                   { row: blockRow, col: blockCol },
                   { row, col }
                 );
@@ -88,7 +89,7 @@ export default function SmallTable({
                   game.previousMove.cell.row === row &&
                   game.previousMove.cell.col === col;
 
-                const value = game.cells[gRow][gCol];
+                const value = game.cells[global.row][global.col];
 
                 return (
                   <td
@@ -122,24 +123,7 @@ export default function SmallTable({
           ))}
         </tbody>
       </table>
-
-      {game.smallWinners[blockRow][blockCol] && (
-        <div
-          className="
-            absolute inset-0 flex -translate-y-1.5 items-center justify-center pointer-events-none 
-          "
-        >
-          {game.smallWinners[blockRow][blockCol] === "X" ? (
-            <span className="font-paytone text-[8rem] text-coral opacity-30 leading-none">
-              X
-            </span>
-          ) : (
-            <span className="font-paytone text-[8rem] text-sunshine opacity-60 leading-none">
-              O
-            </span>
-          )}
-        </div>
-      )}
+      <SmallTableWinningLine blockRow={blockRow} blockCol={blockCol} />
     </div>
   );
 }
