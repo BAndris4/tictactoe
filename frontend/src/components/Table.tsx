@@ -1,5 +1,6 @@
 import SmallTable from "./SmallTable";
 import { useGame } from "../context/GameContext";
+import TableWinningLine from "./TableWinningLine";
 
 export default function Table() {
   const game = useGame();
@@ -13,31 +14,34 @@ export default function Table() {
         scale-[0.98] hover:scale-100 ${game.shake ? "animate-shake" : ""}
       `}
     >
-      <table className="border-collapse border-4 border-deepblue rounded-xl overflow-hidden">
-        <tbody>
-          {Array(3)
-            .fill(0)
-            .map((_, row) => (
-              <tr key={row}>
-                {Array(3)
-                  .fill(0)
-                  .map((_, col) => (
-                    <td
-                      key={col}
-                      className={`
+      <div className="relative inline-block">
+        <table className="border-collapse border-4 border-deepblue rounded-xl overflow-hidden">
+          <tbody>
+            {Array(3)
+              .fill(0)
+              .map((_, row) => (
+                <tr key={row}>
+                  {Array(3)
+                    .fill(0)
+                    .map((_, col) => (
+                      <td
+                        key={col}
+                        className={`
                           p-0 
                           ${col < 2 ? "border-r-4" : ""} 
                           ${row < 2 ? "border-b-4" : ""} 
                           border-deepblue
                         `}
-                    >
-                      <SmallTable blockRow={row} blockCol={col} />
-                    </td>
-                  ))}
-              </tr>
-            ))}
-        </tbody>
-      </table>
+                      >
+                        <SmallTable blockRow={row} blockCol={col} />
+                      </td>
+                    ))}
+                </tr>
+              ))}
+          </tbody>
+        </table>
+        <TableWinningLine />
+      </div>
     </div>
   );
 }

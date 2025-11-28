@@ -48,3 +48,50 @@ export function getWinningLineInBlock(
 
   return null;
 }
+
+export function getWinningLineInBigBoard(
+  smallWinners: (string | undefined)[][],
+  winner: string | undefined
+): WinningLine | null {
+  if (!winner) return null;
+
+  const w = winner;
+
+  for (let r = 0; r < 3; r++) {
+    if (
+      smallWinners[r][0] === w &&
+      smallWinners[r][1] === w &&
+      smallWinners[r][2] === w
+    ) {
+      return { type: "row", index: r };
+    }
+  }
+
+  for (let c = 0; c < 3; c++) {
+    if (
+      smallWinners[0][c] === w &&
+      smallWinners[1][c] === w &&
+      smallWinners[2][c] === w
+    ) {
+      return { type: "col", index: c };
+    }
+  }
+
+  if (
+    smallWinners[0][0] === w &&
+    smallWinners[1][1] === w &&
+    smallWinners[2][2] === w
+  ) {
+    return { type: "diag-main" };
+  }
+
+  if (
+    smallWinners[0][2] === w &&
+    smallWinners[1][1] === w &&
+    smallWinners[2][0] === w
+  ) {
+    return { type: "diag-anti" };
+  }
+
+  return null;
+}

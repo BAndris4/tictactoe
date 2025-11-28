@@ -2,6 +2,7 @@ import Table from "../components/Table";
 import { GameProvider, useGame } from "../context/GameContext";
 import OShape from "../assets/O.svg";
 import XShape from "../assets/X.svg";
+import GameOverModal from "../components/GameOverModal";
 
 function GameContent() {
   const game = useGame();
@@ -39,6 +40,8 @@ function GameContent() {
       <div className="relative flex gap-10 items-start z-10 px-10 py-10">
         <Table />
       </div>
+
+      <GameOverModal />
     </div>
   );
 }
