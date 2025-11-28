@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import RegisterCard from "../components/auth/RegisterCard";
+import LoginCard from "../components/auth/LoginCard";
 import OShape from "../assets/O.svg";
 import XShape from "../assets/X.svg";
 
@@ -8,7 +8,7 @@ type Parallax = {
   y: number;
 };
 
-export default function Register() {
+export default function Login() {
   const [parallax, setParallax] = useState<Parallax>({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -18,10 +18,7 @@ export default function Register() {
       const normX = (e.clientX / innerWidth - 0.5) * 2;
       const normY = (e.clientY / innerHeight - 0.5) * 2;
 
-      setParallax({
-        x: normX,
-        y: normY,
-      });
+      setParallax({ x: normX, y: normY });
     };
 
     window.addEventListener("mousemove", handleMove);
@@ -29,18 +26,17 @@ export default function Register() {
   }, []);
 
   const oStyle: React.CSSProperties = {
-    right: "-8%",
-    bottom: "-65%",
+    left: "-20%",
+    top: "-50%",
     transform: `translate3d(${parallax.x * 30}px, ${parallax.y * 20}px, 0)`,
   };
 
   const xStyle: React.CSSProperties = {
-    left: "-10%",
-    top: "-25%",
-    rotate: "-20deg",
-    transform: `translate3d(${parallax.x * -40}px, ${
-      parallax.y * -25
-    }px, 0) rotate(${parallax.x * 5}deg)`,
+    right: "-20%",
+    bottom: "-35%",
+    rotate: "20deg",
+    transform: `translate3d(${parallax.x * -40}px, ${parallax.y * -25}px, 0)
+                rotate(${parallax.x * 5}deg)`,
   };
 
   return (
@@ -49,18 +45,18 @@ export default function Register() {
         className="pointer-events-none fixed transition-transform duration-200 ease-out"
         style={oStyle}
       >
-        <img src={OShape} alt="O-shape" className="w-[1100px] max-w-none" />
+        <img src={OShape} alt="O-shape" className="w-[1200px]" />
       </div>
 
       <div
         className="pointer-events-none fixed transition-transform duration-200 ease-out"
         style={xStyle}
       >
-        <img src={XShape} alt="X-shape" className="w-[1100px] max-w-none" />
+        <img src={XShape} alt="X-shape" className="w-[1100px]" />
       </div>
 
       <div className="relative z-10 flex min-h-[calc(100vh-40px)] items-center justify-center px-4 py-6">
-        <RegisterCard />
+        <LoginCard />
       </div>
     </div>
   );

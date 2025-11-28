@@ -1,4 +1,5 @@
-import { FormEvent, useState } from "react";
+import type { FormEvent } from "react";
+import { useState } from "react";
 import TextField from "./TextField";
 import PhoneField from "./PhoneField";
 import PasswordField from "./PasswordField";
@@ -10,6 +11,7 @@ import {
   type RegisterFormErrors,
 } from "../../rules/validation";
 import { COUNTRY_CODES } from "../../data/countryCodes";
+import { useNavigate } from "react-router-dom";
 
 const initialValues: RegisterFormValues = {
   firstName: "",
@@ -28,6 +30,8 @@ export default function RegisterCard() {
   const [touched, setTouched] = useState<TouchedState>({});
 
   const passwordChecks = getPasswordChecks(values.password);
+
+  const navigate = useNavigate();
 
   const handleFieldChange = <K extends keyof RegisterFormValues>(
     field: K,
@@ -150,12 +154,24 @@ export default function RegisterCard() {
             onBlur={() => markTouched("password")}
             error={fieldError("password")}
             checks={passwordChecks}
+            mode="register"
           />
 
           <CheckboxField
             checked={values.termsAccepted}
             onChange={(checked) => handleFieldChange("termsAccepted", checked)}
             error={fieldError("termsAccepted")}
+            label={
+              <span>
+                I accept the{" "}
+                <button
+                  type="button"
+                  className="font-semibold text-[#111827] underline-offset-2 hover:text-[#5570F1] hover:underline transition-colors"
+                >
+                  Terms and Conditions
+                </button>
+              </span>
+            }
           />
 
           <button
@@ -186,6 +202,7 @@ export default function RegisterCard() {
             <button
               type="button"
               className="text-[#5570F1] underline-offset-2 hover:underline hover:text-[#4356C4] transition-colors"
+              onClick={() => navigate("/login")}
             >
               Log in
             </button>

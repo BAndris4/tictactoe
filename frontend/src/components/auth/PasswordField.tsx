@@ -12,7 +12,8 @@ type Props = {
   onChange: (value: string) => void;
   onBlur?: () => void;
   error?: string;
-  checks: PasswordChecks;
+  checks?: PasswordChecks;
+  mode?: "login" | "register";
 };
 
 export default function PasswordField({
@@ -22,33 +23,36 @@ export default function PasswordField({
   onBlur,
   error,
   checks,
+  mode = "register",
 }: Props) {
   const [show, setShow] = useState(false);
 
+  const hasError = !!error;
+  const isFilled = value.length > 0;
+
   const passwordIsValid =
+    mode === "register" &&
+    checks &&
     checks.hasMinLength &&
     checks.hasUppercase &&
     checks.hasNumber &&
     checks.hasSpecial;
 
-  const hasError = !!error;
-  const isFilled = value.length > 0;
-
   const bgClass = hasError
     ? "bg-[rgba(231,98,104,0.15)]"
-    : passwordIsValid && value
+    : passwordIsValid
     ? "bg-[rgba(56,222,136,0.10)]"
     : "bg-[rgba(239,241,249,0.6)]";
 
   const labelClass = hasError
     ? "text-[#E76268]"
-    : passwordIsValid && value
+    : passwordIsValid
     ? "text-[#16A34A]"
     : "text-[#5E6366]";
 
   const borderClass = hasError
     ? "border-[#F16063]"
-    : passwordIsValid && value
+    : passwordIsValid
     ? "border-[#16A34A]/70"
     : isFilled
     ? "border-[#5570F1]/60"
@@ -56,7 +60,7 @@ export default function PasswordField({
 
   const shadowClass = hasError
     ? "shadow-[0_0_0_1px_rgba(241,96,99,0.45)]"
-    : passwordIsValid && value
+    : passwordIsValid
     ? "shadow-[0_12px_30px_rgba(22,163,74,0.25)]"
     : isFilled
     ? "shadow-[0_10px_25px_rgba(15,23,42,0.12)]"
@@ -94,7 +98,7 @@ export default function PasswordField({
               placeholder:text-[#B3B6C5]"
           />
 
-          {passwordIsValid && value && !hasError && (
+          {mode === "register" && passwordIsValid && !hasError && (
             <img
               src={CheckIcon}
               alt="valid"
@@ -109,7 +113,7 @@ export default function PasswordField({
           >
             <img
               src={show ? EyeOff : EyeOn}
-              alt={show ? "Hide password" : "Show password"}
+              alt={show ? "Hide" : "Show"}
               className="h-5 w-5 opacity-80"
             />
           </button>
@@ -118,7 +122,7 @@ export default function PasswordField({
 
       {hasError && <p className="mt-1 text-[11px] text-[#F16063]">{error}</p>}
 
-      <PasswordHint checks={checks} />
+      {mode === "register" && checks && <PasswordHint checks={checks} />}
     </div>
   );
 }

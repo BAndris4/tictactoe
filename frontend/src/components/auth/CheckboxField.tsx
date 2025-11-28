@@ -2,9 +2,15 @@ type Props = {
   checked: boolean;
   onChange: (checked: boolean) => void;
   error?: string;
+  label: string | React.ReactNode;
 };
 
-export default function CheckboxField({ checked, onChange, error }: Props) {
+export default function CheckboxField({
+  checked,
+  onChange,
+  error,
+  label,
+}: Props) {
   const hasError = !!error;
 
   return (
@@ -40,15 +46,7 @@ export default function CheckboxField({ checked, onChange, error }: Props) {
           )}
         </span>
 
-        <span className="leading-snug">
-          I accept the{" "}
-          <button
-            type="button"
-            className="font-semibold text-[#111827] underline-offset-2 hover:text-[#5570F1] hover:underline transition-colors"
-          >
-            Terms and Conditions
-          </button>
-        </span>
+        <span className="leading-snug">{label}</span>
       </label>
 
       {hasError && <p className="mt-1 text-[11px] text-[#F16063]">{error}</p>}
