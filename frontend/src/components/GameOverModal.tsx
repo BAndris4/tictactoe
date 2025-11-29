@@ -6,7 +6,6 @@ function GameOverModal() {
   const [visible, setVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // késleltetett megjelenés a big-board vonal után
   useEffect(() => {
     if (game.winner) {
       const timeout = setTimeout(() => setVisible(true), 600);
@@ -15,7 +14,6 @@ function GameOverModal() {
     setVisible(false);
   }, [game.winner]);
 
-  // belépő animációhoz
   useEffect(() => {
     if (visible) {
       const id = requestAnimationFrame(() => setMounted(true));
@@ -42,9 +40,7 @@ function GameOverModal() {
         ${mounted ? "opacity-100" : "opacity-0"}
       `}
     >
-      {/* gradient keret + belső kártya */}
       <div className="relative max-w-sm w-full px-3">
-        {/* külső, nagyon enyhe gradient keret */}
         <div
           className={`
             absolute inset-0 rounded-3xl 
@@ -66,7 +62,6 @@ function GameOverModal() {
             }
           `}
         >
-          {/* kis label felül */}
           <div className="flex items-center justify-center mb-4">
             <div
               className={`
@@ -80,9 +75,7 @@ function GameOverModal() {
             </div>
           </div>
 
-          {/* fő tartalom */}
           <div className="flex flex-col items-center text-center gap-3">
-            {/* winner badge */}
             <div
               className={`
                 inline-flex items-center justify-center
@@ -110,7 +103,6 @@ function GameOverModal() {
             </p>
           </div>
 
-          {/* action gomb */}
           <div className="mt-6 flex justify-center">
             <button
               onClick={handleNewGame}
