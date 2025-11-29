@@ -12,7 +12,13 @@ from ..services import (
     EmailAlreadyTaken,
     authenticate_user,
 )
-from ..tokens import create_access_token
+from ..tokens import (
+    create_access_token, 
+    get_user_from_access_token, 
+    TokenExpired, 
+    InvalidToken
+)
+
 from django.conf import settings
 
 
@@ -200,3 +206,59 @@ class LogoutView(APIView):
         )
 
         return response
+
+class MeView(APIView):
+    @swagger_auto_schema(
+        operation_description="Get current authenticated user from JWT",
+        tags=["User"],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                description="Current authenticated user",
+                example={
+                    "id": 1,
+                    "username": "username",
+                    "email": "user@example.com",
+                    "first_name": "FirstName",
+                    "last_name": "LastName",
+                    "phone_number": "+36201234567",
+                },
+            ),
+            401: "Not authenticated or invalid/expired token",
+        },
+    )
+    def get(self, request):
+        raw_token = None
+
+        auth_header = request.META.get("HTTP_AUTHORIZATION")
+        if auth_header and auth_header.startswith("Bearer "):
+            raw_token = auth_header[len("Bearer ") :]
+
+        if raw_token is None:
+            cookie_val = request.COOKIES.get("access_token")
+            if cookie_val:
+                if cookie_val.startswith("Bearer "):
+                    raw_token = cookie_val[len("Bearer ") :]
+                else:
+                    raw_token = cookie_val
+
+        if raw_token is None:
+            return Response(
+                {"detail": "Not authenticated."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        try:
+            user = get_user_from_access_token(raw_token)
+        except TokenExpired:
+            return Response(
+                {"detail": "Token expired."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        except InvalidToken:
+            return Response(
+                {"detail": "Invalid token."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
