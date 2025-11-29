@@ -24,3 +24,9 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "phone_number",
         ]
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+    stay_logged_in = serializers.BooleanField(required=False, default=False)
+
