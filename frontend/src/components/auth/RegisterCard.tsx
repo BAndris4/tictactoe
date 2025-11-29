@@ -15,6 +15,7 @@ import AccountStep from "./AccountStep";
 import PersonalStep from "./PersonalStep";
 import TutorialStep from "./TutorialStep";
 import StepActions from "./StepActions";
+import { serializePhone } from "../../utils";
 
 const initialValues: RegisterFormValues = {
   username: "",
@@ -112,9 +113,41 @@ export default function RegisterCard() {
     const validationErrors = validateRegisterForm(values);
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length === 0) {
-      // TODO: API call here
-      if (values.playTutorial) navigate("/tutorial");
-      else navigate("/game");
+      fetch("http://localhost:8000/api/users/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: values.username,
+          email: values.email,
+          password: values.password,
+          first_name: values.firstName,
+          last_name: values.lastName,
+          phone_number: serializePhone(values.phone),
+          play_tutorial: values.playTutorial,
+        }),
+        credentials: "include",
+      }).then((res) => {
+        console.log(values);
+        if (res.ok) {
+          fetch("http://localhost:8000/api/users/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              username: values.username,
+              password: values.password,
+              stay_logged_in: false,
+            }),
+          }).then((loginRes) => {
+            if (loginRes.ok) {
+              if (values.playTutorial) navigate("/tutorial");
+              else navigate("/");
+            } else {
+              alert("Automatic login failed after registration.");
+            }
+          });
+        }
+      });
     }
   };
 

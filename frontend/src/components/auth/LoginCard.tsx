@@ -6,7 +6,7 @@ import CheckboxField from "./CheckboxField";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginCard() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [keepSigned, setKeepSigned] = useState(true);
 
@@ -14,7 +14,19 @@ export default function LoginCard() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    console.log({ email, password, keepSigned });
+    fetch("http://localhost:8000/api/users/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ username, password, stay_logged_in: keepSigned }),
+    }).then((res) => {
+      if (res.ok) {
+        navigate("/");
+      } else {
+        alert("Login failed. Please check your credentials.");
+      }
+    });
+    console.log({ username, password, keepSigned });
   };
 
   return (
@@ -28,12 +40,10 @@ export default function LoginCard() {
         relative overflow-hidden
       "
     >
-      {/* Dekoratív fények */}
       <div className="pointer-events-none absolute inset-x-[-40%] top-0 h-24 bg-[radial-gradient(circle_at_top,_rgba(85,112,241,0.28),_transparent_60%)] opacity-60" />
       <div className="pointer-events-none absolute -left-10 bottom-[-40px] h-32 w-32 rounded-full bg-[radial-gradient(circle,_rgba(248,113,113,0.25),_transparent_70%)]" />
 
       <div className="relative z-10">
-        {/* Mini badge – RegisterCard-hoz igazítva */}
         <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#EEF2FF] px-3 py-1 text-[11px] font-medium text-[#4F46E5]">
           <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[#22C55E] animate-pulse" />
           <span>Welcome back</span>
@@ -47,7 +57,7 @@ export default function LoginCard() {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <TextField label="Email" value={email} onChange={setEmail} />
+          <TextField label="Username" value={username} onChange={setUsername} />
 
           <div>
             <PasswordField

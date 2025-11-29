@@ -41,17 +41,15 @@ export default function PhoneField({
 
   const normalize = (raw: string | undefined | null): string => {
     if (!raw) return "";
-    // keep only digits and plus; normalize unicode and whitespace
+
     let cleaned = raw.normalize("NFKC").replace(/[^\d+]/g, "");
 
-    // '00' international prefix -> '+'
     if (cleaned.startsWith("00")) cleaned = "+" + cleaned.slice(2);
 
     if (cleaned.length > 0 && !cleaned.startsWith("+")) {
       cleaned = "+" + cleaned;
     }
 
-    // keep dial code separated
     const match = options.find((o) => cleaned.startsWith(o.dialCode));
     if (match) {
       const rest = cleaned.slice(match.dialCode.length);
@@ -64,7 +62,6 @@ export default function PhoneField({
     onChange(normalize(raw));
   };
 
-  // Autofill sync: run shortly after mount; NordPass/Chrome typically fill within this window
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -78,8 +75,7 @@ export default function PhoneField({
       clearTimeout(t1);
       clearTimeout(t2);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // mount-only
+  }, []);
 
   return (
     <div className="flex flex-col">

@@ -1,4 +1,3 @@
-// src/rules/validation.ts
 export type RegisterFormValues = {
   username: string;
   email: string;
@@ -33,10 +32,8 @@ export const isPasswordValid = (password: string): boolean => {
   return c.hasMinLength && c.hasUppercase && c.hasNumber && c.hasSpecial;
 };
 
-// --- helpers ---
 const norm = (s: string) => s.normalize("NFKC").trim();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// allow dash too; always check the trimmed value
 const USERNAME_RE = /^[a-zA-Z0-9_.-]{3,20}$/;
 const MIN_PHONE_DIGITS = 7;
 
@@ -62,7 +59,7 @@ export const validateRegisterStep = (
       errors.email = "Invalid email address, please check and try again";
     }
 
-    const password = values.password; // don't trim passwords
+    const password = values.password;
     if (!password) {
       errors.password = "Password is required";
     } else if (!isPasswordValid(password)) {
@@ -76,7 +73,6 @@ export const validateRegisterStep = (
     if (!firstName) errors.firstName = "First name is required";
     if (!lastName) errors.lastName = "Last name is required";
 
-    // Phone: don't require '+', accept autofill without it; just check digits length
     const fullPhoneRaw = values.phone ?? "";
     const fullPhone = norm(fullPhoneRaw).replace(/\s+/g, " ");
     const digits = fullPhone.replace(/[^\d]/g, "");
@@ -91,8 +87,6 @@ export const validateRegisterStep = (
       errors.termsAccepted = "You must accept the terms and conditions";
     }
   }
-
-  // step 3: no required fields
 
   return errors;
 };
