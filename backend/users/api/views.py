@@ -180,3 +180,23 @@ class LoginView(APIView):
             )
 
         return response
+
+class LogoutView(APIView):
+    @swagger_auto_schema(
+        operation_description="Logout by clearing JWT HttpOnly cookie",
+        tags=["Auth"],
+        responses={
+            204: openapi.Response(description="Logged out"),
+        },
+    )
+    def post(self, request):
+        response = Response(status=status.HTTP_204_NO_CONTENT)
+
+
+        response.delete_cookie(
+            key="access_token",
+            path="/",
+            samesite="Lax",
+        )
+
+        return response
