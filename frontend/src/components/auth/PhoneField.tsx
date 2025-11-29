@@ -1,3 +1,4 @@
+// src/components/auth/PhoneField.tsx
 import { useEffect, useRef } from "react";
 import type { CountryCodeOption } from "../../data/countryCodes";
 
@@ -24,15 +25,12 @@ export default function PhoneField({
   const bgClass = hasError
     ? "bg-[rgba(231,98,104,0.15)]"
     : "bg-[rgba(239,241,249,0.6)]";
-
   const textClass = hasError ? "text-[#E76268]" : "text-[#5E6366]";
-
   const borderClass = hasError
     ? "border-[#F16063]"
     : isFilled
     ? "border-[#5570F1]/60"
     : "border-transparent";
-
   const shadowClass = hasError
     ? "shadow-[0_0_0_1px_rgba(241,96,99,0.45)]"
     : isFilled
@@ -43,19 +41,22 @@ export default function PhoneField({
 
   const normalize = (raw: string | undefined | null): string => {
     if (!raw) return "";
+    // keep only digits and plus; normalize unicode and whitespace
+    let cleaned = raw.normalize("NFKC").replace(/[^\d+]/g, "");
 
-    let cleaned = raw.replace(/[^\d+]/g, "");
+    // '00' international prefix -> '+'
+    if (cleaned.startsWith("00")) cleaned = "+" + cleaned.slice(2);
 
     if (cleaned.length > 0 && !cleaned.startsWith("+")) {
       cleaned = "+" + cleaned;
     }
 
+    // keep dial code separated
     const match = options.find((o) => cleaned.startsWith(o.dialCode));
     if (match) {
       const rest = cleaned.slice(match.dialCode.length);
       return `${match.dialCode}${rest ? " " + rest : ""}`;
     }
-
     return cleaned;
   };
 
@@ -63,20 +64,22 @@ export default function PhoneField({
     onChange(normalize(raw));
   };
 
+  // Autofill sync: run shortly after mount; NordPass/Chrome typically fill within this window
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-
-    const check = () => {
+    const sync = () => {
       const autofill = el.value;
-      if (autofill && autofill !== value) {
-        onChange(normalize(autofill));
-      }
+      if (autofill && autofill !== value) onChange(normalize(autofill));
     };
-
-    const timer = setTimeout(check, 150);
-    return () => clearTimeout(timer);
-  }, [ref.current]);
+    const t1 = setTimeout(sync, 120);
+    const t2 = setTimeout(sync, 700);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // mount-only
 
   return (
     <div className="flex flex-col">
@@ -100,10 +103,10 @@ export default function PhoneField({
 
         <input
           ref={ref}
+          name="tel"
           type="tel"
           autoComplete="tel"
           inputMode="tel"
-          placeholder="+36 20 123 4567"
           value={value ?? ""}
           onChange={(e) => handleInput(e.target.value)}
           onBlur={onBlur}

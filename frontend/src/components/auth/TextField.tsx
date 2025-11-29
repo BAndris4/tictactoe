@@ -1,3 +1,4 @@
+// src/components/auth/TextField.tsx
 import type { InputHTMLAttributes } from "react";
 
 type Props = {
@@ -16,6 +17,8 @@ export default function TextField({
   value,
   placeholder,
   type = "text",
+  autoComplete,
+  name,
   ...rest
 }: Props) {
   const hasError = Boolean(error);
@@ -24,15 +27,12 @@ export default function TextField({
   const bgClass = hasError
     ? "bg-[rgba(231,98,104,0.15)]"
     : "bg-[rgba(239,241,249,0.6)]";
-
   const textClass = hasError ? "text-[#E76268]" : "text-[#5E6366]";
-
   const borderClass = hasError
     ? "border-[#F16063]"
     : isFilled
     ? "border-[#5570F1]/60"
     : "border-transparent";
-
   const shadowClass = hasError
     ? "shadow-[0_0_0_1px_rgba(241,96,99,0.45)]"
     : isFilled
@@ -61,11 +61,15 @@ export default function TextField({
 
         <input
           {...rest}
+          name={name}
+          autoComplete={autoComplete}
           type={type}
           value={value}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
+          autoCorrect="off"
+          autoCapitalize="none"
           className="mt-1 w-full border-none bg-transparent text-[15px] text-[#4B5563] outline-none placeholder:text-[#B3B6C5]"
         />
       </div>

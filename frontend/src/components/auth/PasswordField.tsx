@@ -1,3 +1,4 @@
+// src/components/auth/PasswordField.tsx
 import { useState } from "react";
 import type { PasswordChecks } from "../../rules/validation";
 import PasswordHint from "./PasswordHint";
@@ -14,6 +15,8 @@ type Props = {
   error?: string;
   checks?: PasswordChecks;
   mode?: "login" | "register";
+  autoComplete?: string;
+  name?: string;
 };
 
 export default function PasswordField({
@@ -24,6 +27,8 @@ export default function PasswordField({
   error,
   checks,
   mode = "register",
+  autoComplete,
+  name,
 }: Props) {
   const [show, setShow] = useState(false);
 
@@ -88,11 +93,17 @@ export default function PasswordField({
 
         <div className="mt-1 flex items-center gap-2">
           <input
+            name={name}
             type={show ? "text" : "password"}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onBlur={onBlur}
-            placeholder="••••••••"
+            autoComplete={
+              autoComplete ??
+              (mode === "register" ? "new-password" : "current-password")
+            }
+            autoCorrect="off"
+            autoCapitalize="none"
             className="flex-1 border-none bg-transparent 
               text-[15px] text-[#111827] outline-none 
               placeholder:text-[#B3B6C5]"
@@ -121,7 +132,6 @@ export default function PasswordField({
       </div>
 
       {hasError && <p className="mt-1 text-[11px] text-[#F16063]">{error}</p>}
-
       {mode === "register" && checks && <PasswordHint checks={checks} />}
     </div>
   );

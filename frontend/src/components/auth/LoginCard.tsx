@@ -47,12 +47,7 @@ export default function LoginCard() {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <TextField
-            label="Email"
-            value={email}
-            placeholder="john.smith@example.com"
-            onChange={setEmail}
-          />
+          <TextField label="Email" value={email} onChange={setEmail} />
 
           <div>
             <PasswordField
