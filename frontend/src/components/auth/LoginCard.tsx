@@ -32,16 +32,16 @@ export default function LoginCard() {
   return (
     <div
       className="
-        w-full max-w-sm rounded-[24px] bg-white/95 px-9 py-10 
-        shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-sm
-        transform transition-all duration-500 
-        hover:-translate-y-2 hover:scale-[1.02]
-        hover:shadow-[0_28px_70px_rgba(15,23,42,0.30)]
+        w-full max-w-sm bg-white px-9 py-10 
+        rounded-[2rem] border border-white
+        shadow-lg shadow-deepblue/5
+        transform transition-all duration-300 
+        hover:-translate-y-1 hover:shadow-xl
         relative overflow-hidden
       "
     >
-      <div className="pointer-events-none absolute inset-x-[-40%] top-0 h-24 bg-[radial-gradient(circle_at_top,_rgba(85,112,241,0.28),_transparent_60%)] opacity-60" />
-      <div className="pointer-events-none absolute -left-10 bottom-[-40px] h-32 w-32 rounded-full bg-[radial-gradient(circle,_rgba(248,113,113,0.25),_transparent_70%)]" />
+      <div className="pointer-events-none absolute inset-x-[-40%] top-0 h-24 bg-[radial-gradient(circle_at_top,_rgba(79,173,192,0.15),_transparent_60%)] opacity-60" />
+      <div className="pointer-events-none absolute -left-10 bottom-[-40px] h-32 w-32 rounded-full bg-[radial-gradient(circle,_rgba(255,112,112,0.15),_transparent_70%)]" />
 
       <div className="relative z-10">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#EEF2FF] px-3 py-1 text-[11px] font-medium text-[#4F46E5]">
@@ -49,7 +49,7 @@ export default function LoginCard() {
           <span>Welcome back</span>
         </div>
 
-        <h1 className="mb-2 text-[24px] font-semibold text-[#111827] tracking-tight">
+        <h1 className="mb-2 text-[24px] font-bold text-deepblue tracking-tight font-paytone">
           Login
         </h1>
         <p className="mb-6 text-[13px] text-[#6B7280]">
@@ -86,13 +86,14 @@ export default function LoginCard() {
           <button
             type="submit"
             className="
-              group relative mt-2 inline-flex h-11 w-full items-center justify-center
-              overflow-hidden rounded-md bg-[#5570F1] text-sm font-medium text-white
-              shadow-[0_10px_30px_rgba(85,112,241,0.45)]
+              group relative mt-2 inline-flex h-12 w-full items-center justify-center
+              overflow-hidden rounded-xl bg-deepblue text-sm font-bold text-white
+              shadow-md shadow-deepblue/20
               transition-all duration-300
-              hover:bg-[#4356C4] hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(67,86,196,0.70)]
+              hover:bg-deepblue/90 hover:-translate-y-0.5 hover:shadow-lg
               active:translate-y-0 active:scale-[0.98]
-              focus:outline-none focus:ring-2 focus:ring-[#5570F1] focus:ring-offset-2 focus:ring-offset-white
+              focus:outline-none focus:ring-2 focus:ring-deepblue focus:ring-offset-2 focus:ring-offset-white
+              font-paytone tracking-wide
             "
           >
             <span

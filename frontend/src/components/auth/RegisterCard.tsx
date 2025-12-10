@@ -157,16 +157,16 @@ export default function RegisterCard() {
   return (
     <div
       className="
-        w-full max-w-md rounded-[24px] bg-white/95 px-9 py-10 
-        shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-sm
-        transform transition-all duration-500 
-        hover:-translate-y-2 hover:scale-[1.02]
-        hover:shadow-[0_28px_70px_rgba(15,23,42,0.30)]
+        w-full max-w-md bg-white px-9 py-10 
+        rounded-[2rem] border border-white
+        shadow-lg shadow-deepblue/5
+        transform transition-all duration-300 
+        hover:-translate-y-1 hover:shadow-xl
         relative overflow-hidden
       "
     >
-      <div className="pointer-events-none absolute inset-x-[-40%] top-0 h-24 bg-[radial-gradient(circle_at_top,_rgba(85,112,241,0.28),_transparent_60%)] opacity-60" />
-      <div className="pointer-events-none absolute -left-10 bottom-[-40px] h-32 w-32 rounded-full bg-[radial-gradient(circle,_rgba(248,113,113,0.25),_transparent_70%)]" />
+      <div className="pointer-events-none absolute inset-x-[-40%] top-0 h-24 bg-[radial-gradient(circle_at_top,_rgba(79,173,192,0.15),_transparent_60%)] opacity-60" />
+      <div className="pointer-events-none absolute -left-10 bottom-[-40px] h-32 w-32 rounded-full bg-[radial-gradient(circle,_rgba(255,112,112,0.15),_transparent_70%)]" />
 
       <div className="relative z-10">
         <StepHeader step={step} />

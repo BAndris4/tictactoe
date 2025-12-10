@@ -13,7 +13,7 @@ export default function StepHeader({ step }: { step: 1 | 2 | 3 }) {
         <span>{stepLabel}</span>
       </div>
 
-      <h1 className="mb-1 text-[24px] font-semibold text-[#111827] tracking-tight">
+      <h1 className="mb-1 text-[24px] font-bold text-deepblue tracking-tight font-paytone">
         Create an Account
       </h1>
       <p className="mb-6 text-[13px] text-[#6B7280]">

@@ -51,9 +51,10 @@ function GameOverModal() {
 
         <div
           className={`
-            relative rounded-2xl bg-white/95 shadow-2xl border ${accentBorder}
-            px-7 py-6
-            transition-all duration-200 ease-out
+            relative rounded-[2rem] bg-white border border-white
+            shadow-2xl shadow-deepblue/10
+            px-7 py-8
+            transition-all duration-300 ease-out
             transform
             ${
               mounted
@@ -71,7 +72,7 @@ function GameOverModal() {
               `}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Game over</span>
+              <span className="font-paytone tracking-wider">Game over</span>
             </div>
           </div>
 
@@ -93,7 +94,7 @@ function GameOverModal() {
               </span>
             </div>
 
-            <h2 className="text-xl font-semibold text-slate-900 mt-1">
+            <h2 className="text-xl font-bold text-deepblue mt-1 font-paytone">
               <span className={accentColor}>{game.winner}</span> megnyerte a
               játékot!
             </h2>
@@ -108,14 +109,15 @@ function GameOverModal() {
               onClick={handleNewGame}
               className="
                 inline-flex items-center justify-center
-                px-5 py-2.5 rounded-xl
-                bg-deepblue text-white font-semibold text-sm
-                shadow-md
+                px-6 py-3 rounded-xl
+                bg-deepblue text-white font-bold text-sm
+                shadow-lg shadow-deepblue/20
                 transition-all duration-200
                 hover:bg-deepblue/90
-                hover:-translate-y-0.5 hover:shadow-lg
+                hover:-translate-y-0.5 hover:shadow-xl
                 active:translate-y-0 active:shadow-md
                 focus:outline-none focus:ring-2 focus:ring-deepblue/60 focus:ring-offset-2
+                font-paytone tracking-wide
               "
             >
               Új játék

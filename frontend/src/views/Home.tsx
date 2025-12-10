@@ -1,4 +1,4 @@
-// src/views/Landing.tsx
+
 import type React from "react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +10,7 @@ type Parallax = {
   y: number;
 };
 
-type MeResponse = any; // ha akarod, később tipizálhatod a /me válasz alapján
+type MeResponse = any;
 
 export default function Landing() {
   const [parallax, setParallax] = useState<Parallax>({ x: 0, y: 0 });
@@ -20,7 +20,7 @@ export default function Landing() {
 
   const navigate = useNavigate();
 
-  // Parallax
+
   useEffect(() => {
     const handleMove = (e: MouseEvent) => {
       const { innerWidth, innerHeight } = window;
@@ -90,7 +90,6 @@ export default function Landing() {
         credentials: "include",
       });
     } catch {
-      // itt most nem dramatizálunk, csak lokálisan kiléptetünk
     } finally {
       setUser(null);
       navigate("/login");
@@ -99,7 +98,6 @@ export default function Landing() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F3F4FF]">
-      {/* Parallax O */}
       <div
         className="pointer-events-none fixed transition-transform duration-200 ease-out"
         style={oStyle}
@@ -107,7 +105,6 @@ export default function Landing() {
         <img src={OShape} alt="O-shape" className="w-[1200px]" />
       </div>
 
-      {/* Parallax X */}
       <div
         className="pointer-events-none fixed transition-transform duration-200 ease-out"
         style={xStyle}

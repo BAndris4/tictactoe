@@ -12,9 +12,10 @@ export default function StepActions({ step, onBack, onNext }: Props) {
           type="button"
           onClick={onBack}
           className="
-            inline-flex h-11 flex-1 items-center justify-center rounded-md
-            border border-slate-200 bg-white text-sm font-medium text-slate-700
-            transition hover:bg-slate-50 active:translate-y-[1px]
+            inline-flex h-12 flex-1 items-center justify-center rounded-xl
+            border-2 border-slate-100 bg-white text-sm font-bold text-deepblue
+            transition hover:bg-slate-50 hover:border-slate-200 active:translate-y-[1px]
+            font-paytone
           "
         >
           Back
