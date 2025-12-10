@@ -54,7 +54,7 @@ export default function SmallTable({
     game.setCells(newCells);
 
     const smallWinner = getSmallTableWinner(newCells, move.block);
-    if (smallWinner) {
+    if (smallWinner && !game.smallWinners[blockRow][blockCol]) {
       const newSmallWinners = game.smallWinners.map((r) => [...r]);
       newSmallWinners[blockRow][blockCol] = smallWinner;
 
