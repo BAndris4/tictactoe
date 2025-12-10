@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EditProfileModal from "../components/EditProfileModal";
-import { mockUser } from "../data/mockProfile";
 import type { UserProfile } from "../data/mockProfile";
 import BackgroundShapes from "../components/BackgroundShapes";
 import UnrankedIconRaw from "../assets/unranked.svg?raw";
@@ -10,14 +9,54 @@ import AiIconRaw from "../assets/ai.svg?raw";
 import CustomIconRaw from "../assets/custom.svg?raw";
 import LocalIcon from "../assets/local.svg";
 
+const emptyUser: UserProfile = {
+  id: 0,
+  username: "",
+  firstName: "",
+  lastName: "",
+  email: "",
+  history: [],
+};
+
 export default function Landing() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<UserProfile>(mockUser);
+  const [user, setUser] = useState<UserProfile>(emptyUser);
+  const [isLoading, setIsLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  useEffect(() => {
+    fetch("http://localhost:8000/api/users/me", { credentials: "include" })
+      .then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          // Map backend snake_case to frontend camelCase
+          const mappedData = {
+            ...data,
+            firstName: data.first_name,
+            lastName: data.last_name,
+            phoneNumber: data.phone_number,
+            history: data.history || []
+          };
+          
+          setUser((prev) => ({ 
+            ...prev, 
+            ...mappedData
+          }));
+          setIsLoading(false);
+        } else {
+          navigate("/login");
+        }
+      })
+      .catch(() => {
+        navigate("/login");
+      });
+  }, [navigate]);
 
   const handleSaveProfile = (updatedData: Partial<UserProfile>) => {
     setUser((prev) => ({ ...prev, ...updatedData }));
   };
+
+  if (isLoading) return null;
 
   const getInitials = () => {
     if (user.firstName && user.lastName) {
