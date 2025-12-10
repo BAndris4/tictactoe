@@ -4,22 +4,18 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import OShape from "../assets/O.svg";
 import XShape from "../assets/X.svg";
+import { useAuth } from "../hooks/useAuth";
 
 type Parallax = {
   x: number;
   y: number;
 };
 
-type MeResponse = any;
 
 export default function Landing() {
   const [parallax, setParallax] = useState<Parallax>({ x: 0, y: 0 });
-  const [user, setUser] = useState<MeResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  const { user, loading, error, logout } = useAuth();
   const navigate = useNavigate();
-
 
   useEffect(() => {
     const handleMove = (e: MouseEvent) => {
@@ -33,31 +29,6 @@ export default function Landing() {
 
     window.addEventListener("mousemove", handleMove);
     return () => window.removeEventListener("mousemove", handleMove);
-  }, []);
-
-  useEffect(() => {
-    const fetchMe = async () => {
-      try {
-        const res = await fetch("http://localhost:8000/api/users/me", {
-          credentials: "include",
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data);
-        } else if (res.status === 401 || res.status === 403) {
-          setUser(null);
-        } else {
-          setError("Ismeretlen hiba történt a /me híváskor.");
-        }
-      } catch (_) {
-        setError("Nem sikerült elérni a szervert.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMe();
   }, []);
 
   const oStyle: React.CSSProperties = {
@@ -84,16 +55,8 @@ export default function Landing() {
   };
 
   const handleLogout = async () => {
-    try {
-      await fetch("http://localhost:8000/api/users/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-    } catch {
-    } finally {
-      setUser(null);
-      navigate("/login");
-    }
+    await logout();
+    navigate("/login");
   };
 
   return (

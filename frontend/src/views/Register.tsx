@@ -1,7 +1,19 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import RegisterCard from "../components/auth/RegisterCard";
 import BackgroundShapes from "../components/BackgroundShapes";
+import { useAuth } from "../hooks/useAuth";
 
 export default function Register() {
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/");
+    }
+  }, [user, loading, navigate]);
+
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F3F4FF] font-inter">
       <BackgroundShapes />
