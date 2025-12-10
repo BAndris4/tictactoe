@@ -129,7 +129,7 @@ export default function Landing() {
                  </div>
                  <div>
                     <h3 className="text-lg font-bold text-deepblue font-paytone">Custom Game</h3>
-                    <p className="text-sm text-deepblue/60 font-inter">Invite a friend.</p>
+                    <p className="text-sm text-deepblue/60 font-inter">Invite a friend</p>
                  </div>
             </div>
 
@@ -143,7 +143,7 @@ export default function Landing() {
                  </div>
                  <div>
                     <h3 className="text-lg font-bold text-deepblue font-paytone">Local Game</h3>
-                    <p className="text-sm text-deepblue/60 font-inter">Offline play.</p>
+                    <p className="text-sm text-deepblue/60 font-inter">Offline play</p>
                  </div>
             </div>
         </div>
