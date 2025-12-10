@@ -1,4 +1,4 @@
-// src/components/auth/PasswordField.tsx
+
 import { useState } from "react";
 import type { PasswordChecks } from "../../rules/validation";
 import PasswordHint from "./PasswordHint";
