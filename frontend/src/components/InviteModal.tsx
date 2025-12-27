@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useGame } from "../context/GameContext";
+import { useAuth } from "../hooks/useAuth";
 
 export default function InviteModal() {
-  const { gameId, status } = useGame();
+  const { gameId, status, players } = useGame();
+  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
 
-  if (status !== "waiting" || !gameId) return null;
+  // Only show if waiting AND I am the creator (player_x)
+  if (status !== "waiting" || !gameId || !user || String(players.x) !== String(user.id)) return null;
 
   const inviteLink = `${window.location.origin}/game/${gameId}`;
 

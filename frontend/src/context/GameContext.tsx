@@ -17,16 +17,25 @@ interface GameContextType {
   winner: string | undefined;
 
   makeMove: (move: Move) => void;
+  joinGame: () => Promise<void>;
 
   flash: boolean;
   shake: boolean;
+  error: string | null;
+  setError: (msg: string | null) => void;
   triggerFlash: () => void;
   triggerShake: () => void;
 
   gameId?: string;
   isOnline: boolean;
   status: string;
-  players: { x?: string | number | null; o?: string | number | null };
+  players: { 
+    x?: string | number | null; 
+    o?: string | number | null;
+    xName?: string | null;
+    oName?: string | null;
+  };
+  moves: any[];
 }
 
 export const GameContext = createContext<GameContextType | undefined>(
@@ -45,8 +54,15 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   );
   const [winner, setWinner] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<string>("local");
-  const [players, setPlayers] = useState<{ x?: string | number | null; o?: string | number | null }>({});
+  const [players, setPlayers] = useState<{ 
+    x?: string | number | null; 
+    o?: string | number | null;
+    xName?: string | null;
+    oName?: string | null;
+  }>({});
+  const [moves, setMoves] = useState<any[]>([]);
 
+  const [error, setError] = useState<string | null>(null);
   const [flash, setFlash] = useState(false);
   const [shake, setShake] = useState(false);
 
@@ -66,18 +82,30 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   useEffect(() => {
     if (gameId) {
       getGame(gameId).then((g) => {
-          // Sync state from server game object
-          // Note: Server has different structure (flat moves list).
-          // We need to replay moves or trust server state?
-          // Server endpoint returns `moves` list. We can replay them or just use them to build state.
-          // Simplest is to just set mode to online and wait for WS to sync?
-          // Actually, WS might not send full state on connect.
-          // For now, let's just use it to check status.
           setStatus(g.status);
-          // Assuming API returns player_x and player_o as IDs or objects. 
-          // Serializer returns user ID (check serializer).
-          // Serializer default ModelSerializer uses PK (id) for FK unless nested.
-          setPlayers({ x: g.player_x, o: g.player_o });
+          setPlayers({ 
+            x: g.player_x, 
+            o: g.player_o,
+            xName: g.player_x_name,
+            oName: g.player_o_name
+          });
+          
+          if (g.moves && g.moves.length > 0) {
+              setMoves(g.moves);
+              // Reconstruction of state
+              g.moves.forEach((m: any) => {
+                  const blockRow = Math.floor(m.cell / 3);
+                  const blockCol = m.cell % 3;
+                  const cellRow = Math.floor(m.subcell / 3);
+                  const cellCol = m.subcell % 3;
+                  
+                  const move: Move = {
+                      block: { row: blockRow, col: blockCol },
+                      cell: { row: cellRow, col: cellCol },
+                  };
+                  applyMoveLocally(move, m.player as Player);
+              });
+          }
       }).catch(console.error);
     }
   }, [gameId]);
@@ -110,13 +138,19 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
           cell: { row: cellRow, col: cellCol },
         };
         
+        setMoves(prev => [...prev, moveData]);
         // Update local state (trusting server logic)
         applyMoveLocally(move, moveData.player as Player);
       } else if (data.type === "game_started") {
           setStatus("active");
-          setPlayers(prev => ({ ...prev, o: parseInt(data.player_o) || data.player_o })); 
+          setPlayers(prev => ({ 
+            ...prev, 
+            o: data.player_o_id || data.player_o, // Handle ID if sent
+            oName: data.player_o_name || data.player_o // fallback if only username
+          })); 
       } else if (data.type === "error") {
           console.error("WS Error:", data.message);
+          setError(data.message);
           triggerShake();
           triggerFlash();
       }
@@ -128,6 +162,33 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
       socket.close();
     };
   }, [gameId]);
+
+  const join = async () => {
+    if (!gameId) return;
+    try {
+      setError(null);
+      const token = getAuthToken();
+      console.log("Join attempt - Has token?", !!token);
+      if (!token) {
+        setError("You must be logged in to join a game");
+        return;
+      }
+      const { joinGame: apiJoinGame } = await import("../api/game");
+      console.log("Calling joinGame API for gameId:", gameId);
+      const g = await apiJoinGame(gameId);
+      console.log("Join successful:", g);
+      setStatus(g.status);
+      setPlayers({ 
+        x: g.player_x, 
+        o: g.player_o,
+        xName: g.player_x_name,
+        oName: g.player_o_name
+      });
+    } catch (err: any) {
+      console.error("Join failed:", err);
+      setError(err.message || "Failed to join game");
+    }
+  };
 
   const applyMoveLocally = (move: Move, player: Player) => {
     const global = toGlobalCoord(move.block, move.cell);
@@ -196,7 +257,8 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         previousMove,
         smallWinners,
         winner,
-        makeMove, // Exposed function
+        makeMove,
+        joinGame: join,
         flash,
         shake,
         triggerFlash,
@@ -204,7 +266,10 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         gameId,
         isOnline: !!gameId,
         status,
-        players
+        players,
+        moves,
+        error,
+        setError
       }}
     >
       {children}

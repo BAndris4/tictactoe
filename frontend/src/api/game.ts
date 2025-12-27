@@ -2,15 +2,26 @@ import { getAuthToken } from "../hooks/useAuth";
 
 const API_URL = "http://localhost:8000/api"; // Should be env var in prod
 
+export interface GameMove {
+  move_no: number;
+  player: 'X' | 'O';
+  cell: number;
+  subcell: number;
+  created_at: string;
+}
+
 export interface Game {
   id: string;
   mode: 'local' | 'online' | 'ai';
   status: 'waiting' | 'active' | 'finished' | 'aborted';
-  player_x: string; // ID or username? Serializer returns ID usually, check serializer
-  player_o: string | null;
+  player_x: string | number;
+  player_o: string | number | null;
+  player_x_name: string;
+  player_o_name: string | null;
   current_turn: 'X' | 'O';
   winner: string | null;
   move_count: number;
+  moves: GameMove[];
 }
 
 const getHeaders = () => {
@@ -22,12 +33,10 @@ const getHeaders = () => {
 };
 
 export const createGame = async (mode: 'local' | 'online' = 'online'): Promise<Game> => {
-  const response = await fetch(`${API_URL}/games/create`, {
+  const response = await fetch(`${API_URL}/games/create/`, {
     method: "POST",
     headers: getHeaders(),
-    body: JSON.stringify({ mode }), // Backend sets mode? CreateGameSerializer only looked at empty create but I should update backend to accept mode if I want to distinguishing. 
-    // Wait, backend CreateGameView sets mode=GameMode.LOCAL hardcoded? 
-    // Creating separate endpoints or update serializer. I need to check backend view.
+    body: JSON.stringify({ mode }),
   });
 
   if (!response.ok) {
@@ -38,7 +47,7 @@ export const createGame = async (mode: 'local' | 'online' = 'online'): Promise<G
 };
 
 export const joinGame = async (gameId: string): Promise<Game> => {
-   const response = await fetch(`${API_URL}/games/join`, {
+   const response = await fetch(`${API_URL}/games/join/`, {
     method: "POST",
     headers: getHeaders(),
     body: JSON.stringify({ game_id: gameId }),
@@ -53,7 +62,7 @@ export const joinGame = async (gameId: string): Promise<Game> => {
 };
 
 export const getGame = async (gameId: string): Promise<Game> => {
-  const response = await fetch(`${API_URL}/games/${gameId}`, {
+  const response = await fetch(`${API_URL}/games/${gameId}/`, {
     method: "GET",
     headers: getHeaders(),
   });

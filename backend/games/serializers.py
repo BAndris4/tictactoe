@@ -17,12 +17,15 @@ class GameMoveSerializer(serializers.ModelSerializer):
 
 class GameSerializer(serializers.ModelSerializer):
     moves = GameMoveSerializer(many=True, read_only=True)
+    player_x_name = serializers.ReadOnlyField(source='player_x.username')
+    player_o_name = serializers.ReadOnlyField(source='player_o.username')
     
     class Meta:
         model = Game
         fields = [
             'id', 'mode', 'status', 'rated', 
-            'player_x', 'player_o', 
+            'player_x', 'player_o',
+            'player_x_name', 'player_o_name',
             'current_turn', 'next_board_constraint', 
             'winner', 'moves'
         ]

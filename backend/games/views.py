@@ -65,7 +65,8 @@ class JoinGameView(APIView):
                 'type': 'game_update',
                 'data': {
                     'type': 'game_started',
-                    'player_o': str(user.id)
+                    'player_o_id': str(user.id),
+                    'player_o_name': user.username
                 }
             }
         )
