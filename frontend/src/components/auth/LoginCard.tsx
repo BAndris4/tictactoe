@@ -19,8 +19,12 @@ export default function LoginCard() {
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ username, password, stay_logged_in: keepSigned }),
-    }).then((res) => {
+    }).then(async (res) => {
       if (res.ok) {
+        const data = await res.json();
+        if (data.access_token) {
+           localStorage.setItem("access_token", data.access_token);
+        }
         navigate("/");
       } else {
         alert("Login failed. Please check your credentials.");

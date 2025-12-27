@@ -49,9 +49,12 @@ export function useAuth() {
       });
     } catch {
     } finally {
+      localStorage.removeItem("access_token");
       setUser(null);
     }
   };
 
   return { user, loading, error, logout, setUser, refetch: fetchUser };
 }
+
+export const getAuthToken = () => localStorage.getItem("access_token");

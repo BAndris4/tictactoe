@@ -76,6 +76,7 @@ export default function Landing() {
         />
 
 
+
         <div className="md:col-span-3 flex flex-col md:flex-row gap-4 md:gap-6">
 
           <GameModeCard
@@ -88,7 +89,15 @@ export default function Landing() {
                 dangerouslySetInnerHTML={{ __html: CustomIconRaw }}
               />
             }
-            onClick={() => {}}
+            onClick={async () => {
+                try {
+                    const { createGame } = await import("../api/game");
+                    const game = await createGame('online');
+                    navigate(`/game/${game.id}`);
+                } catch (e) {
+                    alert("Failed to create game");
+                }
+            }}
             iconBgClass="bg-sunshine/10 text-sunshine"
           />
 
@@ -104,7 +113,15 @@ export default function Landing() {
                 className="w-6 h-6 object-contain opacity-80"
               />
             }
-            onClick={() => navigate("/game")}
+            onClick={async () => {
+                try {
+                     const { createGame } = await import("../api/game");
+                    const game = await createGame('local');
+                    navigate(`/game/${game.id}`);
+                } catch (e) {
+                     alert("Failed to create game");
+                }
+            }}
             iconBgClass="bg-blue-500/10 text-blue-500"
           />
         </div>

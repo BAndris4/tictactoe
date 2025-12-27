@@ -106,7 +106,11 @@ class GameConsumer(AsyncWebsocketConsumer):
         game = Game.objects.get(id=self.game_id)
         
         # Determine player char
-        if user == game.player_x:
+        if game.mode == 'local' and user == game.player_x:
+             # In local mode, the creator plays both sides (or hotseat)
+             # We assume the move is for the current turn if validated
+             player_char = game.current_turn
+        elif user == game.player_x:
             player_char = 'X'
         elif user == game.player_o:
              player_char = 'O'

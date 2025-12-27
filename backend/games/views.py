@@ -5,6 +5,8 @@ from django.shortcuts import get_object_or_404
 from .models import Game, GameStatus, GameMode
 from .serializers import CreateGameSerializer, JoinGameSerializer, GameSerializer
 from .auth_utils import get_user_from_request
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 class CreateGameView(APIView):
     permission_classes = [] # Manual handling
@@ -14,10 +16,20 @@ class CreateGameView(APIView):
         if error_response:
             return error_response
 
+        serializer = CreateGameSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        mode = serializer.validated_data.get('mode', GameMode.ONLINE)
+        
+        # Determine status
+        status_val = GameStatus.WAITING
+        if mode == GameMode.LOCAL:
+            status_val = GameStatus.ACTIVE
+
         game = Game.objects.create(
-            mode=GameMode.LOCAL,
+            mode=mode,
             player_x=user,
-            status=GameStatus.WAITING
+            status=status_val
         )
         return Response(CreateGameSerializer(game).data, status=status.HTTP_201_CREATED)
 
@@ -44,6 +56,19 @@ class JoinGameView(APIView):
         game.player_o = user
         game.status = GameStatus.ACTIVE
         game.save()
+        
+        # Notify players via WebSocket
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f'game_{game.id}',
+            {
+                'type': 'game_update',
+                'data': {
+                    'type': 'game_started',
+                    'player_o': str(user.id)
+                }
+            }
+        )
         
         return Response(GameSerializer(game).data)
 

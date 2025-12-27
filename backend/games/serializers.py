@@ -4,7 +4,7 @@ from .models import Game, GameMove, GameMode, GameStatus
 class CreateGameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
-        fields = ['id']
+        fields = ['id', 'mode']
         read_only_fields = ['id']
 
 class JoinGameSerializer(serializers.Serializer):
