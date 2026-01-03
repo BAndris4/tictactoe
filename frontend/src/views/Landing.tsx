@@ -1,7 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import EditProfileModal from "../components/modals/EditProfileModal";
-import type { UserProfile } from "../data/mockProfile";
+import { useEffect } from "react";
 import BackgroundShapes from "../components/BackgroundShapes";
 import UnrankedIconRaw from "../assets/unranked.svg?raw";
 import AiIconRaw from "../assets/ai.svg?raw";
@@ -15,20 +13,13 @@ import { useAuth } from "../hooks/useAuth";
 
 export default function Landing() {
   const navigate = useNavigate();
-  const { user, loading, logout, setUser } = useAuth();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { user, loading, logout } = useAuth();
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/login");
     }
   }, [loading, user, navigate]);
-
-  const handleSaveProfile = (updatedData: Partial<UserProfile>) => {
-    if (user) {
-      setUser({ ...user, ...updatedData });
-    }
-  };
 
   if (loading || !user) return null;
 
@@ -41,7 +32,7 @@ export default function Landing() {
 
         <LandingProfileCard
           user={user}
-          onEdit={() => setIsEditModalOpen(true)}
+          onEdit={() => navigate("/profile")}
           onHistory={() => navigate("/history")}
           onLogout={logout}
         />
@@ -128,13 +119,6 @@ export default function Landing() {
           />
         </div>
       </div>
-
-      <EditProfileModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        user={user}
-        onSave={handleSaveProfile}
-      />
     </div>
   );
 }

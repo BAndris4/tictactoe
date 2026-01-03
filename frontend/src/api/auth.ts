@@ -58,5 +58,25 @@ export const authApi = {
         credentials: "include",
       });
       localStorage.removeItem("access_token");
+  },
+
+  updateMe: async (data: Partial<{
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone_number: string;
+    username: string;
+  }>) => {
+    const response = await fetch(`${API_URL}/users/me`, {
+      method: "PATCH",
+      headers: {
+        ...getHeaders(),
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error("Failed to update profile");
+    return response.json();
   }
 };

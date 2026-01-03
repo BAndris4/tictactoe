@@ -226,6 +226,44 @@ class LogoutView(APIView):
 
 class MeView(APIView):
     @swagger_auto_schema(
+        operation_description="Update current authenticated user",
+        tags=["User"],
+        request_body=UserSerializer,
+        responses={
+            200: UserSerializer,
+            400: "Validation error",
+            401: "Not authenticated",
+        },
+    )
+    def patch(self, request):
+        user, error = self.get_authenticated_user(request)
+        if error: return error
+        
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        
+        return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
+
+    def get_authenticated_user(self, request):
+        raw_token = None
+        auth_header = request.META.get("HTTP_AUTHORIZATION")
+        if auth_header and auth_header.startswith("Bearer "):
+            raw_token = auth_header[len("Bearer ") :]
+        if raw_token is None:
+            cookie_val = request.COOKIES.get("access_token")
+            if cookie_val:
+                raw_token = cookie_val[len("Bearer ") :] if cookie_val.startswith("Bearer ") else cookie_val
+        
+        if raw_token is None:
+            return None, Response({"detail": "Not authenticated."}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        try:
+            return get_user_from_access_token(raw_token), None
+        except (TokenExpired, InvalidToken):
+            return None, Response({"detail": "Invalid or expired token."}, status=status.HTTP_401_UNAUTHORIZED)
+
+    @swagger_auto_schema(
         operation_description="Get current authenticated user from JWT",
         tags=["User"],
         responses={
@@ -245,39 +283,9 @@ class MeView(APIView):
         },
     )
     def get(self, request):
-        raw_token = None
-
-        auth_header = request.META.get("HTTP_AUTHORIZATION")
-        if auth_header and auth_header.startswith("Bearer "):
-            raw_token = auth_header[len("Bearer ") :]
-
-        if raw_token is None:
-            cookie_val = request.COOKIES.get("access_token")
-            if cookie_val:
-                if cookie_val.startswith("Bearer "):
-                    raw_token = cookie_val[len("Bearer ") :]
-                else:
-                    raw_token = cookie_val
-
-        if raw_token is None:
-            return Response(
-                {"detail": "Not authenticated."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
-        try:
-            user = get_user_from_access_token(raw_token)
-        except TokenExpired:
-            return Response(
-                {"detail": "Token expired."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-        except InvalidToken:
-            return Response(
-                {"detail": "Invalid token."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
+        user, error = self.get_authenticated_user(request)
+        if error: return error
+        
         return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
 
 class BaseFriendView(APIView):
