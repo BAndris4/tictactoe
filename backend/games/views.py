@@ -164,3 +164,23 @@ class ForfeitGameView(APIView):
         )
         
         return Response(GameSerializer(game).data)
+
+class UserGameListView(generics.ListAPIView):
+    serializer_class = GameSerializer
+    permission_classes = [] # Manual handling
+
+    def get_queryset(self):
+        user, error_response = get_user_from_request(self.request)
+        if error_response:
+            return Game.objects.none()
+        
+        from django.db.models import Q
+        return Game.objects.filter(
+            Q(player_x=user) | Q(player_o=user)
+        ).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        user, error_response = get_user_from_request(request)
+        if error_response:
+            return error_response
+        return super().list(request, *args, **kwargs)
