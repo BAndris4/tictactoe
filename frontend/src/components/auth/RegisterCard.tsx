@@ -142,8 +142,13 @@ export default function RegisterCard({ onSuccess }: RegisterCardProps) {
               password: values.password,
               stay_logged_in: false,
             }),
-          }).then((loginRes) => {
+          }).then(async (loginRes) => {
             if (loginRes.ok) {
+               const data = await loginRes.json();
+               if (data.access_token) {
+                  localStorage.setItem("access_token", data.access_token);
+               }
+               
                if (onSuccess) {
                    onSuccess(values.playTutorial);
                }
@@ -212,7 +217,10 @@ export default function RegisterCard({ onSuccess }: RegisterCardProps) {
               <button
                 type="button"
                 className="text-[#5570F1] underline-offset-2 hover:underline hover:text-[#4356C4] transition-colors"
-                onClick={() => navigate("/login")}
+                onClick={() => {
+                  const search = window.location.search;
+                  navigate(`/login${search}`);
+                }}
               >
                 Log in
               </button>

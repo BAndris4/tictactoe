@@ -122,7 +122,10 @@ export default function LoginCard({ onSuccess }: LoginCardProps) {
             <button
               type="button"
               className="text-[#5570F1] underline-offset-2 hover:underline hover:text-[#4356C4] transition"
-              onClick={() => navigate("/register")}
+              onClick={() => {
+                const search = window.location.search;
+                navigate(`/register${search}`);
+              }}
             >
               Sign up
             </button>
