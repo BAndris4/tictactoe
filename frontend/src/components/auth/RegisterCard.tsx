@@ -45,7 +45,11 @@ const pruneStepErrors = (
   return clone;
 };
 
-export default function RegisterCard() {
+interface RegisterCardProps {
+  onSuccess?: (playTutorial?: boolean) => void;
+}
+
+export default function RegisterCard({ onSuccess }: RegisterCardProps) {
   const [values, setValues] = useState<RegisterFormValues>(initialValues);
   const [errors, setErrors] = useState<RegisterFormErrors>({});
   const [touched, setTouched] = useState<TouchedState>({});
@@ -140,8 +144,9 @@ export default function RegisterCard() {
             }),
           }).then((loginRes) => {
             if (loginRes.ok) {
-              if (values.playTutorial) navigate("/tutorial");
-              else navigate("/");
+               if (onSuccess) {
+                   onSuccess(values.playTutorial);
+               }
             } else {
               alert("Automatic login failed after registration.");
             }

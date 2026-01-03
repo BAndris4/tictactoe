@@ -16,9 +16,10 @@ function GameContent() {
 
   // 1. Auth Guard
   useEffect(() => {
-    console.log("Game.tsx v3 - Auth Check", { loading, user });
+    // console.log("Game.tsx v3 - Auth Check", { loading, user });
     if (!loading && !user) {
-      navigate('/login');
+      const currentPath = window.location.pathname;
+      navigate(`/login?redirect=${encodeURIComponent(currentPath)}`);
     }
   }, [loading, user, navigate]);
 

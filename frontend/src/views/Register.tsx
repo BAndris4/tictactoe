@@ -1,18 +1,39 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import RegisterCard from "../components/auth/RegisterCard";
 import BackgroundShapes from "../components/BackgroundShapes";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Register() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { user, loading, refetch } = useAuth();
+  const [pendingTutorial, setPendingTutorial] = useState(false);
+
+  const redirectPath = searchParams.get("redirect");
+
+  const handleSuccess = (playTutorial?: boolean) => {
+    if (playTutorial) {
+      setPendingTutorial(true);
+    }
+    refetch();
+  };
 
   useEffect(() => {
     if (!loading && user) {
-      navigate("/");
+      // Priority: 
+      // 1. Tutorial (if selected during register)
+      // 2. Explicit redirect param (e.g. back to game)
+      // 3. Home
+      if (pendingTutorial) {
+        navigate("/tutorial");
+      } else if (redirectPath && redirectPath !== "/") {
+        navigate(redirectPath);
+      } else {
+        navigate("/");
+      }
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, redirectPath, pendingTutorial]);
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F3F4FF] font-inter">
@@ -22,7 +43,7 @@ export default function Register() {
        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-mint/10 rounded-full blur-[100px] pointer-events-none"></div>
 
       <div className="relative z-10 flex min-h-[calc(100vh-40px)] items-center justify-center px-4 py-6">
-        <RegisterCard />
+        <RegisterCard onSuccess={handleSuccess} />
       </div>
     </div>
   );

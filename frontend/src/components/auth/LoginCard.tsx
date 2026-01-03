@@ -5,7 +5,11 @@ import PasswordField from "./PasswordField";
 import CheckboxField from "./CheckboxField";
 import { useNavigate } from "react-router-dom";
 
-export default function LoginCard() {
+interface LoginCardProps {
+  onSuccess?: () => void;
+}
+
+export default function LoginCard({ onSuccess }: LoginCardProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [keepSigned, setKeepSigned] = useState(true);
@@ -25,7 +29,9 @@ export default function LoginCard() {
         if (data.access_token) {
            localStorage.setItem("access_token", data.access_token);
         }
-        navigate("/");
+        if (onSuccess) {
+            onSuccess();
+        }
       } else {
         alert("Login failed. Please check your credentials.");
       }
