@@ -47,3 +47,18 @@ class GameMove(models.Model):
     class Meta:
         unique_together = ('game', 'move_no')
         ordering = ['move_no']
+class GameInvitationStatus(models.TextChoices):
+    PENDING = 'pending', _('Pending')
+    ACCEPTED = 'accepted', _('Accepted')
+    REJECTED = 'rejected', _('Rejected')
+
+class GameInvitation(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='invitations')
+    from_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_game_invites')
+    to_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='received_game_invites')
+    status = models.CharField(max_length=10, choices=GameInvitationStatus.choices, default=GameInvitationStatus.PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('game', 'to_user')
+        ordering = ['-created_at']

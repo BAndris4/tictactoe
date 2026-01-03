@@ -1,11 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGame } from "../../context/GameContext";
 import { useAuth } from "../../hooks/useAuth";
+import { getFriendsList, type FriendUser } from "../../api/social";
+import { inviteFriend } from "../../api/game";
 
 export default function InviteModal() {
-  const { gameId, status, players } = useGame();
+  const { gameId, status, players, error, setError } = useGame();
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
+  const [friends, setFriends] = useState<FriendUser[]>([]);
+  const [loadingFriends, setLoadingFriends] = useState(false);
+  const [invitedIds, setInvitedIds] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (status === "waiting" && gameId) {
+      setLoadingFriends(true);
+      getFriendsList()
+        .then(setFriends)
+        .finally(() => setLoadingFriends(false));
+    }
+  }, [status, gameId]);
 
   // Only show if waiting AND I am the creator (player_x)
   if (status !== "waiting" || !gameId || !user || String(players.x) !== String(user.id)) return null;
@@ -18,42 +32,100 @@ export default function InviteModal() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleInviteFriend = async (friend: FriendUser) => {
+    try {
+      await inviteFriend(gameId, friend.id);
+      setInvitedIds(prev => new Set([...prev, friend.id]));
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-fadeScaleIn">
-      <div className="w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl border border-white text-center">
-        <h2 className="text-2xl font-bold font-paytone text-deepblue mb-4">
-          Invite a Friend
+      <div className="w-full max-w-lg bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl border border-white text-center flex flex-col max-h-[90vh]">
+        <h2 className="text-3xl font-black font-paytone text-deepblue mb-2">
+          Invite Someone
         </h2>
-        <p className="text-gray-500 mb-6">
-          Share this link to start the game
+        <p className="text-gray-400 font-medium mb-8">
+          Share the link or invite your current friends!
         </p>
 
-        <div className="flex items-center gap-2 mb-6">
+        {/* Link Copy Section */}
+        <div className="bg-slate-50 p-2 rounded-2xl flex items-center gap-2 mb-8 border border-slate-100">
           <input
             readOnly
             value={inviteLink}
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-600 focus:outline-none"
+            className="flex-1 bg-transparent px-4 py-3 text-sm font-bold text-deepblue/60 focus:outline-none overflow-hidden text-ellipsis"
           />
           <button
             onClick={copyToClipboard}
-            className="bg-deepblue text-white p-3 rounded-xl hover:bg-opacity-90 transition-all active:scale-95"
+            className="bg-deepblue text-white px-6 py-3 rounded-xl hover:bg-opacity-95 transition-all active:scale-95 font-paytone text-sm shadow-lg shadow-deepblue/20"
           >
-            {copied ? (
-               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-               </svg>
-            ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-            )}
+            {copied ? "COPIED!" : "COPY LINK"}
           </button>
         </div>
 
-        <div className="flex items-center justify-center gap-2">
-            <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-sunshine opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-sunshine"></span>
-            <span className="text-sm font-medium text-deepblue ml-2">Waiting for opponent...</span>
+        <div className="flex items-center gap-4 mb-6">
+            <div className="flex-1 h-px bg-slate-100"></div>
+            <span className="text-[10px] font-black text-slate-300 tracking-widest uppercase">Or pick a friend</span>
+            <div className="flex-1 h-px bg-slate-100"></div>
+        </div>
+
+        {/* Friends List Section */}
+        <div className="flex-1 overflow-y-auto mb-8 pr-2 custom-scrollbar">
+            {loadingFriends ? (
+                <div className="py-12 flex flex-col items-center gap-3 opacity-20">
+                    <div className="w-8 h-8 border-4 border-slate-200 border-t-sunshine rounded-full animate-spin" />
+                    <p className="text-[10px] font-black tracking-widest">GETTING BROS...</p>
+                </div>
+            ) : friends.length === 0 ? (
+                <div className="py-12 text-center text-slate-300">
+                    <p className="text-sm font-medium italic">No friends online matching your vibe.</p>
+                </div>
+            ) : (
+                <div className="space-y-3">
+                    {friends.map(friend => (
+                        <div key={friend.id} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-transparent hover:border-sunshine/20 hover:bg-white transition-all group">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-mint/10 flex items-center justify-center text-mint font-paytone text-lg">
+                                    {friend.username[0].toUpperCase()}
+                                </div>
+                                <div className="text-left">
+                                    <p className="font-black text-deepblue text-sm">@{friend.username}</p>
+                                    <p className="text-[10px] font-medium text-mint uppercase tracking-tighter">Ready to play</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => handleInviteFriend(friend)}
+                                disabled={invitedIds.has(friend.id)}
+                                className={`px-5 py-2.5 rounded-xl font-paytone text-xs transition-all shadow-sm ${
+                                    invitedIds.has(friend.id)
+                                    ? 'bg-slate-100 text-slate-400 cursor-default'
+                                    : 'bg-sunshine text-deepblue hover:scale-105 active:scale-95 shadow-sunshine/20'
+                                }`}
+                            >
+                                {invitedIds.has(friend.id) ? "INVITED" : "INVITE"}
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+
+        {error && (
+            <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-500 text-xs font-bold border border-red-100 animate-shake">
+                {error}
+            </div>
+        )}
+
+        <div className="flex items-center justify-center gap-2 pt-4 border-t border-slate-50">
+            <div className="flex gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-sunshine animate-bounce [animation-delay:-0.3s]"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-sunshine animate-bounce [animation-delay:-0.15s]"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-sunshine animate-bounce"></span>
+            </div>
+            <span className="text-xs font-black text-deepblue/30 tracking-tight uppercase">Waiting for player...</span>
         </div>
       </div>
     </div>

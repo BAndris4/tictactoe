@@ -168,8 +168,9 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
           } else if (data.winner) {
               setWinner(data.winner);
           }
-      } else if (data.type === "game_aborted") {
-          setStatus("aborted");
+      } else if (data.type === "game_invitation_rejected") {
+          setError(`${data.user} declined your invitation.`);
+          triggerShake();
       } else if (data.type === "error") {
           console.error("WS Error:", data.message);
           setError(data.message);

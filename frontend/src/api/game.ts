@@ -90,3 +90,55 @@ export const getUserGames = async (): Promise<Game[]> => {
 
   return response.json();
 };
+export interface GameInvitation {
+  id: number;
+  game: string;
+  from_user: number;
+  from_user_name: string;
+  to_user: number;
+  to_user_name: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+}
+
+export const inviteFriend = async (gameId: string, userId: number): Promise<GameInvitation> => {
+  const response = await fetch(`${API_URL}/games/invitations/`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ game: gameId, to_user: userId }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error || "Failed to invite friend");
+  }
+
+  return response.json();
+};
+
+export const getPendingInvitations = async (): Promise<GameInvitation[]> => {
+  const response = await fetch(`${API_URL}/games/invitations/pending/`, {
+    method: "GET",
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch pending invitations");
+  }
+
+  return response.json();
+};
+
+export const respondToGameInvitation = async (invitationId: number, action: 'accepted' | 'rejected'): Promise<GameInvitation> => {
+  const response = await fetch(`${API_URL}/games/invitations/${invitationId}/`, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify({ action }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to respond to invitation");
+  }
+
+  return response.json();
+};
