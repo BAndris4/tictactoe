@@ -1,10 +1,10 @@
 import { useMemo } from "react";
 import type { CSSProperties } from "react";
-import { useGame } from "../context/GameContext";
+import { useGame } from "../../../context/GameContext";
 import {
   getWinningLineInBlock,
   type WinningLine,
-} from "../rules/lineHighlight";
+} from "../../../rules/lineHighlight";
 
 function getLineStyle(info: WinningLine): CSSProperties {
   const thickness = 4;

@@ -1,18 +1,21 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import LoginCard from "../components/auth/LoginCard";
 import BackgroundShapes from "../components/BackgroundShapes";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { user, loading, refetch } = useAuth();
+  
+  const redirectPath = searchParams.get("redirect") || "/";
 
   useEffect(() => {
     if (!loading && user) {
-      navigate("/");
+      navigate(redirectPath);
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, redirectPath]);
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F3F4FF] font-inter">
@@ -22,7 +25,7 @@ export default function Login() {
        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-mint/10 rounded-full blur-[100px] pointer-events-none"></div>
 
       <div className="relative z-10 flex min-h-[calc(100vh-40px)] items-center justify-center px-4 py-6">
-        <LoginCard />
+        <LoginCard onSuccess={refetch} />
       </div>
     </div>
   );

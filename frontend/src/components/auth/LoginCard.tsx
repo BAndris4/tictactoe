@@ -1,32 +1,34 @@
 import type { FormEvent } from "react";
-import { useState } from "react";
 import TextField from "./TextField";
 import PasswordField from "./PasswordField";
 import CheckboxField from "./CheckboxField";
 import { useNavigate } from "react-router-dom";
+import { useLogin } from "../../hooks/useLogin";
 
-export default function LoginCard() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [keepSigned, setKeepSigned] = useState(true);
+interface LoginCardProps {
+  onSuccess?: () => void;
+}
 
+export default function LoginCard({ onSuccess }: LoginCardProps) {
   const navigate = useNavigate();
+  const {
+    username,
+    setUsername,
+    password,
+    setPassword,
+    keepSigned,
+    setKeepSigned,
+    login,
+    loading,
+    error,
+  } = useLogin(onSuccess);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    fetch("http://localhost:8000/api/users/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ username, password, stay_logged_in: keepSigned }),
-    }).then((res) => {
-      if (res.ok) {
-        navigate("/");
-      } else {
-        alert("Login failed. Please check your credentials.");
-      }
-    });
-    console.log({ username, password, keepSigned });
+    const success = await login();
+    if (!success) {
+      alert("Login failed. Please check your credentials."); // Maintaining existing behavior for now, though error state is available
+    }
   };
 
   return (
@@ -56,6 +58,12 @@ export default function LoginCard() {
           Sign in to continue your game sessions and track your progress.
         </p>
 
+        {error && (
+            <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-600 text-sm font-medium border border-red-100">
+                {error}
+            </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <TextField label="Username" value={username} onChange={setUsername} />
 
@@ -65,6 +73,7 @@ export default function LoginCard() {
               value={password}
               onChange={setPassword}
               mode="login"
+              disabled={loading}
             />
 
             <div className="mt-1 flex justify-end">
@@ -85,6 +94,7 @@ export default function LoginCard() {
 
           <button
             type="submit"
+            disabled={loading}
             className="
               group relative mt-2 inline-flex h-12 w-full items-center justify-center
               overflow-hidden rounded-xl bg-deepblue text-sm font-bold text-white
@@ -94,6 +104,7 @@ export default function LoginCard() {
               active:translate-y-0 active:scale-[0.98]
               focus:outline-none focus:ring-2 focus:ring-deepblue focus:ring-offset-2 focus:ring-offset-white
               font-paytone tracking-wide
+              disabled:opacity-70 disabled:cursor-not-allowed
             "
           >
             <span
@@ -104,7 +115,7 @@ export default function LoginCard() {
                 group-hover:translate-x-[120%]
               "
             />
-            <span className="relative z-10">Sign in</span>
+            <span className="relative z-10">{loading ? "Signing in..." : "Sign in"}</span>
           </button>
 
           <p className="mt-3 text-center text-[12px] text-[#6B7280]">
@@ -112,7 +123,10 @@ export default function LoginCard() {
             <button
               type="button"
               className="text-[#5570F1] underline-offset-2 hover:underline hover:text-[#4356C4] transition"
-              onClick={() => navigate("/register")}
+              onClick={() => {
+                const search = window.location.search;
+                navigate(`/register${search}`);
+              }}
             >
               Sign up
             </button>

@@ -1,35 +1,44 @@
 import { useEffect, useState } from "react";
-import { useGame } from "../context/GameContext";
+import { useGameResults } from "../../hooks/useGameResults";
 
 function GameOverModal() {
-  const game = useGame();
+  const game = useGameResults();
   const [visible, setVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
-    if (game.winner) {
+    if (game.status !== "finished") {
+      setIsDismissed(false);
+    }
+    
+    if (game.status === "finished" || game.winner) {
       const timeout = setTimeout(() => setVisible(true), 600);
       return () => clearTimeout(timeout);
+    } else {
+      setVisible(false);
     }
-    setVisible(false);
-  }, [game.winner]);
+  }, [game.status, game.winner]);
 
   useEffect(() => {
-    if (visible) {
+    if (visible && !isDismissed) {
       const id = requestAnimationFrame(() => setMounted(true));
       return () => cancelAnimationFrame(id);
     }
     setMounted(false);
-  }, [visible]);
+  }, [visible, isDismissed]);
 
-  if (!game.winner || !visible) return null;
+  if ((!game.winner && game.status !== "finished") || !visible || isDismissed) return null;
 
   const handleNewGame = () => window.location.reload();
-  const isX = game.winner === "X";
+  const handleClose = () => setIsDismissed(true);
+  
+  const isX = game.winnerSymbol === "X";
+  const isDraw = game.winnerSymbol === "D";
 
-  const accentColor = isX ? "text-coral" : "text-sunshine";
-  const accentBorder = isX ? "border-coral/70" : "border-sunshine/70";
-  const accentBgSoft = isX ? "bg-coral/10" : "bg-sunshine/10";
+  const accentColor = isDraw ? "text-slate-500" : isX ? "text-coral" : "text-sunshine";
+  const accentBorder = isDraw ? "border-slate-300" : isX ? "border-coral/70" : "border-sunshine/70";
+  const accentBgSoft = isDraw ? "bg-slate-50" : isX ? "bg-coral/10" : "bg-sunshine/10";
 
   return (
     <div
@@ -63,6 +72,16 @@ function GameOverModal() {
             }
           `}
         >
+          {/* Close Button */}
+          <button 
+            onClick={handleClose}
+            className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 transition-colors text-deepblue/40 hover:text-deepblue/60"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
           <div className="flex items-center justify-center mb-4">
             <div
               className={`
@@ -90,17 +109,25 @@ function GameOverModal() {
                   text-3xl font-paytone ${accentColor}
                 `}
               >
-                {game.winner}
+                {game.winnerSymbol}
               </span>
             </div>
 
             <h2 className="text-xl font-bold text-deepblue mt-1 font-paytone">
-              <span className={accentColor}>{game.winner}</span> megnyerte a
-              játékot!
+              {isDraw ? (
+                <>It's a <span className="text-slate-500">Draw</span>!</>
+              ) : game.winnerName ? (
+                <><span className={accentColor}>{game.winnerName}</span> has won the game!</>
+              ) : (
+                <>Game has ended!</>
+              )}
             </h2>
 
             <p className="text-sm text-slate-600 max-w-xs">
-              Kezdj egy új kört, és próbáld meg visszahódítani a táblát.
+              {isDraw 
+                ? "Neither side could claim the board. A perfectly balanced match!"
+                : "Start a new round and try to conquer the board."
+              }
             </p>
           </div>
 
@@ -120,7 +147,7 @@ function GameOverModal() {
                 font-paytone tracking-wide
               "
             >
-              Új játék
+              New Game
             </button>
           </div>
         </div>

@@ -1,0 +1,154 @@
+import json
+from urllib.parse import parse_qs
+from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.db import database_sync_to_async
+from .models import Game, GameMove
+from .logic import GameLogic
+from .serializers import GameMoveSerializer
+from users.tokens import get_user_from_access_token
+
+class GameConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        try:
+            self.game_id = self.scope['url_route']['kwargs']['game_id']
+            self.room_group_name = f'game_{self.game_id}'
+            
+            # Extract token from query string
+            query_string = self.scope.get("query_string", b"").decode("utf-8")
+            query_params = parse_qs(query_string)
+            token = query_params.get("token", [None])[0]
+
+            if not token:
+                await self.close()
+                return
+                
+            try:
+                self.user = await self.validate_token(token)
+            except Exception: # TokenExpired or InvalidToken
+                await self.close()
+                return
+
+            # Check if game exists
+            try:
+                 self.game = await self.get_game(self.game_id)
+            except Game.DoesNotExist:
+                 await self.close()
+                 return
+
+            # Join room group
+            await self.channel_layer.group_add(
+                self.room_group_name,
+                self.channel_name
+            )
+
+            await self.accept()
+            
+        except Exception:
+            await self.close()
+
+    async def disconnect(self, close_code):
+        # Leave room group
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+
+    # Receive message from WebSocket
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        action = text_data_json.get('action')
+
+        if action == 'move':
+            cell = text_data_json.get('cell')
+            subcell = text_data_json.get('subcell')
+            
+            try:
+                # Process move
+                move, game = await self.process_move(cell, subcell)
+                
+                # Broadcast update
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'game_update',
+                        'data': {
+                            'type': 'new_move',
+                            'move': {
+                                'player': move.player,
+                                'cell': move.cell,
+                                'subcell': move.subcell,
+                                'move_no': move.move_no,
+                                'created_at': move.created_at.isoformat()
+                            },
+                        }
+                    }
+                )
+
+                # If game finished, broadcast game_over
+                if game.status == 'finished':
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            'type': 'game_update',
+                            'data': {
+                                'type': 'game_over',
+                                'winner': game.winner,
+                                'reason': 'board_full' if game.winner == 'D' else 'regular'
+                            }
+                        }
+                    )
+            except ValueError as e:
+                # Send error message to THIS socket only
+                await self.send(text_data=json.dumps({
+                    'type': 'error',
+                    'message': str(e)
+                }))
+
+    @database_sync_to_async
+    def validate_token(self, token):
+        # Handle "Bearer " prefix if present in query param (unlikely but safe)
+        if token.startswith("Bearer "):
+            token = token[len("Bearer "):]
+        return get_user_from_access_token(token)
+
+    @database_sync_to_async
+    def get_game(self, game_id):
+        return Game.objects.get(id=game_id)
+
+    @database_sync_to_async
+    def process_move(self, cell, subcell):
+        user = self.user # Use the user authenticated at connect
+        game = Game.objects.get(id=self.game_id)
+        
+        # Determine player char
+        if game.mode == 'local' and user == game.player_x:
+             # In local mode, the creator plays both sides (or hotseat)
+             # We assume the move is for the current turn if validated
+             player_char = game.current_turn
+        elif user == game.player_x:
+            player_char = 'X'
+        elif user == game.player_o:
+             player_char = 'O'
+        else:
+             raise ValueError("You are not a player in this game.")
+
+        # Logic validation
+        GameLogic.validate_move(game, player_char, cell, subcell)
+        
+        # Create move
+        move = GameMove.objects.create(
+            game=game,
+            move_no=game.move_count + 1,
+            player=player_char,
+            cell=cell,
+            subcell=subcell
+        )
+        
+        # Update game state (turn, constraints, winner)
+        GameLogic.update_game_state(game, move)
+        
+        return move, game
+
+    async def game_update(self, event):
+        # Send message to WebSocket
+        await self.send(text_data=json.dumps(event['data']))

@@ -1,0 +1,49 @@
+from django.db import models
+from django.conf import settings
+from django.utils.translation import gettext_lazy as _
+import uuid
+
+class GameMode(models.TextChoices):
+    AI = 'ai', _('AI')
+    LOCAL = 'local', _('Local')
+    CUSTOM = 'custom', _('Custom')
+
+class GameStatus(models.TextChoices):
+    WAITING = 'waiting', _('Waiting')
+    ACTIVE = 'active', _('Active')
+    FINISHED = 'finished', _('Finished')
+    ABORTED = 'aborted', _('Aborted')
+
+class Game(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    mode = models.CharField(max_length=10, choices=GameMode.choices)
+    status = models.CharField(max_length=10, choices=GameStatus.choices, default=GameStatus.WAITING)
+    rated = models.BooleanField(default=False)
+    
+    player_x = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='games_as_x')
+    player_o = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='games_as_o')
+
+    current_turn = models.CharField(max_length=1, default='X')
+    next_board_constraint = models.IntegerField(null=True, blank=True, help_text="Cache: Which sub-board must be played? NULL = any")
+    move_count = models.IntegerField(default=0)
+    last_move_at = models.DateTimeField(null=True, blank=True)
+    winner = models.CharField(max_length=1, null=True, blank=True, help_text="Cache: X, O or D")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+class GameMove(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='moves')
+    move_no = models.IntegerField()
+    player = models.CharField(max_length=1)
+    cell = models.IntegerField(help_text="0-8")
+    subcell = models.IntegerField(help_text="0-8")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('game', 'move_no')
+        ordering = ['move_no']

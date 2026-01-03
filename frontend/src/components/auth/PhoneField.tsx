@@ -9,6 +9,7 @@ type Props = {
   error?: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
+  disabled?: boolean;
 };
 
 export default function PhoneField({
@@ -18,6 +19,7 @@ export default function PhoneField({
   error,
   onChange,
   onBlur,
+  disabled,
 }: Props) {
   const hasError = !!error;
   const isFilled = value && value.length > 0;
@@ -106,9 +108,10 @@ export default function PhoneField({
           value={value ?? ""}
           onChange={(e) => handleInput(e.target.value)}
           onBlur={onBlur}
+          disabled={disabled}
           className="mt-1 w-full border-none bg-transparent 
             text-[15px] text-[#4B5563] outline-none 
-            placeholder:text-[#B3B6C5]"
+            placeholder:text-[#B3B6C5] disabled:opacity-50"
         />
       </div>
 

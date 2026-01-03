@@ -1,9 +1,8 @@
 import { useMemo } from "react";
-import { useGame } from "../context/GameContext";
-import type { Move } from "../models/Move";
-import { isFull, isMoveValid } from "../rules/gameRule";
-import { toGlobalCoord } from "../utils";
-import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
+import { useGame } from "../../../context/GameContext";
+import type { Move } from "../../../models/Move";
+import { isFull } from "../../../rules/gameRule";
+import { toGlobalCoord } from "../../../utils";
 import SmallTableWinningLine from "./SmallTableWinningLine";
 
 export default function SmallTable({
@@ -31,41 +30,12 @@ export default function SmallTable({
   const handleCellClick = (row: number, col: number) => {
     if (game.winner) return;
 
-    const global = toGlobalCoord(
-      { row: blockRow, col: blockCol },
-      { row, col }
-    );
-
     const move: Move = {
       block: { row: blockRow, col: blockCol },
       cell: { row, col },
     };
 
-    try {
-      isMoveValid(game.cells, move, game.previousMove);
-    } catch (err) {
-      game.triggerFlash();
-      game.triggerShake();
-      return;
-    }
-
-    const newCells = game.cells.map((r) => [...r]);
-    newCells[global.row][global.col] = game.currentPlayer;
-    game.setCells(newCells);
-
-    const smallWinner = getSmallTableWinner(newCells, move.block);
-    if (smallWinner && !game.smallWinners[blockRow][blockCol]) {
-      const newSmallWinners = game.smallWinners.map((r) => [...r]);
-      newSmallWinners[blockRow][blockCol] = smallWinner;
-
-      game.setSmallWinners(newSmallWinners);
-
-      const bigWinner = getWinner(newSmallWinners);
-      if (bigWinner) game.setWinner(bigWinner);
-    }
-
-    game.setPreviousMove(move);
-    game.switchPlayer();
+    game.makeMove(move);
   };
 
   return (

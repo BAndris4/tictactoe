@@ -1,34 +1,157 @@
-import Table from "../components/Table";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import Table from "../components/game/board/Table";
 import { GameProvider, useGame } from "../context/GameContext";
-import GameOverModal from "../components/GameOverModal";
+import GameOverModal from "../components/modals/GameOverModal";
+import InviteModal from "../components/modals/InviteModal";
 import BackgroundShapes from "../components/BackgroundShapes";
+import ResignModal from "../components/modals/ResignModal";
+import ExitWarningModal from "../components/modals/ExitWarningModal";
+import { forfeitGame } from "../api/game";
+import { useAuth } from "../hooks/useAuth";
+import PlayerCard from "../components/game/PlayerCard";
+import { useGameAutoJoin } from "../hooks/useGameAutoJoin";
+import GameSidebar from "../components/game/GameSidebar";
 
 function GameContent() {
   const game = useGame();
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const [showResignModal, setShowResignModal] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
+
+  // 1. Auth Guard
+  useEffect(() => {
+    if (!loading && !user) {
+      const currentPath = window.location.pathname;
+      navigate(`/login?redirect=${encodeURIComponent(currentPath)}`);
+    }
+  }, [loading, user, navigate]);
+
+  // 2. Auto-join logic
+  useGameAutoJoin();
+
+  const isLocalGame = !game.gameId || game.mode === 'local';
+  
+  const { me, opponent } = useMemo(() => {
+    if (!user || !game.players.x) return { me: null, opponent: null };
+    const isX = String(game.players.x) === String(user.id);
+    
+    return {
+      me: isX ? { name: game.players.xName || user.username, symbol: 'X' as const } : { name: game.players.oName || user.username, symbol: 'O' as const },
+      opponent: isX 
+        ? { name: game.players.oName || (isLocalGame ? user.username : null), symbol: 'O' as const } 
+        : { name: game.players.xName || user.username, symbol: 'X' as const }
+    };
+  }, [user, game.players, isLocalGame]);
+
+  const handleResignClick = () => {
+    setShowResignModal(true);
+  };
+
+  const handleExitClick = () => {
+    if (isLocalGame || game.status === 'waiting' || game.status === 'finished') {
+      if ((game.status === 'waiting' || (isLocalGame && game.status === 'active')) && game.gameId) {
+        // For local games or waiting games, notify server and exit immediately
+        forfeitGame(game.gameId).catch(console.error);
+      }
+      navigate("/");
+    } else {
+      setShowExitModal(true);
+    }
+  };
+
+  const handleConfirmForfeit = async () => {
+    if (!game.gameId) return;
+    try {
+      await forfeitGame(game.gameId);
+      setShowResignModal(false);
+    } catch (e) {
+      console.error("Failed to forfeit", e);
+    }
+  };
+
+  const handleConfirmExit = async () => {
+    if (!game.gameId) return;
+    try {
+      await forfeitGame(game.gameId);
+      navigate("/");
+    } catch (e) {
+      console.error("Failed to forfeit", e);
+      navigate("/");
+    }
+  };
+
+  // Show loading or nothing while checking auth to prevent flash/errors
+  if (loading || !user) {
+      return (
+          <div className="h-screen w-full bg-[#F3F4FF] flex items-center justify-center font-inter text-deepblue/50 font-bold animate-pulse">
+              Loading...
+          </div>
+      );
+  }
 
   return (
     <div
-      className={`min-h-screen w-full bg-[#F3F4FF] relative flex items-center justify-center overflow-hidden font-inter ${
+      className={`h-screen w-full bg-[#F3F4FF] relative flex items-center justify-center overflow-hidden font-inter ${
         game.flash ? "animate-flash-red" : ""
       }`}
     >
-       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-deepblue/5 rounded-full blur-[100px] pointer-events-none"></div>
-       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-mint/10 rounded-full blur-[100px] pointer-events-none"></div>
-
       <BackgroundShapes activePlayer={game.currentPlayer} />
 
-      <div className="relative flex gap-10 items-start z-10 px-10 py-10">
-        <Table />
+      <div className="relative flex flex-col md:flex-row gap-6 items-stretch justify-center z-10 p-4 md:p-8 w-full max-w-7xl h-full max-h-[900px]">
+        
+        {/* Main Game Area */}
+        <div className="flex flex-col items-center justify-center gap-8 flex-[1.5] py-4">
+          {/* Opponent Info */}
+          <div className="flex-shrink-0">
+            <PlayerCard player={opponent} isLocalGame={isLocalGame} />
+          </div>
+
+          {/* Board Container - scales to fit available space */}
+          <div className="flex-shrink-0">
+            <div className="p-2 sm:p-3 bg-white/30 backdrop-blur-xl rounded-[32px] sm:rounded-[40px] shadow-2xl border border-white/40 transform origin-center scale-90 sm:scale-100 transition-transform">
+              <Table />
+            </div>
+          </div>
+
+          {/* User Info */}
+          <div className="flex-shrink-0">
+            <PlayerCard player={me} isMe isLocalGame={isLocalGame} />
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <GameSidebar 
+          onExit={handleExitClick}
+          onResign={game.status !== 'finished' ? handleResignClick : undefined}
+          isLocalGame={isLocalGame}
+        />
+
       </div>
 
       <GameOverModal />
+      <InviteModal />
+
+      <ResignModal 
+        isOpen={showResignModal}
+        onClose={() => setShowResignModal(false)}
+        onConfirm={handleConfirmForfeit}
+      />
+      
+      <ExitWarningModal 
+        isOpen={showExitModal}
+        onClose={() => setShowExitModal(false)}
+        onConfirm={handleConfirmExit}
+      />
     </div>
   );
 }
 
 export default function Game() {
+  const { id } = useParams<{ id: string }>();
   return (
-    <GameProvider>
+    <GameProvider gameId={id}>
       <GameContent />
     </GameProvider>
   );
