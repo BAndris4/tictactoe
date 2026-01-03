@@ -1,5 +1,7 @@
+import { useMemo } from "react";
 import TextField from "./TextField";
 import PhoneField from "./PhoneField";
+import SearchableSelect from "./SearchableSelect";
 import CheckboxField from "./CheckboxField";
 import type { RegisterFormValues } from "../../rules/validation";
 import type { CountryCodeOption } from "../../data/countryCodes";
@@ -24,6 +26,39 @@ export default function PersonalStep({
   countryOptions,
   disabled,
 }: Props) {
+  const memoOptions = useMemo(() => countryOptions.map(c => ({ 
+    label: c.name, 
+    value: c.code,
+    sublabel: c.dialCode
+  })), [countryOptions]);
+
+  const handleCountryChange = (countryCode: string) => {
+    onChange("country", countryCode);
+    
+    // Auto-fill dial code if phone is empty or only has a dial code
+    const country = countryOptions.find(c => c.code === countryCode);
+    if (country) {
+      const currentPhone = values.phone || "";
+      const isJustDialCode = countryOptions.some(c => currentPhone === c.dialCode);
+      if (!currentPhone || isJustDialCode) {
+        onChange("phone", country.dialCode);
+      }
+    }
+  };
+
+  const handlePhoneChange = (phone: string) => {
+    onChange("phone", phone);
+
+    // Auto-select country if dial code matches
+    const country = countryOptions
+      .filter(c => phone.startsWith(c.dialCode))
+      .sort((a, b) => b.dialCode.length - a.dialCode.length)[0];
+
+    if (country && country.code !== values.country) {
+      onChange("country", country.code);
+    }
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -49,11 +84,21 @@ export default function PersonalStep({
         />
       </div>
 
+      <SearchableSelect
+        label="Country"
+        value={values.country}
+        options={memoOptions}
+        onChange={handleCountryChange}
+        onBlur={() => onBlur("country")}
+        error={fieldError("country")}
+        disabled={disabled}
+      />
+
       <PhoneField
         label="Phone Number"
         value={values.phone}
         options={countryOptions}
-        onChange={(v) => onChange("phone", v)}
+        onChange={handlePhoneChange}
         onBlur={() => onBlur("phone")}
         error={fieldError("phone")}
         disabled={disabled}

@@ -10,6 +10,7 @@ type Props = {
   onChange: (value: string) => void;
   onBlur?: () => void;
   disabled?: boolean;
+  required?: boolean;
 };
 
 export default function PhoneField({
@@ -20,6 +21,7 @@ export default function PhoneField({
   onChange,
   onBlur,
   disabled,
+  required,
 }: Props) {
   const hasError = !!error;
   const isFilled = value && value.length > 0;
@@ -96,7 +98,7 @@ export default function PhoneField({
             group-focus-within:text-[#5570F1]
           `}
         >
-          {label}
+          {label}{required && <span className="text-[#E76268] ml-0.5">*</span>}
         </div>
 
         <input

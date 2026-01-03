@@ -36,6 +36,7 @@ export default function AccountStep({
         onBlur={() => onBlur("username")}
         error={fieldError("username")}
         disabled={disabled}
+        required
       />
 
       <TextField
@@ -48,6 +49,7 @@ export default function AccountStep({
         onBlur={() => onBlur("email")}
         error={fieldError("email")}
         disabled={disabled}
+        required
       />
 
       <PasswordField
@@ -61,6 +63,7 @@ export default function AccountStep({
         checks={passwordChecks}
         mode="register"
         disabled={disabled}
+        required
       />
     </>
   );

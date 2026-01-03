@@ -18,6 +18,7 @@ type Props = {
   autoComplete?: string;
   name?: string;
   disabled?: boolean;
+  required?: boolean;
 };
 
 export default function PasswordField({
@@ -31,6 +32,7 @@ export default function PasswordField({
   autoComplete,
   name,
   disabled,
+  required,
 }: Props) {
   const [show, setShow] = useState(false);
 
@@ -90,8 +92,7 @@ export default function PasswordField({
             group-focus-within:text-[#5570F1]
           `}
         >
-          {label}
-        </div>
+          {label}{required && <span className="text-[#E76268] ml-0.5">*</span>}  </div>
 
         <div className="mt-1 flex items-center gap-2">
           <input

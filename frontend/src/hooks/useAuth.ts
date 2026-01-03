@@ -19,6 +19,7 @@ export function useAuth() {
           firstName: data.first_name,
           lastName: data.last_name,
           phoneNumber: data.phone_number,
+          country: data.country,
           history: data.history || [],
         };
         setUser(mappedUser);
