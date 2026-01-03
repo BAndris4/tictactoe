@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from ..models import Friendship, FriendshipStatus
 
 User = get_user_model()
 
@@ -29,4 +30,15 @@ class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
     stay_logged_in = serializers.BooleanField(required=False, default=False)
+
+class FriendshipSerializer(serializers.ModelSerializer):
+    from_user = serializers.StringRelatedField()
+    to_user = serializers.StringRelatedField()
+    
+    class Meta:
+        model = Friendship
+        fields = ['id', 'from_user', 'to_user', 'status', 'created_at']
+
+class FriendRequestActionSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=[FriendshipStatus.ACCEPTED, FriendshipStatus.REJECTED])
 

@@ -5,12 +5,22 @@ from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from .serializers import RegisterSerializer, UserSerializer, LoginSerializer
+from .serializers import (
+    RegisterSerializer, 
+    UserSerializer, 
+    LoginSerializer,
+    FriendshipSerializer,
+    FriendRequestActionSerializer
+)
 from ..services import (
     register_user,
     UsernameAlreadyTaken,
     EmailAlreadyTaken,
     authenticate_user,
+    send_friend_request,
+    respond_to_friend_request,
+    unfriend_user,
+    block_user
 )
 from ..tokens import (
     create_access_token, 
@@ -18,8 +28,15 @@ from ..tokens import (
     TokenExpired, 
     InvalidToken
 )
+from ..selectors import (
+    get_pending_friend_requests,
+    get_friends_list
+)
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class RegisterView(APIView):
@@ -262,3 +279,99 @@ class MeView(APIView):
             )
 
         return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
+
+class BaseFriendView(APIView):
+    def get_authenticated_user(self, request):
+        raw_token = None
+        auth_header = request.META.get("HTTP_AUTHORIZATION")
+        if auth_header and auth_header.startswith("Bearer "):
+            raw_token = auth_header[len("Bearer ") :]
+        if raw_token is None:
+            cookie_val = request.COOKIES.get("access_token")
+            if cookie_val:
+                raw_token = cookie_val[len("Bearer ") :] if cookie_val.startswith("Bearer ") else cookie_val
+        
+        if raw_token is None:
+            return None, Response({"detail": "Not authenticated."}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        try:
+            return get_user_from_access_token(raw_token), None
+        except (TokenExpired, InvalidToken):
+            return None, Response({"detail": "Invalid or expired token."}, status=status.HTTP_401_UNAUTHORIZED)
+
+class FriendRequestView(BaseFriendView):
+    def post(self, request):
+        user, error = self.get_authenticated_user(request)
+        if error: return error
+        
+        username = request.data.get("username")
+        if not username:
+            return Response({"detail": "Username is required."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            friendship = send_friend_request(from_user=user, to_username=username)
+            return Response(FriendshipSerializer(friendship).data, status=status.HTTP_201_CREATED)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class PendingFriendRequestsView(BaseFriendView):
+    def get(self, request):
+        user, error = self.get_authenticated_user(request)
+        if error: return error
+        
+        requests = get_pending_friend_requests(user)
+        return Response(FriendshipSerializer(requests, many=True).data)
+
+class FriendRequestActionView(BaseFriendView):
+    def patch(self, request, pk):
+        user, error = self.get_authenticated_user(request)
+        if error: return error
+        
+        serializer = FriendRequestActionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        try:
+            friendship = respond_to_friend_request(
+                friendship_id=pk, 
+                user=user, 
+                status=serializer.validated_data['status']
+            )
+            return Response(FriendshipSerializer(friendship).data)
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class FriendsListView(BaseFriendView):
+    def get(self, request):
+        user, error = self.get_authenticated_user(request)
+        if error: return error
+        
+        friends = get_friends_list(user)
+        return Response(UserSerializer(friends, many=True).data)
+
+class UnfriendView(BaseFriendView):
+    def delete(self, request, username):
+        user, error = self.get_authenticated_user(request)
+        if error: return error
+        
+        try:
+            unfriend_user(user=user, target_username=username)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+class BlockUserView(BaseFriendView):
+    def post(self, request):
+        user, error = self.get_authenticated_user(request)
+        if error: return error
+        
+        username = request.data.get("username")
+        if not username:
+            return Response({"detail": "Username is required."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            friendship = block_user(user=user, target_username=username)
+            return Response(FriendshipSerializer(friendship).data)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)

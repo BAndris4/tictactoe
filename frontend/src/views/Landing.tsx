@@ -10,6 +10,7 @@ import LocalIcon from "../assets/local.svg";
 import LandingProfileCard from "../components/LandingProfileCard";
 import RankedGameCard from "../components/RankedGameCard";
 import GameModeCard from "../components/GameModeCard";
+import TopBar from "../components/layout/TopBar";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Landing() {
@@ -34,6 +35,7 @@ export default function Landing() {
   return (
     <div className="relative min-h-screen bg-[#F3F4FF] text-deepblue font-inter overflow-hidden p-4 sm:p-6 lg:p-8 flex items-center justify-center">
       <BackgroundShapes />
+      <TopBar />
 
       <div className="relative z-10 w-full max-w-7xl mx-auto h-full grid grid-cols-1 md:grid-cols-4 grid-rows-[auto_auto_auto] md:grid-rows-[minmax(300px,auto)_auto] gap-4 md:gap-6 animate-fadeScaleIn">
 
