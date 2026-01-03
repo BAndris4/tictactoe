@@ -11,6 +11,7 @@ type Props = {
   autoComplete?: string;
   name?: string;
   disabled?: boolean;
+  required?: boolean;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, "className" | "onChange">;
 
 export default function TextField({
@@ -25,6 +26,7 @@ export default function TextField({
   autoComplete,
   name,
   disabled,
+  required,
   ...rest
 }: Props) {
   const hasError = Boolean(error);
@@ -63,7 +65,7 @@ export default function TextField({
             group-focus-within:text-[#5570F1]
           `}
         >
-          {label}
+          {label}{required && <span className="text-[#E76268] ml-0.5">*</span>}
         </div>
 
         <input

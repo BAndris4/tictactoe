@@ -5,6 +5,7 @@ import Login from "./views/Login";
 import Landing from "./views/Landing";
 import History from "./views/History";
 import Social from "./views/Social";
+import Profile from "./views/Profile";
 
 import { ToastProvider } from "./context/ToastContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -18,9 +19,10 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/game/:id?" element={<Game />} />
           <Route path="/history" element={<History />} />
-          <Route path="/social" element={<Social />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
+            <Route path="/social" element={<Social />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
           </Routes>
         </BrowserRouter>
       </NotificationProvider>

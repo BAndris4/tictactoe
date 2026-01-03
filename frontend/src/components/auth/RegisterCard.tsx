@@ -46,7 +46,7 @@ export default function RegisterCard({ onSuccess }: RegisterCardProps) {
         shadow-lg shadow-deepblue/5
         transform transition-all duration-300 
         hover:-translate-y-1 hover:shadow-xl
-        relative overflow-hidden
+        relative
       "
     >
       <div className="pointer-events-none absolute inset-x-[-40%] top-0 h-24 bg-[radial-gradient(circle_at_top,_rgba(79,173,192,0.15),_transparent_60%)] opacity-60" />

@@ -14,6 +14,7 @@ export interface UserProfile {
   lastName: string;
   email: string;
   phoneNumber?: string;
+  country?: string;
   history: MatchHistoryItem[];
 }
 
