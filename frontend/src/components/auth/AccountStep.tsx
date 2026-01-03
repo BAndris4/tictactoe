@@ -14,6 +14,7 @@ type Props = {
   onBlur: (field: keyof RegisterFormValues) => void;
   fieldError: (field: keyof RegisterFormValues) => string | undefined;
   passwordChecks: PasswordChecks;
+  disabled?: boolean;
 };
 
 export default function AccountStep({
@@ -22,6 +23,7 @@ export default function AccountStep({
   onBlur,
   fieldError,
   passwordChecks,
+  disabled,
 }: Props) {
   return (
     <>
@@ -33,6 +35,7 @@ export default function AccountStep({
         onChange={(v) => onChange("username", v)}
         onBlur={() => onBlur("username")}
         error={fieldError("username")}
+        disabled={disabled}
       />
 
       <TextField
@@ -44,6 +47,7 @@ export default function AccountStep({
         onChange={(v) => onChange("email", v)}
         onBlur={() => onBlur("email")}
         error={fieldError("email")}
+        disabled={disabled}
       />
 
       <PasswordField
@@ -56,6 +60,7 @@ export default function AccountStep({
         error={fieldError("password")}
         checks={passwordChecks}
         mode="register"
+        disabled={disabled}
       />
     </>
   );

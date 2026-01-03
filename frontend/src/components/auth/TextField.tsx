@@ -6,6 +6,11 @@ type Props = {
   error?: string;
   containerClassName?: string;
   onChange: (value: string) => void;
+  // Optional props
+  type?: string;
+  autoComplete?: string;
+  name?: string;
+  disabled?: boolean;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, "className" | "onChange">;
 
 export default function TextField({
@@ -19,6 +24,7 @@ export default function TextField({
   type = "text",
   autoComplete,
   name,
+  disabled,
   ...rest
 }: Props) {
   const hasError = Boolean(error);
@@ -47,6 +53,7 @@ export default function TextField({
           ${bgClass} border ${borderClass} ${shadowClass}
           focus-within:bg-[#E9ECF8]
           focus-within:shadow-[0_14px_35px_rgba(15,23,42,0.18)]
+          ${disabled ? "opacity-60 cursor-not-allowed" : ""}
         `}
       >
         <div
@@ -70,7 +77,8 @@ export default function TextField({
           onBlur={onBlur}
           autoCorrect="off"
           autoCapitalize="none"
-          className="mt-1 w-full border-none bg-transparent text-[15px] text-[#4B5563] outline-none placeholder:text-[#B3B6C5]"
+          disabled={disabled}
+          className={`mt-1 w-full border-none bg-transparent text-[15px] text-[#4B5563] outline-none placeholder:text-[#B3B6C5] disabled:cursor-not-allowed`}
         />
       </div>
 

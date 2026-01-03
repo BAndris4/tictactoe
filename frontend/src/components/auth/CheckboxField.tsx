@@ -3,6 +3,7 @@ type Props = {
   onChange: (checked: boolean) => void;
   error?: string;
   label: string | React.ReactNode;
+  disabled?: boolean;
 };
 
 export default function CheckboxField({
@@ -10,15 +11,17 @@ export default function CheckboxField({
   onChange,
   error,
   label,
+  disabled,
 }: Props) {
   const hasError = !!error;
 
   return (
-    <div className="mt-3">
-      <label className="flex cursor-pointer items-start gap-2 text-xs text-[#4B4B5C] select-none">
+    <div className={`mt-3 ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}>
+      <label className={`flex items-start gap-2 text-xs text-[#4B4B5C] select-none ${disabled ? "pointer-events-none" : "cursor-pointer"}`}>
         <input
           type="checkbox"
           checked={checked}
+          disabled={disabled}
           onChange={(e) => onChange(e.target.checked)}
           className="peer sr-only"
         />

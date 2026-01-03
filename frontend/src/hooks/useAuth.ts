@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import type { UserProfile } from "../data/mockProfile";
+import { authApi } from "../api/auth";
+import { getAuthToken as getClientToken } from "../api/client";
 
 export function useAuth() {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -9,12 +11,9 @@ export function useAuth() {
   const fetchUser = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/users/me", {
-        credentials: "include",
-      });
+      const data = await authApi.getMe();
 
-      if (res.ok) {
-        const data = await res.json();
+      if (data) {
         const mappedUser: UserProfile = {
           ...data,
           firstName: data.first_name,
@@ -24,13 +23,11 @@ export function useAuth() {
         };
         setUser(mappedUser);
         setError(null);
-      } else if (res.status === 401 || res.status === 403) {
-        setUser(null);
       } else {
-        setError("Failed to fetch user profile");
+        setUser(null);
       }
     } catch (err) {
-      setError("Network error");
+      // console.error(err);
       setUser(null);
     } finally {
       setLoading(false);
@@ -43,13 +40,9 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      await fetch("http://localhost:8000/api/users/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      await authApi.logout();
     } catch {
     } finally {
-      localStorage.removeItem("access_token");
       setUser(null);
     }
   };
@@ -57,4 +50,4 @@ export function useAuth() {
   return { user, loading, error, logout, setUser, refetch: fetchUser };
 }
 
-export const getAuthToken = () => localStorage.getItem("access_token");
+export const getAuthToken = getClientToken;

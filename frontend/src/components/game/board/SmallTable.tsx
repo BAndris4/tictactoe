@@ -1,9 +1,8 @@
 import { useMemo } from "react";
-import { useGame } from "../context/GameContext";
-import type { Move } from "../models/Move";
-import { isFull, isMoveValid } from "../rules/gameRule";
-import { toGlobalCoord } from "../utils";
-import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
+import { useGame } from "../../../context/GameContext";
+import type { Move } from "../../../models/Move";
+import { isFull } from "../../../rules/gameRule";
+import { toGlobalCoord } from "../../../utils";
 import SmallTableWinningLine from "./SmallTableWinningLine";
 
 export default function SmallTable({

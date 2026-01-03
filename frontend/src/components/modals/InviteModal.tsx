@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useGame } from "../context/GameContext";
-import { useAuth } from "../hooks/useAuth";
+import { useGame } from "../../context/GameContext";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function InviteModal() {
   const { gameId, status, players } = useGame();

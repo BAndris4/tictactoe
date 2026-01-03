@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import EditProfileModal from "../components/EditProfileModal";
+import EditProfileModal from "../components/modals/EditProfileModal";
 import type { UserProfile } from "../data/mockProfile";
 import BackgroundShapes from "../components/BackgroundShapes";
 import UnrankedIconRaw from "../assets/unranked.svg?raw";

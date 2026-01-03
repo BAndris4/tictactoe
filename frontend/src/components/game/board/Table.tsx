@@ -1,5 +1,5 @@
 import SmallTable from "./SmallTable";
-import { useGame } from "../context/GameContext";
+import { useGame } from "../../../context/GameContext";
 import TableWinningLine from "./TableWinningLine";
 
 export default function Table() {

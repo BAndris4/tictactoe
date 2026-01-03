@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { UserProfile } from "../data/mockProfile";
+import type { UserProfile } from "../../data/mockProfile";
 
 interface EditProfileModalProps {
   isOpen: boolean;

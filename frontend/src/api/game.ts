@@ -1,6 +1,4 @@
-import { getAuthToken } from "../hooks/useAuth";
-
-const API_URL = "http://localhost:8000/api"; // Should be env var in prod
+import { API_URL, getHeaders } from "./client";
 
 export interface GameMove {
   move_no: number;
@@ -23,14 +21,6 @@ export interface Game {
   move_count: number;
   moves: GameMove[];
 }
-
-const getHeaders = () => {
-  const token = getAuthToken();
-  return {
-    "Content-Type": "application/json",
-    "Authorization": token ? `Bearer ${token}` : "",
-  };
-};
 
 export const createGame = async (mode: 'local' | 'online' = 'online'): Promise<Game> => {
   const response = await fetch(`${API_URL}/games/create/`, {

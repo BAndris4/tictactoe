@@ -13,6 +13,7 @@ type Props = {
   onBlur: (field: keyof RegisterFormValues) => void;
   fieldError: (field: keyof RegisterFormValues) => string | undefined;
   countryOptions: CountryCodeOption[];
+  disabled?: boolean;
 };
 
 export default function PersonalStep({
@@ -21,6 +22,7 @@ export default function PersonalStep({
   onBlur,
   fieldError,
   countryOptions,
+  disabled,
 }: Props) {
   return (
     <>
@@ -33,6 +35,7 @@ export default function PersonalStep({
           onChange={(v) => onChange("firstName", v)}
           onBlur={() => onBlur("firstName")}
           error={fieldError("firstName")}
+          disabled={disabled}
         />
         <TextField
           label="Last Name"
@@ -42,6 +45,7 @@ export default function PersonalStep({
           onChange={(v) => onChange("lastName", v)}
           onBlur={() => onBlur("lastName")}
           error={fieldError("lastName")}
+          disabled={disabled}
         />
       </div>
 
@@ -52,12 +56,14 @@ export default function PersonalStep({
         onChange={(v) => onChange("phone", v)}
         onBlur={() => onBlur("phone")}
         error={fieldError("phone")}
+        disabled={disabled}
       />
 
       <CheckboxField
         checked={values.termsAccepted}
         onChange={(checked) => onChange("termsAccepted", checked)}
         error={fieldError("termsAccepted")}
+        disabled={disabled}
         label={
           <span>
             I accept the{" "}

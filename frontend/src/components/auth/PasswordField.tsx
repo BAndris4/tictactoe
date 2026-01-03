@@ -17,6 +17,7 @@ type Props = {
   mode?: "login" | "register";
   autoComplete?: string;
   name?: string;
+  disabled?: boolean;
 };
 
 export default function PasswordField({
@@ -29,6 +30,7 @@ export default function PasswordField({
   mode = "register",
   autoComplete,
   name,
+  disabled,
 }: Props) {
   const [show, setShow] = useState(false);
 
@@ -104,9 +106,10 @@ export default function PasswordField({
             }
             autoCorrect="off"
             autoCapitalize="none"
+            disabled={disabled}
             className="flex-1 border-none bg-transparent 
               text-[15px] text-[#111827] outline-none 
-              placeholder:text-[#B3B6C5]"
+              placeholder:text-[#B3B6C5] disabled:opacity-50"
           />
 
           {mode === "register" && passwordIsValid && !hasError && (
