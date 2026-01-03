@@ -161,6 +161,15 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
             o: data.player_o_id || data.player_o, // Handle ID if sent
             oName: data.player_o_name || data.player_o // fallback if only username
           })); 
+      } else if (data.type === "game_over") {
+          setStatus("finished");
+          if (data.data && data.data.winner) {
+              setWinner(data.data.winner);
+          } else if (data.winner) {
+              setWinner(data.winner);
+          }
+      } else if (data.type === "game_aborted") {
+          setStatus("aborted");
       } else if (data.type === "error") {
           console.error("WS Error:", data.message);
           setError(data.message);

@@ -3,9 +3,11 @@ import MoveHistory from "./MoveHistory";
 
 interface Props {
   onExit?: () => void;
+  onResign?: () => void;
+  isLocalGame?: boolean;
 }
 
-export default function GameSidebar({ onExit }: Props) {
+export default function GameSidebar({ onExit, onResign, isLocalGame }: Props) {
   const navigate = useNavigate();
 
   const handleExit = () => {
@@ -31,6 +33,19 @@ export default function GameSidebar({ onExit }: Props) {
 
       {/* Move History */}
       <MoveHistory />
+
+      {/* Resign Button - Only for online games */}
+      {!isLocalGame && onResign && (
+        <button 
+          onClick={onResign}
+          className="flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-600 px-6 py-4 rounded-2xl font-bold shadow-sm transition-all hover:scale-[1.01] active:scale-95 border border-red-500/20 flex-shrink-0"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
+          </svg>
+          Resign Game
+        </button>
+      )}
     </div>
   );
 }

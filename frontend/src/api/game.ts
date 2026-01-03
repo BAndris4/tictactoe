@@ -63,3 +63,16 @@ export const getGame = async (gameId: string): Promise<Game> => {
 
   return response.json();
 };
+
+export const forfeitGame = async (gameId: string): Promise<Game> => {
+  const response = await fetch(`${API_URL}/games/${gameId}/forfeit/`, {
+    method: "POST",
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to forfeit game");
+  }
+
+  return response.json();
+};

@@ -24,7 +24,7 @@ export default function MoveHistory() {
                 <span className={`font-bold ${move.player === 'X' ? 'text-coral' : 'text-sunshine'}`}>{move.player}</span>
                 <span className="text-sm">B{move.cell} C{move.subcell}</span>
               </div>
-              <span className="text-[10px] opacity-50 whitespace-nowrap">{new Date(move.created_at).toLocaleString("hu-HU", { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+              <span className="text-[10px] opacity-50 whitespace-nowrap">{new Date(move.created_at).toLocaleString("en-US", { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
             </div>
           ))
         ) : (

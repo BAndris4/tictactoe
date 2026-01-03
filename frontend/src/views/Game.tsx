@@ -1,10 +1,13 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Table from "../components/game/board/Table";
 import { GameProvider, useGame } from "../context/GameContext";
 import GameOverModal from "../components/modals/GameOverModal";
 import InviteModal from "../components/modals/InviteModal";
 import BackgroundShapes from "../components/BackgroundShapes";
+import ResignModal from "../components/modals/ResignModal";
+import ExitWarningModal from "../components/modals/ExitWarningModal";
+import { forfeitGame } from "../api/game";
 import { useAuth } from "../hooks/useAuth";
 import PlayerCard from "../components/game/PlayerCard";
 import { useGameAutoJoin } from "../hooks/useGameAutoJoin";
@@ -14,6 +17,8 @@ function GameContent() {
   const game = useGame();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const [showResignModal, setShowResignModal] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   // 1. Auth Guard
   useEffect(() => {
@@ -39,6 +44,43 @@ function GameContent() {
         : { name: game.players.xName || user.username, symbol: 'X' as const }
     };
   }, [user, game.players, isLocalGame]);
+
+  const handleResignClick = () => {
+    setShowResignModal(true);
+  };
+
+  const handleExitClick = () => {
+    if (isLocalGame || game.status === 'waiting' || game.status === 'finished') {
+      if ((game.status === 'waiting' || (isLocalGame && game.status === 'active')) && game.gameId) {
+        // For local games or waiting games, notify server and exit immediately
+        forfeitGame(game.gameId).catch(console.error);
+      }
+      navigate("/");
+    } else {
+      setShowExitModal(true);
+    }
+  };
+
+  const handleConfirmForfeit = async () => {
+    if (!game.gameId) return;
+    try {
+      await forfeitGame(game.gameId);
+      setShowResignModal(false);
+    } catch (e) {
+      console.error("Failed to forfeit", e);
+    }
+  };
+
+  const handleConfirmExit = async () => {
+    if (!game.gameId) return;
+    try {
+      await forfeitGame(game.gameId);
+      navigate("/");
+    } catch (e) {
+      console.error("Failed to forfeit", e);
+      navigate("/");
+    }
+  };
 
   // Show loading or nothing while checking auth to prevent flash/errors
   if (loading || !user) {
@@ -80,12 +122,28 @@ function GameContent() {
         </div>
 
         {/* Sidebar */}
-        <GameSidebar />
+        <GameSidebar 
+          onExit={handleExitClick}
+          onResign={game.status !== 'finished' ? handleResignClick : undefined}
+          isLocalGame={isLocalGame}
+        />
 
       </div>
 
       <GameOverModal />
       <InviteModal />
+
+      <ResignModal 
+        isOpen={showResignModal}
+        onClose={() => setShowResignModal(false)}
+        onConfirm={handleConfirmForfeit}
+      />
+      
+      <ExitWarningModal 
+        isOpen={showExitModal}
+        onClose={() => setShowExitModal(false)}
+        onConfirm={handleConfirmExit}
+      />
     </div>
   );
 }
