@@ -92,7 +92,7 @@ export default function Landing() {
             onClick={async () => {
                 try {
                     const { createGame } = await import("../api/game");
-                    const game = await createGame('online');
+                    const game = await createGame('custom');
                     navigate(`/game/${game.id}`);
                 } catch (e) {
                     alert("Failed to create game");

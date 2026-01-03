@@ -20,7 +20,7 @@ class CreateGameView(APIView):
         serializer = CreateGameSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        mode = serializer.validated_data.get('mode', GameMode.ONLINE)
+        mode = serializer.validated_data.get('mode', GameMode.CUSTOM)
         
         # Determine status
         status_val = GameStatus.WAITING

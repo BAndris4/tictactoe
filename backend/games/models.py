@@ -6,7 +6,7 @@ import uuid
 class GameMode(models.TextChoices):
     AI = 'ai', _('AI')
     LOCAL = 'local', _('Local')
-    ONLINE = 'online', _('Online')
+    CUSTOM = 'custom', _('Custom')
 
 class GameStatus(models.TextChoices):
     WAITING = 'waiting', _('Waiting')

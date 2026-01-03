@@ -238,6 +238,16 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         return newCells;
     });
 
+    // Client-side draw detection: if board is full (81 cells) and no winner
+    setCells((currentCells) => {
+        const isFull = currentCells.every(row => row.every(cell => cell !== null));
+        if (isFull) {
+            setWinner(prev => prev || "D");
+            setStatus(prev => (prev === "active" ? "finished" : prev));
+        }
+        return currentCells;
+    });
+
     setPreviousMove(move);
     setCurrentPlayer(player === "X" ? "O" : "X");
   };

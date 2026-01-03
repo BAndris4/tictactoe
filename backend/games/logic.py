@@ -147,9 +147,11 @@ class GameLogic:
             game.winner = game_winner
             game.status = 'finished'
             game.finished_at = move.created_at # approximate
-        else:
-            # Check draw? (All boards full or won)
-            pass
+        elif game.move_count + 1 >= 81:
+            # Board is full, and no global winner
+            game.winner = 'D'
+            game.status = 'finished'
+            game.finished_at = move.created_at
 
         # 3. Update constraint for NEXT player
         # The next player must play in 'move.subcell'

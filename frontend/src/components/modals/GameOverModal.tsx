@@ -33,11 +33,12 @@ function GameOverModal() {
   const handleNewGame = () => window.location.reload();
   const handleClose = () => setIsDismissed(true);
   
-  const isX = game.winner === "X";
+  const isX = game.winnerSymbol === "X";
+  const isDraw = game.winnerSymbol === "D";
 
-  const accentColor = isX ? "text-coral" : "text-sunshine";
-  const accentBorder = isX ? "border-coral/70" : "border-sunshine/70";
-  const accentBgSoft = isX ? "bg-coral/10" : "bg-sunshine/10";
+  const accentColor = isDraw ? "text-slate-500" : isX ? "text-coral" : "text-sunshine";
+  const accentBorder = isDraw ? "border-slate-300" : isX ? "border-coral/70" : "border-sunshine/70";
+  const accentBgSoft = isDraw ? "bg-slate-50" : isX ? "bg-coral/10" : "bg-sunshine/10";
 
   return (
     <div
@@ -113,7 +114,9 @@ function GameOverModal() {
             </div>
 
             <h2 className="text-xl font-bold text-deepblue mt-1 font-paytone">
-              {game.winnerName ? (
+              {isDraw ? (
+                <>It's a <span className="text-slate-500">Draw</span>!</>
+              ) : game.winnerName ? (
                 <><span className={accentColor}>{game.winnerName}</span> has won the game!</>
               ) : (
                 <>Game has ended!</>
@@ -121,7 +124,10 @@ function GameOverModal() {
             </h2>
 
             <p className="text-sm text-slate-600 max-w-xs">
-              Start a new round and try to conquer the board.
+              {isDraw 
+                ? "Neither side could claim the board. A perfectly balanced match!"
+                : "Start a new round and try to conquer the board."
+              }
             </p>
           </div>
 

@@ -64,7 +64,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             
             try:
                 # Process move
-                move = await self.process_move(cell, subcell)
+                move, game = await self.process_move(cell, subcell)
                 
                 # Broadcast update
                 await self.channel_layer.group_send(
@@ -83,6 +83,20 @@ class GameConsumer(AsyncWebsocketConsumer):
                         }
                     }
                 )
+
+                # If game finished, broadcast game_over
+                if game.status == 'finished':
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            'type': 'game_update',
+                            'data': {
+                                'type': 'game_over',
+                                'winner': game.winner,
+                                'reason': 'board_full' if game.winner == 'D' else 'regular'
+                            }
+                        }
+                    )
             except ValueError as e:
                 # Send error message to THIS socket only
                 await self.send(text_data=json.dumps({
@@ -133,7 +147,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         # Update game state (turn, constraints, winner)
         GameLogic.update_game_state(game, move)
         
-        return move
+        return move, game
 
     async def game_update(self, event):
         # Send message to WebSocket
