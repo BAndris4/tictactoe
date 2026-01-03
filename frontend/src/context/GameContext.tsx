@@ -6,6 +6,7 @@ import { toGlobalCoord } from "../utils";
 import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
 import { getAuthToken } from "../hooks/useAuth";
 import { getGame } from "../api/game";
+import { useToast } from "./ToastContext";
 
 type Player = "X" | "O";
 
@@ -44,6 +45,7 @@ export const GameContext = createContext<GameContextType | undefined>(
 );
 
 export function GameProvider({ children, gameId }: { children: ReactNode; gameId?: string }) {
+  const { showToast } = useToast();
   const [currentPlayer, setCurrentPlayer] = useState<Player>("X");
   const [cells, setCells] = useState<(string | null)[][]>(
     Array(9).fill(null).map(() => Array(9).fill(null))
@@ -168,11 +170,12 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
           } else if (data.winner) {
               setWinner(data.winner);
           }
-      } else if (data.type === "game_aborted") {
-          setStatus("aborted");
+      } else if (data.type === "game_invitation_rejected") {
+          showToast(`${data.user} declined your invitation.`, "warning");
+          triggerShake();
       } else if (data.type === "error") {
           console.error("WS Error:", data.message);
-          setError(data.message);
+          showToast(data.message, "error");
           triggerShake();
           triggerFlash();
       }

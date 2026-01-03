@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useGameResults } from "../../hooks/useGameResults";
 
 function GameOverModal() {
   const game = useGameResults();
+  const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -30,7 +32,7 @@ function GameOverModal() {
 
   if ((!game.winner && game.status !== "finished") || !visible || isDismissed) return null;
 
-  const handleNewGame = () => window.location.reload();
+  const handleExit = () => navigate("/");
   const handleClose = () => setIsDismissed(true);
   
   const isX = game.winnerSymbol === "X";
@@ -133,10 +135,10 @@ function GameOverModal() {
 
           <div className="mt-6 flex justify-center">
             <button
-              onClick={handleNewGame}
+              onClick={handleExit}
               className="
                 inline-flex items-center justify-center
-                px-6 py-3 rounded-xl
+                px-8 py-3 rounded-xl
                 bg-deepblue text-white font-bold text-sm
                 shadow-lg shadow-deepblue/20
                 transition-all duration-200
@@ -147,7 +149,7 @@ function GameOverModal() {
                 font-paytone tracking-wide
               "
             >
-              New Game
+              Exit to Home
             </button>
           </div>
         </div>

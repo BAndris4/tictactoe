@@ -1,5 +1,14 @@
 from rest_framework import serializers
-from .models import Game, GameMove, GameMode, GameStatus
+from .models import Game, GameMove, GameMode, GameStatus, GameInvitation
+
+class GameInvitationSerializer(serializers.ModelSerializer):
+    from_user_name = serializers.ReadOnlyField(source='from_user.username')
+    to_user_name = serializers.ReadOnlyField(source='to_user.username')
+    
+    class Meta:
+        model = GameInvitation
+        fields = ['id', 'game', 'from_user', 'from_user_name', 'to_user', 'to_user_name', 'status', 'created_at']
+        read_only_fields = ['id', 'from_user', 'status', 'created_at']
 
 class CreateGameSerializer(serializers.ModelSerializer):
     class Meta:

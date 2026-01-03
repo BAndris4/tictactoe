@@ -62,7 +62,7 @@ export default function ResignModal({
                 onConfirm();
                 onClose();
               }}
-              className="flex-1 py-3 rounded-xl bg-red-500 font-bold text-white shadow-lg shadow-red-500/30 hover:bg-red-600 transition"
+              className="flex-1 py-3 rounded-xl bg-coral font-bold text-white shadow-lg shadow-coral/30 hover:bg-opacity-90 transition"
             >
               Resign
             </button>
