@@ -72,7 +72,7 @@ export default function NotificationMenu() {
           : 'bg-white/80 hover:bg-white text-deepblue/60 hover:text-deepblue shadow-sm backdrop-blur-md'
         }`}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
         </svg>
         {notifications.length > 0 && (
@@ -93,9 +93,9 @@ export default function NotificationMenu() {
             <div className="max-h-96 overflow-y-auto overflow-x-hidden p-1">
               {notifications.length === 0 ? (
                 <div className="py-12 flex flex-col items-center gap-3 text-deepblue/20">
-                  <div className="p-4 bg-slate-50 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
-                       <path strokeLinecap="round" strokeLinejoin="round" d="M9.143 17.082a24.248 24.248 0 003.844.214m-3.844-.214a10.856 10.856 0 00-4.773-5.091V9.125c0-4.556 3.468-8.25 7.75-8.25s7.75 3.694 7.75 8.25v2.866a10.856 10.856 0 00-4.773 5.091m-7.75 0a23.984 23.984 0 0115.5 0m-15.5 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                  <div className="p-6 bg-slate-50/50 rounded-full text-deepblue/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-12 h-12">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                     </svg>
                   </div>
                   <p className="text-[10px] font-black uppercase tracking-widest font-paytone text-slate-300">Quiet for now...</p>

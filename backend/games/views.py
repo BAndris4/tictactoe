@@ -196,23 +196,8 @@ class ForfeitGameView(APIView):
         game = get_object_or_404(Game, id=pk)
         
         if game.status == GameStatus.WAITING:
-            game.status = GameStatus.ABORTED
-            game.save()
-            
-            # Notify via WebSocket if anyone is listening in the game lobby
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                f'game_{game.id}',
-                {
-                    'type': 'game_update',
-                    'data': {
-                        'type': 'game_aborted',
-                        'reason': 'player_left'
-                    }
-                }
-            )
-
             # Notify all invited users specifically via their notification channel
+            channel_layer = get_channel_layer()
             pending_invites = GameInvitation.objects.filter(game=game, status=GameInvitationStatus.PENDING)
             for invite in pending_invites:
                 async_to_sync(channel_layer.group_send)(
@@ -226,12 +211,11 @@ class ForfeitGameView(APIView):
                         }
                     }
                 )
-                # Also mark invitation as REJECTED or CANCELLED? 
-                # Let's keep it PENDING or mark as REJECTED for now to hide it.
-                invite.status = GameInvitationStatus.REJECTED
-                invite.save()
-
-            return Response(GameSerializer(game).data)
+            
+            # Delete the game and cascade-delete invitations
+            game_data = GameSerializer(game).data # Capture data before deletion
+            game.delete()
+            return Response(game_data)
 
         if game.status in [GameStatus.FINISHED, GameStatus.ABORTED]:
             return Response(GameSerializer(game).data)
