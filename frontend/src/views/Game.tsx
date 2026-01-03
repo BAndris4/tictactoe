@@ -11,16 +11,21 @@ import MoveHistory from "../components/game/MoveHistory";
 
 function GameContent() {
   const game = useGame();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
+  // 1. Auth Guard
+  useEffect(() => {
+    console.log("Game.tsx v3 - Auth Check", { loading, user });
+    if (!loading && !user) {
+      navigate('/login');
+    }
+  }, [loading, user, navigate]);
+
+  // 2. Auto-join logic (only runs if authenticated)
   useEffect(() => {
     const checkAndJoin = async () => {
-      // Wait for user to be loaded
-      if (!user) {
-        console.log("Auto-join: User not loaded yet");
-        return;
-      }
+      if (loading || !user) return; // Skip if not ready
 
       if (
         game.gameId &&
@@ -30,13 +35,6 @@ function GameContent() {
         const isPlayerX = String(game.players.x) === String(user.id);
         const hasPlayerO = !!game.players.o;
         
-        console.log("Auto-join check:", {
-          gameId: game.gameId,
-          userId: user.id,
-          isPlayerX,
-          hasPlayerO
-        });
-
         if (!isPlayerX && !hasPlayerO) {
           console.log("Auto-joining game as Player O");
           try {
@@ -48,9 +46,9 @@ function GameContent() {
       }
     };
     checkAndJoin();
-  }, [game.gameId, game.status, user, game.players, game.joinGame]);
+  }, [game.gameId, game.status, user, loading, game.players, game.joinGame]);
 
-  const isLocalGame = !game.gameId;
+  const isLocalGame = !game.gameId || game.mode === 'local';
   
   const { me, opponent } = useMemo(() => {
     if (!user || !game.players.x) return { me: null, opponent: null };
@@ -63,6 +61,15 @@ function GameContent() {
         : { name: game.players.xName || user.username, symbol: 'X' as const }
     };
   }, [user, game.players, isLocalGame]);
+
+  // Show loading or nothing while checking auth to prevent flash/errors
+  if (loading || !user) {
+      return (
+          <div className="h-screen w-full bg-[#F3F4FF] flex items-center justify-center font-inter text-deepblue/50 font-bold animate-pulse">
+              Loading...
+          </div>
+      );
+  }
 
   return (
     <div

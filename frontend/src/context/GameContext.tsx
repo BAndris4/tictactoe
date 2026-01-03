@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import type { ReactNode } from "react";
 import type { Move } from "../models/Move";
-import { isMoveValid, isFull } from "../rules/gameRule";
+import { isMoveValid } from "../rules/gameRule";
 import { toGlobalCoord } from "../utils";
 import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
 import { getAuthToken } from "../hooks/useAuth";
@@ -28,6 +28,7 @@ interface GameContextType {
 
   gameId?: string;
   isOnline: boolean;
+  mode: string;
   status: string;
   players: { 
     x?: string | number | null; 
@@ -54,6 +55,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   );
   const [winner, setWinner] = useState<string | undefined>(undefined);
   const [status, setStatus] = useState<string>("local");
+  const [mode, setMode] = useState<string>("local");
   const [players, setPlayers] = useState<{ 
     x?: string | number | null; 
     o?: string | number | null;
@@ -83,6 +85,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
     if (gameId) {
       getGame(gameId).then((g) => {
           setStatus(g.status);
+          setMode(g.mode);
           setPlayers({ 
             x: g.player_x, 
             o: g.player_o,
@@ -138,9 +141,19 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
           cell: { row: cellRow, col: cellCol },
         };
         
-        setMoves(prev => [...prev, moveData]);
+        setMoves(prev => {
+            if (prev.some(m => m.move_no === moveData.move_no)) {
+                return prev;
+            }
+            return [...prev, moveData];
+        });
+        
         // Update local state (trusting server logic)
+        // Note: In local game mode, makeMove() already called applyMoveLocally().
+        // Calling it again is idempotent for 'cells' and 'currentPlayer' toggling (if data matches).
+        // However, to be cleaner, we could avoid it if duplicate, but setMoves check handles the data.
         applyMoveLocally(move, moveData.player as Player);
+
       } else if (data.type === "game_started") {
           setStatus("active");
           setPlayers(prev => ({ 
@@ -178,6 +191,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
       const g = await apiJoinGame(gameId);
       console.log("Join successful:", g);
       setStatus(g.status);
+      setMode(g.mode);
       setPlayers({ 
         x: g.player_x, 
         o: g.player_o,
@@ -231,7 +245,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
       return;
     }
 
-    if (gameId && ws.current) {
+    if (gameId && ws.current && mode !== 'local') {
         // Online Mode: Send to Server
         // Convert to server coords
         // Block (0-8) = row*3 + col
@@ -244,8 +258,34 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
             subcell: subcellIdx
         }));
     } else {
-        // Offline Mode: Apply locally
+        // Offline or Local Mode: Apply locally
         applyMoveLocally(move, currentPlayer);
+
+        // Add to history locally so it shows up immediately
+        const cellIdx = move.block.row * 3 + move.block.col;
+        const subcellIdx = move.cell.row * 3 + move.cell.col;
+        const newMove = {
+            move_no: moves.length + 1,
+            player: currentPlayer,
+            cell: cellIdx,
+            subcell: subcellIdx,
+            created_at: new Date().toISOString()
+        };
+        setMoves(prev => [...prev, newMove]);
+        
+        // Local games DO have a backend component. We want to persist the move.
+        // So for local games, we should probably do BOTH: update locally immediately AND send to backend.
+        
+        if (gameId && ws.current && mode === 'local') {
+             // Sync with backend for persistence, but don't wait for it
+             const cIdx = move.block.row * 3 + move.block.col;
+             const sIdx = move.cell.row * 3 + move.cell.col;
+             ws.current.send(JSON.stringify({
+                action: "move",
+                cell: cIdx,
+                subcell: sIdx
+            }));
+        }
     }
   };
 
@@ -265,12 +305,14 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         triggerShake,
         gameId,
         isOnline: !!gameId,
+        mode,
         status,
         players,
         moves,
         error,
         setError
       }}
+
     >
       {children}
     </GameContext.Provider>

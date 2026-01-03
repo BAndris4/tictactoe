@@ -77,7 +77,8 @@ class GameConsumer(AsyncWebsocketConsumer):
                                 'player': move.player,
                                 'cell': move.cell,
                                 'subcell': move.subcell,
-                                'move_no': move.move_no
+                                'move_no': move.move_no,
+                                'created_at': move.created_at.isoformat()
                             },
                         }
                     }
