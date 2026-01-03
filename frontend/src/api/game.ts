@@ -20,6 +20,7 @@ export interface Game {
   winner: string | null;
   move_count: number;
   moves: GameMove[];
+  created_at: string;
 }
 
 export const createGame = async (mode: 'local' | 'online' = 'online'): Promise<Game> => {
@@ -72,6 +73,19 @@ export const forfeitGame = async (gameId: string): Promise<Game> => {
 
   if (!response.ok) {
     throw new Error("Failed to forfeit game");
+  }
+
+  return response.json();
+};
+
+export const getUserGames = async (): Promise<Game[]> => {
+  const response = await fetch(`${API_URL}/games/my-games/`, {
+    method: "GET",
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch user games");
   }
 
   return response.json();
