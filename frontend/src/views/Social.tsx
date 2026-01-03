@@ -11,6 +11,9 @@ import {
   type Friendship
 } from "../api/social";
 
+import { createGame, inviteFriend } from "../api/game";
+import { useToast } from "../context/ToastContext";
+
 type Tab = 'friends' | 'pending' | 'add';
 
 export default function Social() {
@@ -21,6 +24,25 @@ export default function Social() {
   const [loading, setLoading] = useState(true);
   const [searchUsername, setSearchUsername] = useState("");
   const [requestStatus, setRequestStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
+  const [invitingId, setInvitingId] = useState<number | null>(null);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    fetchData();
+  }, [activeTab]);
+
+  const handleQuickInvite = async (friend: FriendUser) => {
+    try {
+      setInvitingId(friend.id);
+      const game = await createGame('custom');
+      await inviteFriend(game.id, friend.id);
+      navigate(`/game/${game.id}`);
+    } catch (err) {
+      showToast("Failed to create invite", "error");
+    } finally {
+      setInvitingId(null);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -38,6 +60,7 @@ export default function Social() {
       }
     } catch (err) {
       console.error("Failed to fetch social data", err);
+      showToast("Sync failed. Check your connection.", "error");
     } finally {
       setLoading(false);
     }
@@ -66,7 +89,7 @@ export default function Social() {
           fetchData();
       }
     } catch (err) {
-      alert("Action failed");
+      showToast("Action failed", "error");
     }
   };
 
@@ -76,7 +99,7 @@ export default function Social() {
       await unfriendUser(username);
       setFriends(prev => prev.filter(f => f.username !== username));
     } catch (err) {
-      alert("Failed to unfriend");
+      showToast("Failed to unfriend", "error");
     }
   };
 
@@ -208,10 +231,11 @@ export default function Social() {
                                             Unfriend
                                         </button>
                                         <button 
-                                            className="px-4 py-2 rounded-xl bg-deepblue text-white text-xs font-bold font-paytone opacity-0 group-hover:opacity-100 transition-all hover:bg-deepblue/90"
-                                            onClick={() => alert("Quick game invite coming soon!")}
+                                            className="px-4 py-2 rounded-xl bg-deepblue text-white text-xs font-bold font-paytone opacity-0 group-hover:opacity-100 transition-all hover:bg-deepblue/90 disabled:opacity-50"
+                                            onClick={() => handleQuickInvite(friend)}
+                                            disabled={invitingId === friend.id}
                                         >
-                                            Invite
+                                            {invitingId === friend.id ? "..." : "Invite"}
                                         </button>
                                     </div>
                                 </div>

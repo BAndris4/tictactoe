@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getPendingRequests, respondToFriendRequest, type Friendship } from "../../api/social";
 import { getPendingInvitations, respondToGameInvitation, type GameInvitation } from "../../api/game";
+import { useToast } from "../../context/ToastContext";
 
 type Notification = 
   | { type: 'friend_request'; data: Friendship }
@@ -11,6 +12,7 @@ export default function NotificationMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const fetchAll = async () => {
     try {
@@ -43,7 +45,7 @@ export default function NotificationMenu() {
       await respondToFriendRequest(id, action);
       setNotifications(prev => prev.filter(n => !(n.type === 'friend_request' && n.data.id === id)));
     } catch (err) {
-      alert("Failed to respond");
+      showToast("Failed to respond to friend request", "error");
     }
   };
 
@@ -55,8 +57,8 @@ export default function NotificationMenu() {
         navigate(`/game/${gameId}`);
         setIsOpen(false);
       }
-    } catch (err) {
-      alert("Failed to respond to game invite");
+    } catch (err: any) {
+      showToast(err.message || "Failed to respond to game invite", "error");
     }
   };
 

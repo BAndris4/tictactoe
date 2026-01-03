@@ -59,6 +59,9 @@ class GameInvitationActionView(APIView):
             
             # Auto-join the game
             game = invitation.game
+            if game.status == GameStatus.ABORTED:
+                return Response({"error": "This game has been cancelled by the creator."}, status=status.HTTP_400_BAD_REQUEST)
+            
             if game.status == GameStatus.WAITING:
                 game.player_o = user
                 game.status = GameStatus.ACTIVE
@@ -142,6 +145,9 @@ class JoinGameView(APIView):
         
         game = get_object_or_404(Game, id=game_id)
         
+        if game.status == GameStatus.ABORTED:
+            return Response({"error": "This game has been cancelled."}, status=status.HTTP_400_BAD_REQUEST)
+
         if game.status != GameStatus.WAITING:
             return Response({"error": "Game is not waiting for players"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -193,7 +199,7 @@ class ForfeitGameView(APIView):
             game.status = GameStatus.ABORTED
             game.save()
             
-            # Notify via WebSocket if anyone is listening
+            # Notify via WebSocket if anyone is listening in the game lobby
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
                 f'game_{game.id}',
@@ -205,6 +211,26 @@ class ForfeitGameView(APIView):
                     }
                 }
             )
+
+            # Notify all invited users specifically via their notification channel
+            pending_invites = GameInvitation.objects.filter(game=game, status=GameInvitationStatus.PENDING)
+            for invite in pending_invites:
+                async_to_sync(channel_layer.group_send)(
+                    f'user_notifications_{invite.to_user.id}',
+                    {
+                        'type': 'send_notification',
+                        'data': {
+                            'type': 'game_invitation_cancelled',
+                            'game_id': str(game.id),
+                            'from_user': user.username
+                        }
+                    }
+                )
+                # Also mark invitation as REJECTED or CANCELLED? 
+                # Let's keep it PENDING or mark as REJECTED for now to hide it.
+                invite.status = GameInvitationStatus.REJECTED
+                invite.save()
+
             return Response(GameSerializer(game).data)
 
         if game.status in [GameStatus.FINISHED, GameStatus.ABORTED]:

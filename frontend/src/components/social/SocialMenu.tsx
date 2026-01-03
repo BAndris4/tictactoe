@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFriendsList, type FriendUser } from "../../api/social";
+import { createGame, inviteFriend } from "../../api/game";
+import { useToast } from "../../context/ToastContext";
 
 export default function SocialMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [friends, setFriends] = useState<FriendUser[]>([]);
   const [loading, setLoading] = useState(false);
+  const [invitingId, setInvitingId] = useState<number | null>(null);
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -16,6 +20,21 @@ export default function SocialMenu() {
         .finally(() => setLoading(false));
     }
   }, [isOpen]);
+
+  const handleQuickInvite = async (friend: FriendUser) => {
+    try {
+      setInvitingId(friend.id);
+      const game = await createGame('custom');
+      await inviteFriend(game.id, friend.id);
+      showToast(`Invite sent to @${friend.username}!`, "success");
+      navigate(`/game/${game.id}`);
+      setIsOpen(false);
+    } catch (err) {
+      showToast("Failed to create invite", "error");
+    } finally {
+      setInvitingId(null);
+    }
+  };
 
   return (
     <div className="relative">
@@ -69,10 +88,11 @@ export default function SocialMenu() {
                       </div>
                     </div>
                     <button 
-                       onClick={() => alert(`Inviting @${friend.username}...`)}
-                       className="px-3 py-1.5 rounded-lg bg-deepblue text-white text-[10px] font-bold font-paytone opacity-0 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95 shadow-sm"
+                       onClick={() => handleQuickInvite(friend)}
+                       disabled={invitingId === friend.id}
+                       className="px-3 py-1.5 rounded-lg bg-deepblue text-white text-[10px] font-bold font-paytone opacity-0 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95 shadow-sm disabled:opacity-50"
                     >
-                      Invite
+                      {invitingId === friend.id ? "..." : "Invite"}
                     </button>
                   </div>
                 ))

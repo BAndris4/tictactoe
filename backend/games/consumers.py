@@ -152,3 +152,54 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def game_update(self, event):
         # Send message to WebSocket
         await self.send(text_data=json.dumps(event['data']))
+
+class NotificationConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        try:
+            # Extract token from query string
+            query_string = self.scope.get("query_string", b"").decode("utf-8")
+            query_params = parse_qs(query_string)
+            token = query_params.get("token", [None])[0]
+
+            if not token:
+                await self.close()
+                return
+                
+            try:
+                self.user = await self.validate_token(token)
+            except Exception:
+                await self.close()
+                return
+
+            self.user_group_name = f'user_notifications_{self.user.id}'
+
+            # Join user group
+            await self.channel_layer.group_add(
+                self.user_group_name,
+                self.channel_name
+            )
+
+            await self.accept()
+            
+        except Exception:
+            await self.close()
+
+    async def disconnect(self, close_code):
+        if hasattr(self, 'user_group_name'):
+            await self.channel_layer.group_discard(
+                self.user_group_name,
+                self.channel_name
+            )
+
+    async def receive(self, text_data):
+        pass # No receive logic needed for now
+
+    async def send_notification(self, event):
+        # Send message to WebSocket
+        await self.send(text_data=json.dumps(event['data']))
+
+    @database_sync_to_async
+    def validate_token(self, token):
+        if token.startswith("Bearer "):
+            token = token[len("Bearer "):]
+        return get_user_from_access_token(token)

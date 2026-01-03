@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useGame } from "../../context/GameContext";
 import { useAuth } from "../../hooks/useAuth";
 import { getFriendsList, type FriendUser } from "../../api/social";
-import { inviteFriend } from "../../api/game";
+import { inviteFriend, forfeitGame } from "../../api/game";
 
 export default function InviteModal() {
   const { gameId, status, players, error, setError } = useGame();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [friends, setFriends] = useState<FriendUser[]>([]);
   const [loadingFriends, setLoadingFriends] = useState(false);
   const [invitedIds, setInvitedIds] = useState<Set<number>>(new Set());
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (status === "waiting" && gameId) {
@@ -41,9 +44,36 @@ export default function InviteModal() {
     }
   };
 
+  const handleCancelGame = async () => {
+    try {
+      setCancelling(true);
+      await forfeitGame(gameId);
+      navigate("/");
+    } catch (err: any) {
+      setError("Failed to cancel game");
+      setCancelling(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-fadeScaleIn">
       <div className="w-full max-w-lg bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl border border-white text-center flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between mb-6">
+            <button 
+                onClick={handleCancelGame}
+                disabled={cancelling}
+                className="text-[10px] font-black tracking-widest text-coral hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
+            >
+                <div className="w-1.5 h-1.5 rounded-full bg-coral"></div>
+                {cancelling ? "CANCELLING..." : "CANCEL GAME"}
+            </button>
+            <div className="flex gap-1 items-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-sunshine animate-bounce [animation-delay:-0.3s]"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-sunshine animate-bounce [animation-delay:-0.15s]"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-sunshine animate-bounce"></span>
+            </div>
+        </div>
+
         <h2 className="text-3xl font-black font-paytone text-deepblue mb-2">
           Invite Someone
         </h2>
@@ -73,7 +103,7 @@ export default function InviteModal() {
         </div>
 
         {/* Friends List Section */}
-        <div className="flex-1 overflow-y-auto mb-8 pr-2 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
             {loadingFriends ? (
                 <div className="py-12 flex flex-col items-center gap-3 opacity-20">
                     <div className="w-8 h-8 border-4 border-slate-200 border-t-sunshine rounded-full animate-spin" />
@@ -114,19 +144,10 @@ export default function InviteModal() {
         </div>
 
         {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-500 text-xs font-bold border border-red-100 animate-shake">
+            <div className="mt-6 p-4 rounded-xl bg-red-50 text-red-500 text-xs font-bold border border-red-100 animate-shake">
                 {error}
             </div>
         )}
-
-        <div className="flex items-center justify-center gap-2 pt-4 border-t border-slate-50">
-            <div className="flex gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-sunshine animate-bounce [animation-delay:-0.3s]"></span>
-                <span className="w-1.5 h-1.5 rounded-full bg-sunshine animate-bounce [animation-delay:-0.15s]"></span>
-                <span className="w-1.5 h-1.5 rounded-full bg-sunshine animate-bounce"></span>
-            </div>
-            <span className="text-xs font-black text-deepblue/30 tracking-tight uppercase">Waiting for player...</span>
-        </div>
       </div>
     </div>
   );
