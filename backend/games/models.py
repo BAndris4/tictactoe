@@ -28,6 +28,9 @@ class Game(models.Model):
     move_count = models.IntegerField(default=0)
     last_move_at = models.DateTimeField(null=True, blank=True)
     winner = models.CharField(max_length=1, null=True, blank=True, help_text="Cache: X, O or D")
+    
+    player_x_xp_gained = models.IntegerField(null=True, blank=True)
+    player_o_xp_gained = models.IntegerField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     started_at = models.DateTimeField(null=True, blank=True)

@@ -35,3 +35,17 @@ class Friendship(models.Model):
 
     def __str__(self) -> str:
         return f"{self.from_user} -> {self.to_user} ({self.status})"
+
+class PlayerProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='player_profile')
+    level = models.IntegerField(default=1)
+    current_xp = models.IntegerField(default=0)
+    total_xp = models.IntegerField(default=0)
+    
+    def __str__(self) -> str:
+        return f"{self.user} (Lvl {self.level})"
+
+    @property
+    def can_play_ranked(self) -> bool:
+        return self.level >= 10
+

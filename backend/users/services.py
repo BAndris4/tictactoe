@@ -5,7 +5,7 @@ from typing import Optional
 from django.contrib.auth import authenticate, get_user_model
 from django.db import IntegrityError, transaction, models
 
-from .models import Friendship, FriendshipStatus
+from .models import Friendship, FriendshipStatus, PlayerProfile
 User = get_user_model()
 
 
@@ -16,6 +16,114 @@ class UsernameAlreadyTaken(Exception):
 class EmailAlreadyTaken(Exception):
     pass
 
+class LevelingService:
+
+    X_PARAM = 0.0063
+    Y_PARAM = 1.027
+
+    @classmethod
+    def get_xp_required_for_level(cls, level):
+        return min([int((level / cls.X_PARAM) ** cls.Y_PARAM), 5000])
+
+    @staticmethod
+    def calculate_stats_and_xp(game, player_char):
+        """Kiszámolja mennyi XP jár az adott meccsért"""
+        from games.models import GameMove
+        from games.logic import GameLogic
+        # 1. Lépések (DB-ből)
+        moves_count = GameMove.objects.filter(game=game, player=player_char).count()
+        
+        # 2. Mini tábla győzelmek (Logika segítségével újraszámolva)
+        mini_wins = 0
+        for i in range(9):
+            if GameLogic.check_subboard_winner(game.id, i) == player_char:
+                mini_wins += 1
+                
+        # XP Összegzés
+        xp = 0
+        xp += moves_count * 5
+        xp += mini_wins * 20      
+        
+        # Győzelem / Döntetlen / Vereség
+        if game.winner == player_char:
+            xp += 100
+        elif game.winner == 'D':
+            xp += 75
+        else:
+            xp += 50
+            
+        # Game Mode Adjustments
+        if game.mode == 'local':
+            xp = 0
+        elif game.mode == 'custom':
+            xp = int(xp / 4)
+            
+        return xp
+
+    @classmethod
+    def process_game_end(cls, game):
+        """
+        GameConsumer hívja meg, amikor game.status='finished'.
+        Visszatér egy dict-tel: { user_id: { xp_data... } }
+        """
+        results = {}
+        
+        # Tuple lista: (User objektum, Karakter 'X'/'O')
+        players = []
+        if game.player_x: players.append((game.player_x, 'X'))
+        if game.player_o: players.append((game.player_o, 'O'))
+
+        for user, char in players:
+            # Profil lekérése (vagy létrehozása, ha valamiért nincs - bár a signal miatt kéne lennie)
+            profile, _ = PlayerProfile.objects.get_or_create(user=user)
+            
+            with transaction.atomic():
+                # Friss XP kiszámolása
+                xp_gained = cls.calculate_stats_and_xp(game, char)
+                
+                # Hozzáadás
+                profile.current_xp += xp_gained
+                profile.total_xp += xp_gained
+                
+                # Mentés a Game modelbe
+                if char == 'X':
+                    game.player_x_xp_gained = xp_gained
+                else:
+                    game.player_o_xp_gained = xp_gained
+                # Note: We save game later or now? Since we loop, we should save only once or save inside the loop.
+                # Ideally save at the end, but we need to set fields. 
+                # Let's save the game object at the very end of the loop or update fields.
+                # Actually, django objects are mutable. We can just set it.
+                
+                # Szintlépés ellenőrzése (while ciklus, ha többet is lépne egyszerre)
+                leveled_up = False
+                while True:
+                    needed = cls.get_xp_required_for_level(profile.level)
+                    if profile.current_xp >= needed:
+                        profile.current_xp -= needed
+                        profile.level += 1
+                        leveled_up = True
+                    else:
+                        break
+                
+                profile.save()
+
+                # Eredmény összeállítása a frontendnek
+                results[user.id] = {
+                    'xp_gained': xp_gained,
+                    'new_level': profile.level,
+                    'leveled_up': leveled_up,
+                    'current_xp': profile.current_xp,
+                    'next_level_xp': cls.get_xp_required_for_level(profile.level),
+                    'xp_to_next': cls.get_xp_required_for_level(profile.level) - profile.current_xp,
+                    'can_play_ranked': profile.can_play_ranked
+                }
+        
+        # Save game changes (xp gained fields)
+        game.save()
+            
+        return results
+    
 
 def register_user(
     *,

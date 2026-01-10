@@ -99,6 +99,19 @@ export default function History() {
                                     }`}>
                                         {result}
                                     </div>
+                                    
+                                    {/* XP Display */}
+                                    {(game.player_x_xp_gained !== undefined && game.player_x_xp_gained !== null) && (
+                                        <div className="mt-1 text-right">
+                                            <span className={`text-xs font-bold ${
+                                                (isPlayerX ? game.player_x_xp_gained : game.player_o_xp_gained) === 0 
+                                                  ? "text-slate-400" 
+                                                  : "text-sunshine"
+                                            }`}>
+                                                +{(isPlayerX ? game.player_x_xp_gained : game.player_o_xp_gained) || 0} XP
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );

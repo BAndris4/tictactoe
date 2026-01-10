@@ -21,6 +21,8 @@ export interface Game {
   move_count: number;
   moves: GameMove[];
   created_at: string;
+  player_x_xp_gained?: number;
+  player_o_xp_gained?: number;
 }
 
 export const createGame = async (mode: 'local' | 'custom' = 'custom'): Promise<Game> => {

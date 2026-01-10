@@ -86,6 +86,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 
                 # If game finished, broadcast game_over
                 if game.status == 'finished':
+                    from users.services import LevelingService
+                    
+                    xp_results = await database_sync_to_async(LevelingService.process_game_end)(game)
                     await self.channel_layer.group_send(
                         self.room_group_name,
                         {
@@ -93,7 +96,8 @@ class GameConsumer(AsyncWebsocketConsumer):
                             'data': {
                                 'type': 'game_over',
                                 'winner': game.winner,
-                                'reason': 'board_full' if game.winner == 'D' else 'regular'
+                                'reason': 'board_full' if game.winner == 'D' else 'regular',
+                                'xp_results': xp_results 
                             }
                         }
                     )
