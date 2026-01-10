@@ -7,6 +7,7 @@ class GameMode(models.TextChoices):
     AI = 'ai', _('AI')
     LOCAL = 'local', _('Local')
     CUSTOM = 'custom', _('Custom')
+    UNRANKED = 'unranked', _('Unranked')
 
 class GameStatus(models.TextChoices):
     WAITING = 'waiting', _('Waiting')

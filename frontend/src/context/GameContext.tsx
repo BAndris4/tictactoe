@@ -37,8 +37,17 @@ interface GameContextType {
     xName?: string | null;
     oName?: string | null;
   };
+  // Matchmaking
   moves: any[];
   xpResults: any | null;
+
+  isSearching: boolean;
+  isSearchMinimized: boolean;
+  searchStartTime: number | null;
+  startSearch: () => void;
+  cancelSearch: () => void;
+  minimizeSearch: (minimized: boolean) => void;
+  matchFoundData: { gameId: string; opponent: string; opponentUsername?: string } | null;
 }
 
 export const GameContext = createContext<GameContextType | undefined>(
@@ -47,6 +56,15 @@ export const GameContext = createContext<GameContextType | undefined>(
 
 export function GameProvider({ children, gameId }: { children: ReactNode; gameId?: string }) {
   const { showToast } = useToast();
+  // We need navigation to redirect when match found
+  // But GameProvider might be inside Router. To be safe, let's use window.location or expect useNavigate from a hook if we were a component.
+  // Actually, context is usually inside Router, so we can't use useNavigate() here easily unless we wrap it.
+  // Wait, GameProvider is likely used inside App.tsx within Router.
+  // Let's import useNavigate from react-router-dom
+  const navigate = { push: (url: string) => window.location.href = url }; // Fallback? 
+  // Better: assume we can import it.
+  // import { useNavigate } from "react-router-dom"; -> We need to check imports.
+  
   const [currentPlayer, setCurrentPlayer] = useState<Player>("X");
   const [cells, setCells] = useState<(string | null)[][]>(
     Array(9).fill(null).map(() => Array(9).fill(null))
@@ -71,6 +89,74 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   const [error, setError] = useState<string | null>(null);
   const [flash, setFlash] = useState(false);
   const [shake, setShake] = useState(false);
+
+  // Matchmaking State
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSearchMinimized, setIsSearchMinimized] = useState(false);
+  const [searchStartTime, setSearchStartTime] = useState<number | null>(null);
+  const [matchmakingSocket, setMatchmakingSocket] = useState<WebSocket | null>(null);
+  
+  // Match Found State for Modal
+  const [matchFoundData, setMatchFoundData] = useState<{ gameId: string; opponent: string; opponentUsername?: string } | null>(null);
+
+  // Matchmaking Effect
+  useEffect(() => {
+     if (isSearching && !matchmakingSocket) {
+         const token = getAuthToken();
+         const wsUrl = `ws://localhost:8000/ws/matchmaking/${token ? `?token=${token}` : ""}`;
+         const ws = new WebSocket(wsUrl);
+         
+         ws.onopen = () => {
+             console.log("Matchmaking connected");
+             ws.send(JSON.stringify({ action: "search" }));
+         };
+         
+         ws.onmessage = (event) => {
+             const data = JSON.parse(event.data);
+             if (data.status === "match_found") {
+                 console.log("Match found!", data);
+                 setIsSearching(false);
+                 setMatchmakingSocket(null);
+                 ws.close();
+                 
+                 // Show Modal first, do NOT navigate yet
+                 setMatchFoundData({
+                     gameId: data.game_id,
+                     opponent: data.opponent,
+                     opponentUsername: data.opponent_username
+                 });
+             }
+         };
+         
+         ws.onclose = () => {
+             console.log("Matchmaking disconnected");
+         }
+
+         setMatchmakingSocket(ws);
+     }
+  }, [isSearching]);
+
+  const startSearch = () => {
+      setIsSearching(true);
+      setSearchStartTime(Date.now());
+      setIsSearchMinimized(false);
+      setMatchFoundData(null); // Clear previous match data
+  };
+
+  const cancelSearch = () => {
+      setIsSearching(false);
+      setSearchStartTime(null);
+      if (matchmakingSocket) {
+          matchmakingSocket.send(JSON.stringify({ action: "cancel" }));
+          matchmakingSocket.close();
+          setMatchmakingSocket(null);
+      }
+  };
+
+  const minimizeSearch = (minimized: boolean) => {
+      setIsSearchMinimized(minimized);
+  };
+
 
   // WebSocket ref
   const ws = useRef<WebSocket | null>(null);
@@ -339,7 +425,14 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         moves,
         xpResults,
         error,
-        setError
+        setError,
+        isSearching,
+        isSearchMinimized,
+        searchStartTime,
+        startSearch,
+        cancelSearch,
+        minimizeSearch,
+        matchFoundData
       }}
 
     >
