@@ -59,14 +59,6 @@ export const GameContext = createContext<GameContextType | undefined>(
 
 export function GameProvider({ children, gameId }: { children: ReactNode; gameId?: string }) {
   const { showToast } = useToast();
-  // We need navigation to redirect when match found
-  // But GameProvider might be inside Router. To be safe, let's use window.location or expect useNavigate from a hook if we were a component.
-  // Actually, context is usually inside Router, so we can't use useNavigate() here easily unless we wrap it.
-  // Wait, GameProvider is likely used inside App.tsx within Router.
-  // Let's import useNavigate from react-router-dom
-  const navigate = { push: (url: string) => window.location.href = url }; // Fallback? 
-  // Better: assume we can import it.
-  // import { useNavigate } from "react-router-dom"; -> We need to check imports.
   
   const [currentPlayer, setCurrentPlayer] = useState<Player>("X");
   const [cells, setCells] = useState<(string | null)[][]>(
@@ -277,15 +269,6 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
           triggerShake();
           triggerFlash();
       } else if (data.type === "player_status") {
-          const update = data // The data IS the message if it was flattened, spread
-          // Wait, let's verify consumer again.
-          // consumer: await self.send(text_data=json.dumps(event['data']))
-          // event['data'] = { 'type': 'player_status', 'sender': ..., 'status': ... }
-          // So data.type is indeed "player_status".
-          
-          // Filter out my own messages
-          // details in players: { x: ID, o: ID }
-          // currentPlayer is 'X' or 'O'.
           
           const senderId = Number(data.sender);
           
@@ -294,7 +277,6 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
           else if (currentPlayer === 'O') myId = Number(players.o);
           
           if (myId && senderId === myId) {
-              // It's me, ignore
               return;
           }
           

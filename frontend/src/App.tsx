@@ -28,6 +28,7 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/register" element={<Register />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/tutorial" element={<Tutorial />} />
             </Routes>
           </BrowserRouter>
         </GameProvider>

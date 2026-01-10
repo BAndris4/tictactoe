@@ -2,12 +2,11 @@ import { useEffect, useState } from "react";
 import { useGame } from "../context/GameContext";
 
 export default function MatchmakingWidget() {
-  const { isSearching, isSearchMinimized, minimizeSearch, cancelSearch, searchStartTime } = useGame();
+  const { isSearching, isSearchMinimized, cancelSearch, searchStartTime } = useGame();
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
     if (isSearching && searchStartTime) {
-        // Sync elapsed time correctly even if component re-mounts
         setElapsed(Math.floor((Date.now() - searchStartTime) / 1000));
         
         const interval = setInterval(() => {
