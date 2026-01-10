@@ -47,7 +47,10 @@ interface GameContextType {
   startSearch: () => void;
   cancelSearch: () => void;
   minimizeSearch: (minimized: boolean) => void;
+
   matchFoundData: { gameId: string; opponent: string; opponentUsername?: string } | null;
+  opponentStatus: 'active' | 'away';
+  updatePlayerStatus: (status: 'active' | 'away') => void;
 }
 
 export const GameContext = createContext<GameContextType | undefined>(
@@ -98,6 +101,8 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   
   // Match Found State for Modal
   const [matchFoundData, setMatchFoundData] = useState<{ gameId: string; opponent: string; opponentUsername?: string } | null>(null);
+  
+  const [opponentStatus, setOpponentStatus] = useState<'active' | 'away'>('active');
 
   // Matchmaking Effect
   useEffect(() => {
@@ -213,6 +218,10 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
 
     socket.onopen = () => {
       console.log("WS Connected");
+      socket.send(JSON.stringify({
+          action: 'status_update',
+          status: 'active'
+      }));
     };
 
     socket.onmessage = (event) => {
@@ -265,11 +274,31 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
       } else if (data.type === "game_invitation_rejected") {
           showToast(`${data.user} declined your invitation.`, "warning");
           triggerShake();
-      } else if (data.type === "error") {
-          console.error("WS Error:", data.message);
-          showToast(data.message, "error");
           triggerShake();
           triggerFlash();
+      } else if (data.type === "player_status") {
+          const update = data // The data IS the message if it was flattened, spread
+          // Wait, let's verify consumer again.
+          // consumer: await self.send(text_data=json.dumps(event['data']))
+          // event['data'] = { 'type': 'player_status', 'sender': ..., 'status': ... }
+          // So data.type is indeed "player_status".
+          
+          // Filter out my own messages
+          // details in players: { x: ID, o: ID }
+          // currentPlayer is 'X' or 'O'.
+          
+          const senderId = Number(data.sender);
+          
+          let myId: number | undefined;
+          if (currentPlayer === 'X') myId = Number(players.x);
+          else if (currentPlayer === 'O') myId = Number(players.o);
+          
+          if (myId && senderId === myId) {
+              // It's me, ignore
+              return;
+          }
+          
+          setOpponentStatus(data.status);
       }
     };
 
@@ -403,6 +432,15 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
     }
   };
 
+  const updatePlayerStatus = (status: 'active' | 'away') => {
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+          ws.current.send(JSON.stringify({
+              action: 'status_update',
+              status: status
+          }));
+      }
+  };
+
   return (
     <GameContext.Provider
       value={{
@@ -432,7 +470,9 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         startSearch,
         cancelSearch,
         minimizeSearch,
-        matchFoundData
+        matchFoundData,
+        opponentStatus,
+        updatePlayerStatus
       }}
 
     >

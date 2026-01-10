@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Table from "../components/game/board/Table";
 import { GameProvider, useGame } from "../context/GameContext";
@@ -11,6 +11,7 @@ import { forfeitGame } from "../api/game";
 import { useAuth } from "../hooks/useAuth";
 import PlayerCard from "../components/game/PlayerCard";
 import { useGameAutoJoin } from "../hooks/useGameAutoJoin";
+import { getAuthToken } from "../hooks/useAuth";
 import GameSidebar from "../components/game/GameSidebar";
 
 function GameContent() {
@@ -33,6 +34,73 @@ function GameContent() {
 
   const isLocalGame = !game.gameId || game.mode === 'local';
   
+  // Ref to track game status for unmount cleanup
+  const gameStatusRef = useRef(game.status);
+  const gameIdRef = useRef(game.gameId);
+  const isLocalRef = useRef(isLocalGame);
+  
+  // Update refs when they change
+  useEffect(() => {
+      gameStatusRef.current = game.status;
+      gameIdRef.current = game.gameId;
+      isLocalRef.current = isLocalGame;
+  }, [game.status, game.gameId, isLocalGame]);
+
+  // 3. Auto-forfeit on tab switch (10s) and Status Updates
+  useEffect(() => {
+    if (!game.gameId || game.status !== 'active' || isLocalGame) return;
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        console.log("Tab hidden. Starting auto-forfeit timer (10s)...");
+        game.updatePlayerStatus('away'); 
+        
+        timeoutId = setTimeout(() => {
+          console.log("Auto-forfeiting due to inactivity...");
+          forfeitGame(game.gameId!).catch(console.error);
+        }, 10000);
+      } else {
+        console.log("Tab visible. Clearing auto-forfeit timer.");
+        game.updatePlayerStatus('active'); 
+        clearTimeout(timeoutId);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      clearTimeout(timeoutId);
+    };
+  }, [game.gameId, game.status, isLocalGame]);
+
+  // 4. Handle "Back Button" / Unmount Forfeit
+  useEffect(() => {
+    return () => {
+        // This runs on component unmount
+        if (isLocalRef.current) return;
+        
+        // If game is technically active when we leave
+        if (gameStatusRef.current === 'active' && gameIdRef.current) {
+            console.log("Unmounting active game - triggering forfeit with keepalive");
+            
+            const token = getAuthToken();
+            const gameId = gameIdRef.current;
+            
+            // Use fetch with keepalive which outlives the page context
+            fetch(`http://localhost:8000/api/games/${gameId}/forfeit/`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                keepalive: true
+            }).catch(err => console.error("Unmount forfeit failed", err));
+        }
+    };
+  }, []);
+
   const { me, opponent } = useMemo(() => {
     if (!user || !game.players.x) return { me: null, opponent: null };
     const isX = String(game.players.x) === String(user.id);
@@ -119,6 +187,14 @@ function GameContent() {
           <div className="flex-shrink-0">
             <PlayerCard player={me} isMe isLocalGame={isLocalGame} />
           </div>
+          
+           {/* Opponent Away Warning */}
+           {game.opponentStatus === 'away' && game.status === 'active' && !isLocalGame && (
+              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-yellow-500/90 text-white px-4 py-2 rounded-full shadow-lg z-50 animate-pulse font-bold flex items-center gap-2">
+                  <span className="text-xl">⚠️</span>
+                  Opponent is away! Auto-win in 10s...
+              </div>
+           )}
         </div>
 
         {/* Sidebar */}

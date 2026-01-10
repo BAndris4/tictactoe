@@ -107,6 +107,25 @@ class GameConsumer(AsyncWebsocketConsumer):
                     'type': 'error',
                     'message': str(e)
                 }))
+        
+        elif action == 'status_update':
+            status_val = text_data_json.get('status') # 'active' or 'away'
+            
+            # Relay to room
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'player_status_update',
+                    'data': {
+                        'type': 'player_status',
+                        'sender': self.user.id,
+                        'status': status_val
+                    }
+                }
+            )
+
+    async def player_status_update(self, event):
+        await self.send(text_data=json.dumps(event['data']))
 
     @database_sync_to_async
     def validate_token(self, token):

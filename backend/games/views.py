@@ -254,6 +254,10 @@ class ForfeitGameView(APIView):
         game.finished_at = timezone.now()
         game.save()
         
+        # Calculate XP
+        from users.services import LevelingService
+        xp_results = LevelingService.process_game_end(game)
+        
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             f'game_{game.id}',
@@ -262,7 +266,8 @@ class ForfeitGameView(APIView):
                 'data': {
                     'type': 'game_over',
                     'winner': winner_symbol,
-                    'reason': 'forfeit'
+                    'reason': 'forfeit',
+                    'xp_results': xp_results
                 }
             }
         )
