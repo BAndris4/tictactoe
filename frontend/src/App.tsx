@@ -11,6 +11,7 @@ import { ToastProvider } from "./context/ToastContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { GameProvider } from "./context/GameContext";
 import MatchFoundModal from "./components/modals/MatchFoundModal";
+import Tutorial from "./views/Tutorial";
 
 function App() {
   return (
