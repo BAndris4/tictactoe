@@ -9,24 +9,28 @@ import Profile from "./views/Profile";
 
 import { ToastProvider } from "./context/ToastContext";
 import { NotificationProvider } from "./context/NotificationContext";
+import { GameProvider } from "./context/GameContext";
+import MatchFoundModal from "./components/modals/MatchFoundModal";
 import Tutorial from "./views/Tutorial";
 
 function App() {
   return (
     <ToastProvider>
       <NotificationProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/game/:id?" element={<Game />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/social" element={<Social />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/tutorial" element={<Tutorial />} />
-          </Routes>
-        </BrowserRouter>
+        <GameProvider>
+          <BrowserRouter>
+            <MatchFoundModal />
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/game/:id?" element={<Game />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/social" element={<Social />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
+            </Routes>
+          </BrowserRouter>
+        </GameProvider>
       </NotificationProvider>
     </ToastProvider>
   );

@@ -37,8 +37,20 @@ interface GameContextType {
     xName?: string | null;
     oName?: string | null;
   };
+  // Matchmaking
   moves: any[];
   xpResults: any | null;
+
+  isSearching: boolean;
+  isSearchMinimized: boolean;
+  searchStartTime: number | null;
+  startSearch: () => void;
+  cancelSearch: () => void;
+  minimizeSearch: (minimized: boolean) => void;
+
+  matchFoundData: { gameId: string; opponent: string; opponentUsername?: string } | null;
+  opponentStatus: 'active' | 'away';
+  updatePlayerStatus: (status: 'active' | 'away') => void;
 }
 
 export const GameContext = createContext<GameContextType | undefined>(
@@ -47,6 +59,15 @@ export const GameContext = createContext<GameContextType | undefined>(
 
 export function GameProvider({ children, gameId }: { children: ReactNode; gameId?: string }) {
   const { showToast } = useToast();
+  // We need navigation to redirect when match found
+  // But GameProvider might be inside Router. To be safe, let's use window.location or expect useNavigate from a hook if we were a component.
+  // Actually, context is usually inside Router, so we can't use useNavigate() here easily unless we wrap it.
+  // Wait, GameProvider is likely used inside App.tsx within Router.
+  // Let's import useNavigate from react-router-dom
+  const navigate = { push: (url: string) => window.location.href = url }; // Fallback? 
+  // Better: assume we can import it.
+  // import { useNavigate } from "react-router-dom"; -> We need to check imports.
+  
   const [currentPlayer, setCurrentPlayer] = useState<Player>("X");
   const [cells, setCells] = useState<(string | null)[][]>(
     Array(9).fill(null).map(() => Array(9).fill(null))
@@ -71,6 +92,76 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   const [error, setError] = useState<string | null>(null);
   const [flash, setFlash] = useState(false);
   const [shake, setShake] = useState(false);
+
+  // Matchmaking State
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSearchMinimized, setIsSearchMinimized] = useState(false);
+  const [searchStartTime, setSearchStartTime] = useState<number | null>(null);
+  const [matchmakingSocket, setMatchmakingSocket] = useState<WebSocket | null>(null);
+  
+  // Match Found State for Modal
+  const [matchFoundData, setMatchFoundData] = useState<{ gameId: string; opponent: string; opponentUsername?: string } | null>(null);
+  
+  const [opponentStatus, setOpponentStatus] = useState<'active' | 'away'>('active');
+
+  // Matchmaking Effect
+  useEffect(() => {
+     if (isSearching && !matchmakingSocket) {
+         const token = getAuthToken();
+         const wsUrl = `ws://localhost:8000/ws/matchmaking/${token ? `?token=${token}` : ""}`;
+         const ws = new WebSocket(wsUrl);
+         
+         ws.onopen = () => {
+             console.log("Matchmaking connected");
+             ws.send(JSON.stringify({ action: "search" }));
+         };
+         
+         ws.onmessage = (event) => {
+             const data = JSON.parse(event.data);
+             if (data.status === "match_found") {
+                 console.log("Match found!", data);
+                 setIsSearching(false);
+                 setMatchmakingSocket(null);
+                 ws.close();
+                 
+                 // Show Modal first, do NOT navigate yet
+                 setMatchFoundData({
+                     gameId: data.game_id,
+                     opponent: data.opponent,
+                     opponentUsername: data.opponent_username
+                 });
+             }
+         };
+         
+         ws.onclose = () => {
+             console.log("Matchmaking disconnected");
+         }
+
+         setMatchmakingSocket(ws);
+     }
+  }, [isSearching]);
+
+  const startSearch = () => {
+      setIsSearching(true);
+      setSearchStartTime(Date.now());
+      setIsSearchMinimized(false);
+      setMatchFoundData(null); // Clear previous match data
+  };
+
+  const cancelSearch = () => {
+      setIsSearching(false);
+      setSearchStartTime(null);
+      if (matchmakingSocket) {
+          matchmakingSocket.send(JSON.stringify({ action: "cancel" }));
+          matchmakingSocket.close();
+          setMatchmakingSocket(null);
+      }
+  };
+
+  const minimizeSearch = (minimized: boolean) => {
+      setIsSearchMinimized(minimized);
+  };
+
 
   // WebSocket ref
   const ws = useRef<WebSocket | null>(null);
@@ -127,6 +218,10 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
 
     socket.onopen = () => {
       console.log("WS Connected");
+      socket.send(JSON.stringify({
+          action: 'status_update',
+          status: 'active'
+      }));
     };
 
     socket.onmessage = (event) => {
@@ -179,11 +274,31 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
       } else if (data.type === "game_invitation_rejected") {
           showToast(`${data.user} declined your invitation.`, "warning");
           triggerShake();
-      } else if (data.type === "error") {
-          console.error("WS Error:", data.message);
-          showToast(data.message, "error");
           triggerShake();
           triggerFlash();
+      } else if (data.type === "player_status") {
+          const update = data // The data IS the message if it was flattened, spread
+          // Wait, let's verify consumer again.
+          // consumer: await self.send(text_data=json.dumps(event['data']))
+          // event['data'] = { 'type': 'player_status', 'sender': ..., 'status': ... }
+          // So data.type is indeed "player_status".
+          
+          // Filter out my own messages
+          // details in players: { x: ID, o: ID }
+          // currentPlayer is 'X' or 'O'.
+          
+          const senderId = Number(data.sender);
+          
+          let myId: number | undefined;
+          if (currentPlayer === 'X') myId = Number(players.x);
+          else if (currentPlayer === 'O') myId = Number(players.o);
+          
+          if (myId && senderId === myId) {
+              // It's me, ignore
+              return;
+          }
+          
+          setOpponentStatus(data.status);
       }
     };
 
@@ -317,6 +432,15 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
     }
   };
 
+  const updatePlayerStatus = (status: 'active' | 'away') => {
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+          ws.current.send(JSON.stringify({
+              action: 'status_update',
+              status: status
+          }));
+      }
+  };
+
   return (
     <GameContext.Provider
       value={{
@@ -339,7 +463,16 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         moves,
         xpResults,
         error,
-        setError
+        setError,
+        isSearching,
+        isSearchMinimized,
+        searchStartTime,
+        startSearch,
+        cancelSearch,
+        minimizeSearch,
+        matchFoundData,
+        opponentStatus,
+        updatePlayerStatus
       }}
 
     >
