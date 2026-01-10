@@ -7,6 +7,8 @@ interface LandingProfileCardProps {
   onLogout: () => void;
 }
 
+import CircularProgressBar from "./common/CircularProgressBar";
+
 export default function LandingProfileCard({
   user,
   onEdit,
@@ -20,20 +22,34 @@ export default function LandingProfileCard({
     return user.username.substring(0, 2).toUpperCase();
   };
 
+  // Safe access to profile data (in case UserProfile type in mockProfile/auth isn't fully updated yet)
+  const level = (user as any).profile?.level || 1;
+  const currentXp = (user as any).profile?.current_xp || 0;
+  const nextLevelXp = (user as any).profile?.next_level_xp || 1000;
+  
+  const percentage = Math.min((currentXp / nextLevelXp) * 100, 100);
+
   return (
     <div className="md:col-span-1 md:row-span-2 bg-white rounded-[2rem] p-6 flex flex-col items-center justify-between group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-lg shadow-deepblue/5 border border-white h-full relative overflow-hidden">
       <div
         className="flex flex-col items-center text-center mt-8 cursor-pointer"
         onClick={onEdit}
       >
-        <div className="relative">
-          <div className="w-28 h-28 rounded-full bg-slate-50 border-4 border-white shadow-[0_0_20px_rgba(0,0,0,0.05)] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform text-4xl font-extrabold text-deepblue font-paytone">
-            {getInitials()}
-          </div>
-          <div className="absolute top-0 right-0 bg-mint text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white shadow-sm font-paytone tracking-wider">
-            LVL 1
-          </div>
+        <div className="relative mb-4 group-hover:scale-105 transition-transform duration-300">
+             <CircularProgressBar
+                 percentage={percentage}
+                 level={level}
+                 currentXp={currentXp}
+                 nextLevelXp={nextLevelXp}
+                 size={135}
+                 strokeWidth={5}
+             >
+                  <div className="w-full h-full flex items-center justify-center text-4xl font-extrabold text-deepblue font-paytone bg-slate-50">
+                     {getInitials()}
+                  </div>
+             </CircularProgressBar>
         </div>
+
         <h2 className="text-xl font-bold text-deepblue font-paytone tracking-tight">
           {user.firstName} {user.lastName}
         </h2>

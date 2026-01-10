@@ -52,6 +52,12 @@ class LevelingService:
         else:
             xp += 50
             
+        # Game Mode Adjustments
+        if game.mode == 'local':
+            xp = 0
+        elif game.mode == 'custom':
+            xp = int(xp / 4)
+            
         return xp
 
     @classmethod
@@ -79,6 +85,16 @@ class LevelingService:
                 profile.current_xp += xp_gained
                 profile.total_xp += xp_gained
                 
+                # Mentés a Game modelbe
+                if char == 'X':
+                    game.player_x_xp_gained = xp_gained
+                else:
+                    game.player_o_xp_gained = xp_gained
+                # Note: We save game later or now? Since we loop, we should save only once or save inside the loop.
+                # Ideally save at the end, but we need to set fields. 
+                # Let's save the game object at the very end of the loop or update fields.
+                # Actually, django objects are mutable. We can just set it.
+                
                 # Szintlépés ellenőrzése (while ciklus, ha többet is lépne egyszerre)
                 leveled_up = False
                 while True:
@@ -97,9 +113,14 @@ class LevelingService:
                     'xp_gained': xp_gained,
                     'new_level': profile.level,
                     'leveled_up': leveled_up,
+                    'current_xp': profile.current_xp,
+                    'next_level_xp': cls.get_xp_required_for_level(profile.level),
                     'xp_to_next': cls.get_xp_required_for_level(profile.level) - profile.current_xp,
                     'can_play_ranked': profile.can_play_ranked
                 }
+        
+        # Save game changes (xp gained fields)
+        game.save()
             
         return results
     

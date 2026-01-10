@@ -16,6 +16,11 @@ export interface UserProfile {
   phoneNumber?: string;
   country?: string;
   history: MatchHistoryItem[];
+  profile?: {
+      level: number;
+      current_xp: number;
+      next_level_xp: number;
+  };
 }
 
 export const mockUser: UserProfile = {

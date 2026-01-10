@@ -38,6 +38,7 @@ interface GameContextType {
     oName?: string | null;
   };
   moves: any[];
+  xpResults: any | null;
 }
 
 export const GameContext = createContext<GameContextType | undefined>(
@@ -65,6 +66,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
     oName?: string | null;
   }>({});
   const [moves, setMoves] = useState<any[]>([]);
+  const [xpResults, setXpResults] = useState<any | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [flash, setFlash] = useState(false);
@@ -169,6 +171,10 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
               setWinner(data.data.winner);
           } else if (data.winner) {
               setWinner(data.winner);
+          }
+          if (data.xp_results) {
+              console.log("Setting XP Results:", data.xp_results);
+              setXpResults(data.xp_results);
           }
       } else if (data.type === "game_invitation_rejected") {
           showToast(`${data.user} declined your invitation.`, "warning");
@@ -331,6 +337,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         status,
         players,
         moves,
+        xpResults,
         error,
         setError
       }}

@@ -15,6 +15,8 @@ class RegisterSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -24,7 +26,20 @@ class UserSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "phone_number",
+            "profile"
         ]
+
+    def get_profile(self, obj):
+        # Ensure profile exists
+        from ..models import PlayerProfile
+        from ..services import LevelingService
+        profile, _ = PlayerProfile.objects.get_or_create(user=obj)
+        
+        return {
+            "level": profile.level,
+            "current_xp": profile.current_xp,
+            "next_level_xp": LevelingService.get_xp_required_for_level(profile.level)
+        }
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()

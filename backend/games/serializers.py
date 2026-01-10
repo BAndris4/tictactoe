@@ -36,7 +36,8 @@ class GameSerializer(serializers.ModelSerializer):
             'player_x', 'player_o',
             'player_x_name', 'player_o_name',
             'current_turn', 'next_board_constraint', 
-            'winner', 'moves', 'created_at'
+            'winner', 'moves', 'created_at',
+            'player_x_xp_gained', 'player_o_xp_gained'
         ]
 
     def get_player_x_name(self, obj):
