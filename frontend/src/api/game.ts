@@ -10,7 +10,7 @@ export interface GameMove {
 
 export interface Game {
   id: string;
-  mode: 'local' | 'custom' | 'ai';
+  mode: 'local' | 'custom' | 'ai' | 'ranked' | 'unranked';
   status: 'waiting' | 'active' | 'finished' | 'aborted';
   player_x: string | number;
   player_o: string | number | null;
@@ -23,6 +23,8 @@ export interface Game {
   created_at: string;
   player_x_xp_gained?: number;
   player_o_xp_gained?: number;
+  player_x_lp_change?: number;
+  player_o_lp_change?: number;
 }
 
 export const createGame = async (mode: 'local' | 'custom' = 'custom'): Promise<Game> => {

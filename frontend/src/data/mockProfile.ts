@@ -1,10 +1,12 @@
 export interface MatchHistoryItem {
   id: number;
   opponent: string;
+  opponent_username?: string;
   result: "WIN" | "LOSS" | "DRAW";
   date: string;
-  lpChange: number;
-  mode?: "Ranked" | "Unranked" | "Local";
+  lp_change?: number;
+  xp_gained?: number;
+  mode: "ranked" | "unranked" | "local" | "ai" | "custom";
 }
 
 export interface UserProfile {
@@ -20,6 +22,11 @@ export interface UserProfile {
       level: number;
       current_xp: number;
       next_level_xp: number;
+      mmr: number | null;
+      placement_games_played: number;
+      total_lp: number;
+      rank: string;
+      lp_in_division: number;
   };
 }
 
@@ -36,28 +43,42 @@ export const mockUser: UserProfile = {
       opponent: "SpeedDemon",
       result: "WIN",
       date: "2h ago",
-      lpChange: 25,
+      lp_change: 25,
+      mode: "ranked"
     },
     {
       id: 2,
       opponent: "TactixMaster",
       result: "LOSS",
       date: "5h ago",
-      lpChange: -18,
+      lp_change: -18,
+      mode: "ranked"
     },
     {
       id: 3,
       opponent: "NoobSlayer",
       result: "WIN",
       date: "1d ago",
-      lpChange: 22,
+      lp_change: 22,
+      mode: "ranked"
     },
     {
       id: 4,
       opponent: "DrawKing",
       result: "DRAW",
       date: "2d ago",
-      lpChange: 5,
+      lp_change: 5,
+      mode: "unranked"
     },
   ],
+  profile: {
+      level: 5,
+      current_xp: 450,
+      next_level_xp: 1000,
+      mmr: 1000,
+      placement_games_played: 10,
+      total_lp: 235,
+      rank: "Bronze 3",
+      lp_in_division: 35
+  }
 };

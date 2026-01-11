@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import BackgroundShapes from "../components/BackgroundShapes";
 import UnrankedIconRaw from "../assets/unranked.svg?raw";
 import AiIconRaw from "../assets/ai.svg?raw";
@@ -13,12 +13,14 @@ import { useAuth } from "../hooks/useAuth";
 
 import MatchmakingModal from "../components/modals/MatchmakingModal";
 import MatchmakingWidget from "../components/MatchmakingWidget";
+import RankedOverviewModal from "../components/modals/RankedOverviewModal";
 import { useGame } from "../context/GameContext";
 
 export default function Landing() {
   const navigate = useNavigate();
   const { user, loading, logout } = useAuth();
   const { startSearch } = useGame();
+  const [showRankedOverview, setShowRankedOverview] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -33,6 +35,14 @@ export default function Landing() {
       <BackgroundShapes />
       <MatchmakingModal />
       <MatchmakingWidget />
+      <RankedOverviewModal 
+        isOpen={showRankedOverview} 
+        onClose={() => setShowRankedOverview(false)}
+        onFindGame={() => {
+          setShowRankedOverview(false);
+          startSearch('ranked');
+        }}
+      />
       <TopBar />
 
       <div className="relative z-10 w-full max-w-7xl mx-auto h-full grid grid-cols-1 md:grid-cols-4 grid-rows-[auto_auto_auto] md:grid-rows-[minmax(300px,auto)_auto] gap-4 md:gap-6 animate-fadeScaleIn">
@@ -59,7 +69,7 @@ export default function Landing() {
         />
 
 
-        <RankedGameCard onClick={() => {}} />
+        <RankedGameCard user={user} onClick={() => setShowRankedOverview(true)} />
 
 
         <GameModeCard

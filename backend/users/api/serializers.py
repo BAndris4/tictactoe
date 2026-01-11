@@ -35,10 +35,25 @@ class UserSerializer(serializers.ModelSerializer):
         from ..services import LevelingService
         profile, _ = PlayerProfile.objects.get_or_create(user=obj)
         
+        from ..ranking_service import RankingService
+        
+        if profile.total_lp is None:
+            rank_name = "Unranked"
+            lp_in_division = 0
+            total_lp = 0
+        else:
+            rank_name, lp_in_division = RankingService.get_rank_from_lp(profile.total_lp)
+            total_lp = profile.total_lp
+        
         return {
             "level": profile.level,
             "current_xp": profile.current_xp,
-            "next_level_xp": LevelingService.get_xp_required_for_level(profile.level)
+            "next_level_xp": LevelingService.get_xp_required_for_level(profile.level),
+            "mmr": profile.mmr, # Can be None
+            "placement_games_played": profile.placement_games_played,
+            "total_lp": total_lp,
+            "rank": rank_name,
+            "lp_in_division": lp_in_division
         }
 
 class LoginSerializer(serializers.Serializer):

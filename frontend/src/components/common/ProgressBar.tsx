@@ -45,17 +45,17 @@ export default function ProgressBar({ currentXp, nextLevelXp, xpGained, level, l
   }, [percentage]);
 
   return (
-    <div className="w-full max-w-xs mx-auto mt-4">
-      <div className="flex justify-between items-end mb-1 px-1">
-        <span className="text-sm font-bold text-deepblue/70 font-paytone">
+    <div className="w-full max-w-sm mx-auto mt-4">
+      <div className="flex justify-between items-end mb-2 px-1">
+        <span className="text-lg font-bold text-deepblue/80 font-paytone">
           Level {level}
         </span>
-        <span className="text-xs font-semibold text-slate-500">
+        <span className="text-sm font-semibold text-slate-500">
           {currentXp} <span className="text-slate-400">/ {nextLevelXp} XP</span>
         </span>
       </div>
       
-      <div className="relative h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner border border-slate-200">
+      <div className="relative h-5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner border border-slate-200">
          {/* 1. Previous XP (Base) - Fill immediately or animate? 
              Let's fill immediately to show the "starting point". 
          */}
@@ -83,16 +83,16 @@ export default function ProgressBar({ currentXp, nextLevelXp, xpGained, level, l
       </div>
       
       {leveledUp && (
-          <div className="text-center mt-2 animate-bounce">
-              <span className="text-xs font-bold text-coral uppercase tracking-widest bg-coral/10 px-2 py-1 rounded">
-                  Level Up!
+          <div className="text-center mt-3 animate-bounce">
+              <span className="text-sm font-black text-coral uppercase tracking-widest bg-coral/10 px-3 py-1.5 rounded-full shadow-sm">
+                  LEVEL UP!
               </span>
           </div>
       )}
       
-      <div className="text-center mt-2">
-           <span className="text-sm font-medium text-emerald-600">
-               +{xpGained} XP Gained
+      <div className="text-center mt-3">
+           <span className="text-lg font-black text-emerald-600">
+               +{xpGained} XP
            </span>
       </div>
     </div>

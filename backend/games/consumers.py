@@ -17,11 +17,11 @@ class GameConsumer(AsyncWebsocketConsumer):
             query_string = self.scope.get("query_string", b"").decode("utf-8")
             query_params = parse_qs(query_string)
             token = query_params.get("token", [None])[0]
-
+            
             if not token:
                 await self.close()
                 return
-                
+
             try:
                 self.user = await self.validate_token(token)
             except Exception: # TokenExpired or InvalidToken
@@ -30,10 +30,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 
             # Check if game exists
             try:
-                 self.game = await self.get_game(self.game_id)
+                self.game = await self.get_game(self.game_id)
             except Game.DoesNotExist:
-                 await self.close()
-                 return
+                await self.close()
+                return
 
             # Join room group
             await self.channel_layer.group_add(
@@ -42,7 +42,6 @@ class GameConsumer(AsyncWebsocketConsumer):
             )
 
             await self.accept()
-            
         except Exception:
             await self.close()
 
@@ -61,11 +60,11 @@ class GameConsumer(AsyncWebsocketConsumer):
         if action == 'move':
             cell = text_data_json.get('cell')
             subcell = text_data_json.get('subcell')
-            
+
             try:
                 # Process move
                 move, game = await self.process_move(cell, subcell)
-                
+
                 # Broadcast update
                 await self.channel_layer.group_send(
                     self.room_group_name,
@@ -86,31 +85,60 @@ class GameConsumer(AsyncWebsocketConsumer):
 
                 # If game finished, broadcast game_over
                 if game.status == 'finished':
-                    from users.services import LevelingService
+                    xp_results = {}
+                    ranking_results = {}
                     
-                    xp_results = await database_sync_to_async(LevelingService.process_game_end)(game)
+                    try:
+                        from users.services import LevelingService
+                        
+                        # Process Leveling (XP) - This runs for all modes
+                        try:
+                            xp_results = await database_sync_to_async(LevelingService.process_game_end)(game)
+                        except Exception as e:
+                             print(f"Error processing XP results: {e}")
+
+                        # Process Ranking (MMR & LP) - ONLY if game is rated (ranked mode)
+                        if game.rated:
+                            from users.ranking_service import RankingService
+                            try:
+                                ranking_results = await database_sync_to_async(RankingService.process_game_end)(game)
+                            except Exception as e:
+                                print(f"Error processing Ranking results: {e}")
+                                
+                    except Exception as e:
+                        print(f"CRITICAL ERROR in game end processing: {e}")
+                        # Even if stats fail, we MUST send game_over to client
+                    
+                    mmr_results = ranking_results.get('mmr', {})
+                    lp_results = ranking_results.get('lp', {})
+                    ranks = ranking_results.get('ranks', {})
+
                     await self.channel_layer.group_send(
                         self.room_group_name,
                         {
                             'type': 'game_update',
                             'data': {
                                 'type': 'game_over',
+                                'mode': game.mode,
                                 'winner': game.winner,
                                 'reason': 'board_full' if game.winner == 'D' else 'regular',
-                                'xp_results': xp_results 
+                                'xp_results': xp_results,
+                                'mmr_results': mmr_results,
+                                'lp_results': lp_results,
+                                'ranks': ranks
                             }
                         }
                     )
+
             except ValueError as e:
                 # Send error message to THIS socket only
                 await self.send(text_data=json.dumps({
                     'type': 'error',
                     'message': str(e)
                 }))
-        
+
         elif action == 'status_update':
             status_val = text_data_json.get('status') # 'active' or 'away'
-            
             # Relay to room
             await self.channel_layer.group_send(
                 self.room_group_name,
@@ -142,7 +170,7 @@ class GameConsumer(AsyncWebsocketConsumer):
     def process_move(self, cell, subcell):
         user = self.user # Use the user authenticated at connect
         game = Game.objects.get(id=self.game_id)
-        
+
         # Determine player char
         if game.mode == 'local' and user == game.player_x:
              # In local mode, the creator plays both sides (or hotseat)
@@ -151,13 +179,13 @@ class GameConsumer(AsyncWebsocketConsumer):
         elif user == game.player_x:
             player_char = 'X'
         elif user == game.player_o:
-             player_char = 'O'
+            player_char = 'O'
         else:
-             raise ValueError("You are not a player in this game.")
+            raise ValueError("You are not a player in this game.")
 
         # Logic validation
         GameLogic.validate_move(game, player_char, cell, subcell)
-        
+
         # Create move
         move = GameMove.objects.create(
             game=game,
@@ -176,6 +204,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         # Send message to WebSocket
         await self.send(text_data=json.dumps(event['data']))
 
+
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         try:
@@ -183,11 +212,11 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             query_string = self.scope.get("query_string", b"").decode("utf-8")
             query_params = parse_qs(query_string)
             token = query_params.get("token", [None])[0]
-
+            
             if not token:
                 await self.close()
                 return
-                
+
             try:
                 self.user = await self.validate_token(token)
             except Exception:
@@ -203,7 +232,6 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             )
 
             await self.accept()
-            
         except Exception:
             await self.close()
 
