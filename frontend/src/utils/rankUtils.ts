@@ -12,15 +12,9 @@ import unranked from "../assets/ranks/unranked.svg";
 
 export const RANK_MAP: Record<string, string> = {
   "Unranked": unranked,
-  "Bronze 1": b1,
-  "Bronze 2": b2,
-  "Bronze 3": b3,
-  "Silver 1": s1,
-  "Silver 2": s2,
-  "Silver 3": s3,
-  "Gold 1": g1,
-  "Gold 2": g2,
-  "Gold 3": g3,
+  "Bronze 1": b1, "Bronze 2": b2, "Bronze 3": b3,
+  "Silver 1": s1, "Silver 2": s2, "Silver 3": s3,
+  "Gold 1": g1, "Gold 2": g2, "Gold 3": g3,
   "Master": m,
 };
 
@@ -31,6 +25,12 @@ export const RANKS_ORDER = [
   "Master"
 ];
 
+// Segédfüggvény, hogy tudjuk hányadik a sorban (progresshez)
+export const getRankIndex = (rankName: string) => {
+    if (rankName === "Unranked") return -1;
+    return RANKS_ORDER.indexOf(rankName);
+}
+
 export const RANK_COLORS: Record<string, string> = {
   "Bronze": "bg-amber-700",
   "Silver": "bg-slate-400",
@@ -39,20 +39,29 @@ export const RANK_COLORS: Record<string, string> = {
   "Unranked": "bg-slate-500"
 };
 
+// Text color helper
+export const RANK_TEXT_COLORS: Record<string, string> = {
+    "Bronze": "text-amber-700",
+    "Silver": "text-slate-500",
+    "Gold": "text-yellow-600",
+    "Master": "text-purple-600",
+    "Unranked": "text-slate-500"
+};
+
+export function getRankBaseName(rankName: string): string {
+    if (rankName.includes("Bronze")) return "Bronze";
+    if (rankName.includes("Silver")) return "Silver";
+    if (rankName.includes("Gold")) return "Gold";
+    if (rankName.includes("Master")) return "Master";
+    return "Unranked";
+}
+
 export function getRankColor(rankName: string): string {
-    if (rankName.includes("Bronze")) return RANK_COLORS["Bronze"];
-    if (rankName.includes("Silver")) return RANK_COLORS["Silver"];
-    if (rankName.includes("Gold")) return RANK_COLORS["Gold"];
-    if (rankName.includes("Master")) return RANK_COLORS["Master"];
-    return RANK_COLORS["Unranked"];
+    return RANK_COLORS[getRankBaseName(rankName)] || RANK_COLORS["Unranked"];
 }
 
 export function getRankTextColor(rankName: string): string {
-    if (rankName.includes("Bronze")) return "text-amber-700";
-    if (rankName.includes("Silver")) return "text-slate-500";
-    if (rankName.includes("Gold")) return "text-yellow-600";
-    if (rankName.includes("Master")) return "text-purple-600";
-    return "text-slate-500";
+    return RANK_TEXT_COLORS[getRankBaseName(rankName)] || RANK_TEXT_COLORS["Unranked"];
 }
 
 export function getRankImage(rankName: string): string {
