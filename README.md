@@ -1,6 +1,6 @@
-# Tic Tac Toe - Szakdolgozat Projekt
+# Ultimate Tic Tac Toe - Szakdolgozat Projekt
 
-Ez a repository tartalmazza a Tic Tac Toe (Amőba) játék modern webes implementációjának forráskódját. A projekt célja egy teljes értékű webalkalmazás bemutatása, amely szétválasztott backend és frontend architektúrát használ.
+Ez a repository tartalmazza az Ultimate Tic Tac Toe játék modern webes implementációjának forráskódját. A projekt célja egy teljes értékű webalkalmazás bemutatása, amely szétválasztott backend és frontend architektúrát használ.
 
 ## Technológiák
 
@@ -95,19 +95,3 @@ Ha komponensenként szeretnéd futtatni az alkalmazást:
    ```bash
    npm run dev
    ```
-
-## Adminisztráció
-
-Adminisztrátor felhasználó létrehozása (Docker futtatás esetén):
-
-```bash
-docker-compose exec backend python manage.py createsuperuser
-```
-
-Manuális futtatás esetén (aktív venv-vel):
-
-```bash
-python manage.py createsuperuser
-```
-
-Ezután bejelentkezhetsz a `/admin` felületen a megadott adatokkal.
