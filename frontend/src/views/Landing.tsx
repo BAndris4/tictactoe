@@ -59,7 +59,7 @@ export default function Landing() {
         />
 
 
-        <RankedGameCard onClick={() => {}} />
+        <RankedGameCard onClick={() => startSearch('ranked')} />
 
 
         <GameModeCard

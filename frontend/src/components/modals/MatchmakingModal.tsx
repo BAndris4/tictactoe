@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useGame } from "../../context/GameContext";
 
 export default function MatchmakingModal() {
-  const { isSearching, isSearchMinimized, cancelSearch, minimizeSearch, searchStartTime } = useGame();
+  const { isSearching, isSearchMinimized, cancelSearch, minimizeSearch, searchStartTime, searchMode } = useGame();
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
@@ -32,8 +32,13 @@ export default function MatchmakingModal() {
              <div className="absolute top-0 -left-1/2 w-full h-full bg-gradient-to-r from-transparent via-deepblue to-transparent animate-[shimmer_3s_infinite]" />
         </div>
 
-        <h2 className="text-2xl font-black text-deepblue font-paytone mb-2">Finding Opponent...</h2>
-        <p className="text-slate-500 font-medium mb-8">Searching for players near your level</p>
+        <h2 className="text-2xl font-black text-deepblue font-paytone mb-2">
+             Finding Opponent...
+             {searchMode === 'ranked' && <span className="ml-2 bg-mint/10 text-mint text-[10px] px-2 py-0.5 rounded align-middle">RANKED</span>}
+         </h2>
+         <p className="text-slate-500 font-medium mb-8">
+             {searchMode === 'ranked' ? 'Searching for players near your MMR' : 'Searching for players near your level'}
+         </p>
 
         <div className="text-5xl font-black text-mint font-paytone mb-8 tabular-nums tracking-widest">
             {formatTime(elapsed)}

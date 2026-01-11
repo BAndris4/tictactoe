@@ -3,17 +3,21 @@ from .models import PlayerProfile
 
 class RankingService:
     STARTING_MMR = 1000
-    PLACEMENT_GAMES = 5
+    STABILIZATION_GAMES = 50
     
     # K-factors
-    K_PLACEMENT = 50
-    K_DEFAULT = 20
+    K_START = 50
+    K_STABLE = 20
 
     @classmethod
     def get_k_factor(cls, games_played: int) -> int:
-        if games_played < cls.PLACEMENT_GAMES:
-            return cls.K_PLACEMENT
-        return cls.K_DEFAULT
+        if games_played >= cls.STABILIZATION_GAMES:
+            return cls.K_STABLE
+        
+        # Linear decay from K_START to K_STABLE
+        k_diff = cls.K_START - cls.K_STABLE
+        decay = k_diff * (games_played / cls.STABILIZATION_GAMES)
+        return int(round(cls.K_START - decay))
 
     @classmethod
     def calculate_expected_score(cls, rating_a: int, rating_b: int) -> float:
@@ -72,13 +76,8 @@ class RankingService:
             profile_o.mmr += change_o
             
             # Increment games played counters
-            # Logic: If they haven't finished placement yet, increment placement counter
-            # Strictly speaking, we just increment it.
-            if profile_x.placement_games_played < cls.PLACEMENT_GAMES:
-                profile_x.placement_games_played += 1
-                
-            if profile_o.placement_games_played < cls.PLACEMENT_GAMES:
-                profile_o.placement_games_played += 1
+            profile_x.placement_games_played += 1
+            profile_o.placement_games_played += 1
             
             profile_x.save()
             profile_o.save()

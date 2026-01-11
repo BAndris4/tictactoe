@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useGame } from "../context/GameContext";
 
 export default function MatchmakingWidget() {
-  const { isSearching, isSearchMinimized, cancelSearch, searchStartTime } = useGame();
+  const { isSearching, isSearchMinimized, cancelSearch, searchStartTime, searchMode } = useGame();
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
@@ -29,11 +29,13 @@ export default function MatchmakingWidget() {
         className="fixed top-24 right-4 z-50 bg-white rounded-2xl shadow-xl border-2 border-slate-100 p-4 flex items-center gap-4 animate-fadeScaleIn group hover:scale-[1.02] transition-transform"
     >
         <div className="relative w-3 h-3 shrink-0">
-             <div className="absolute inset-0 bg-mint rounded-full animate-ping opacity-75" />
-             <div className="relative w-3 h-3 bg-mint rounded-full" />
+             <div className={`absolute inset-0 ${searchMode === 'ranked' ? 'bg-mint' : 'bg-coral'} rounded-full animate-ping opacity-75`} />
+             <div className={`relative w-3 h-3 ${searchMode === 'ranked' ? 'bg-mint' : 'bg-coral'} rounded-full`} />
         </div>
         <div className="flex flex-col mr-2">
-            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Searching</div>
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight mb-0.5">
+                {searchMode === 'ranked' ? 'Ranked' : 'Unranked'}
+            </div>
             <div className="text-lg font-black text-deepblue font-paytone tabular-nums leading-none">
                 {formatTime(elapsed)}
             </div>

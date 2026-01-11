@@ -8,6 +8,7 @@ class GameMode(models.TextChoices):
     LOCAL = 'local', _('Local')
     CUSTOM = 'custom', _('Custom')
     UNRANKED = 'unranked', _('Unranked')
+    RANKED = 'ranked', _('Ranked')
 
 class GameStatus(models.TextChoices):
     WAITING = 'waiting', _('Waiting')

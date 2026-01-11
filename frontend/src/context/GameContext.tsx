@@ -44,7 +44,8 @@ interface GameContextType {
   isSearching: boolean;
   isSearchMinimized: boolean;
   searchStartTime: number | null;
-  startSearch: () => void;
+  searchMode: 'unranked' | 'ranked';
+  startSearch: (mode?: 'unranked' | 'ranked') => void;
   cancelSearch: () => void;
   minimizeSearch: (minimized: boolean) => void;
 
@@ -89,6 +90,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   const [isSearching, setIsSearching] = useState(false);
   const [isSearchMinimized, setIsSearchMinimized] = useState(false);
   const [searchStartTime, setSearchStartTime] = useState<number | null>(null);
+  const [searchMode, setSearchMode] = useState<'unranked' | 'ranked'>('unranked');
   const [matchmakingSocket, setMatchmakingSocket] = useState<WebSocket | null>(null);
   
   // Match Found State for Modal
@@ -105,7 +107,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
          
          ws.onopen = () => {
              console.log("Matchmaking connected");
-             ws.send(JSON.stringify({ action: "search" }));
+             ws.send(JSON.stringify({ action: "search", mode: searchMode }));
          };
          
          ws.onmessage = (event) => {
@@ -133,7 +135,8 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
      }
   }, [isSearching]);
 
-  const startSearch = () => {
+  const startSearch = (mode: 'unranked' | 'ranked' = 'unranked') => {
+      setSearchMode(mode);
       setIsSearching(true);
       setSearchStartTime(Date.now());
       setIsSearchMinimized(false);
@@ -449,6 +452,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         isSearching,
         isSearchMinimized,
         searchStartTime,
+        searchMode,
         startSearch,
         cancelSearch,
         minimizeSearch,
