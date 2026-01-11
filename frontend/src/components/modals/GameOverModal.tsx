@@ -128,14 +128,31 @@ function GameOverModal() {
           </div>
 
           {myXpResult && (
-              <div className="mb-6 bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                  <ProgressBar 
-                    currentXp={myXpResult.current_xp} 
-                    nextLevelXp={myXpResult.next_level_xp} 
-                    xpGained={myXpResult.xp_gained}
-                    level={myXpResult.new_level}
-                    leveledUp={myXpResult.leveled_up}
-                  />
+              <div className="mb-6 space-y-3">
+                  {game.mode === 'ranked' && myXpResult && myXpResult.lp_change !== undefined && (
+                    <div className="bg-mint/5 rounded-2xl p-4 border border-mint/10 flex items-center justify-between animate-fadeInUp opacity-0 [animation-fill-mode:forwards] [animation-delay:400ms]">
+                        <div className="flex flex-col items-start">
+                            <span className="text-[10px] font-extrabold text-mint uppercase tracking-widest font-inter">Rank Points</span>
+                            <span className="text-sm font-black text-deepblue font-paytone">Match Efficiency</span>
+                        </div>
+                        <div className={`text-3xl font-black font-paytone drop-shadow-sm ${
+                            (myXpResult.lp_change ?? 0) > 0 ? 'text-mint' : 
+                            (myXpResult.lp_change ?? 0) < 0 ? 'text-coral' : 'text-deepblue/40'
+                        }`}>
+                            {(myXpResult.lp_change ?? 0) > 0 ? `+${myXpResult.lp_change}` : myXpResult.lp_change} LP
+                        </div>
+                    </div>
+                  )}
+
+                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                      <ProgressBar 
+                        currentXp={myXpResult.current_xp} 
+                        nextLevelXp={myXpResult.next_level_xp} 
+                        xpGained={myXpResult.xp_gained}
+                        level={myXpResult.new_level}
+                        leveledUp={myXpResult.leveled_up}
+                      />
+                  </div>
               </div>
           )}
           

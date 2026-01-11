@@ -262,9 +262,28 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
           } else if (data.winner) {
               setWinner(data.winner);
           }
+
+          // Combine results
+          const results: Record<string, any> = {};
           if (data.xp_results) {
-              console.log("Setting XP Results:", data.xp_results);
-              setXpResults(data.xp_results);
+              Object.keys(data.xp_results).forEach(uid => {
+                  results[uid] = { ...data.xp_results[uid] };
+              });
+          }
+          if (data.mmr_results) {
+              Object.keys(data.mmr_results).forEach(uid => {
+                  if (results[uid]) results[uid].mmr_change = data.mmr_results[uid];
+              });
+          }
+          if (data.lp_results) {
+              Object.keys(data.lp_results).forEach(uid => {
+                  if (results[uid]) results[uid].lp_change = data.lp_results[uid];
+              });
+          }
+
+          if (Object.keys(results).length > 0) {
+              console.log("Setting Final Results:", results);
+              setXpResults(results);
           }
       } else if (data.type === "game_invitation_rejected") {
           showToast(`${data.user} declined your invitation.`, "warning");

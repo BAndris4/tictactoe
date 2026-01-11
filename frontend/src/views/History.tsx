@@ -100,18 +100,28 @@ export default function History() {
                                         {result}
                                     </div>
                                     
-                                    {/* XP Display */}
-                                    {(game.player_x_xp_gained !== undefined && game.player_x_xp_gained !== null) && (
-                                        <div className="mt-1 text-right">
-                                            <span className={`text-xs font-bold ${
+                                    {/* Rewards Display */}
+                                    <div className="mt-1 text-right flex flex-col items-end gap-0.5">
+                                        {(game.player_x_xp_gained !== undefined && game.player_x_xp_gained !== null) && (
+                                            <span className={`text-[10px] font-black uppercase tracking-widest ${
                                                 (isPlayerX ? game.player_x_xp_gained : game.player_o_xp_gained) === 0 
                                                   ? "text-slate-400" 
                                                   : "text-sunshine"
                                             }`}>
                                                 +{(isPlayerX ? game.player_x_xp_gained : game.player_o_xp_gained) || 0} XP
                                             </span>
-                                        </div>
-                                    )}
+                                        )}
+                                        {game.mode === 'ranked' && (game.player_x_lp_change !== undefined) && (
+                                            <span className={`text-[10px] font-black uppercase tracking-widest ${
+                                                (isPlayerX ? game.player_x_lp_change : game.player_o_lp_change || 0) > 0 
+                                                  ? "text-mint" 
+                                                  : (isPlayerX ? game.player_x_lp_change : game.player_o_lp_change || 0) < 0 
+                                                  ? "text-coral" : "text-slate-400"
+                                            }`}>
+                                                {(isPlayerX ? game.player_x_lp_change : game.player_o_lp_change || 0) > 0 ? "+" : ""}{(isPlayerX ? game.player_x_lp_change : game.player_o_lp_change) || 0} LP
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         );
