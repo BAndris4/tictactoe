@@ -258,6 +258,10 @@ class ForfeitGameView(APIView):
         from users.services import LevelingService
         xp_results = LevelingService.process_game_end(game)
         
+        # Calculate MMR
+        from users.ranking_service import RankingService
+        mmr_results = RankingService.process_game_end(game)
+        
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             f'game_{game.id}',
@@ -267,7 +271,8 @@ class ForfeitGameView(APIView):
                     'type': 'game_over',
                     'winner': winner_symbol,
                     'reason': 'forfeit',
-                    'xp_results': xp_results
+                    'xp_results': xp_results,
+                    'mmr_results': mmr_results
                 }
             }
         )

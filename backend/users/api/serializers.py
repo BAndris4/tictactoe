@@ -38,7 +38,9 @@ class UserSerializer(serializers.ModelSerializer):
         return {
             "level": profile.level,
             "current_xp": profile.current_xp,
-            "next_level_xp": LevelingService.get_xp_required_for_level(profile.level)
+            "next_level_xp": LevelingService.get_xp_required_for_level(profile.level),
+            "mmr": profile.mmr,
+            "placement_games_played": profile.placement_games_played,
         }
 
 class LoginSerializer(serializers.Serializer):

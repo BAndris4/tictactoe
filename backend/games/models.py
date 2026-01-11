@@ -32,6 +32,9 @@ class Game(models.Model):
     
     player_x_xp_gained = models.IntegerField(null=True, blank=True)
     player_o_xp_gained = models.IntegerField(null=True, blank=True)
+    
+    player_x_mmr_change = models.IntegerField(null=True, blank=True)
+    player_o_mmr_change = models.IntegerField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     started_at = models.DateTimeField(null=True, blank=True)
