@@ -23,59 +23,81 @@ export default function History() {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-[#F3F4FF] overflow-hidden text-deepblue font-inter flex flex-col items-center">
+    <div className="relative min-h-screen bg-[#F3F4FF] overflow-x-hidden text-deepblue font-inter flex flex-col items-center">
       <BackgroundShapes />
 
+      {/* Container: Közepes méret, kényelmes olvasáshoz */}
       <div className="relative z-10 w-full max-w-4xl px-4 md:px-8 py-8 md:py-12 flex flex-col h-full animate-fadeScaleIn">
         
+        {/* Header Section */}
         <div className="flex items-center justify-between mb-8">
             <button 
                 onClick={() => navigate("/")}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border-2 border-slate-100 text-deepblue font-bold hover:bg-slate-50 hover:border-slate-200 transition-all shadow-sm font-paytone"
+                className="group flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border-2 border-slate-100 text-deepblue/80 font-bold hover:bg-slate-50 hover:border-slate-200 transition-all duration-200 font-paytone text-sm shadow-sm"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                 </svg>
-                Back
+                Dashboard
             </button>
-            <h1 className="text-3xl font-extrabold text-deepblue tracking-tight font-paytone">Match History</h1>
-            <div className="w-[100px]"></div>
+            
+            <h1 className="text-3xl font-black text-deepblue font-paytone tracking-tight">
+                Match History
+            </h1>
+            
+            <div className="w-[120px] hidden md:block"></div> {/* Spacer az igazításhoz */}
         </div>
-
-        <div className="bg-white rounded-[2rem] shadow-xl shadow-deepblue/5 border border-white overflow-hidden p-2">
+        
+        {/* Match List */}
+        <div className="flex flex-col gap-4 pb-8">
             {loading ? (
-                <div className="p-12 text-center text-deepblue/60 font-medium">Loading history...</div>
+                <div className="flex flex-col items-center justify-center h-64 bg-white/50 rounded-3xl border border-white">
+                    <div className="w-10 h-10 border-4 border-slate-200 border-t-deepblue rounded-full animate-spin mb-4" />
+                    <span className="font-bold text-deepblue/40 uppercase tracking-wider text-sm">Loading Matches...</span>
+                </div>
             ) : games.length === 0 ? (
-                <div className="p-12 text-center text-deepblue/60 font-medium">No matches found yet. Play a game!</div>
+                <div className="flex flex-col items-center justify-center h-64 bg-white/50 rounded-3xl border border-white text-center p-6">
+                    <span className="font-bold text-deepblue/40 uppercase tracking-wider text-lg mb-4">No matches found</span>
+                    <button onClick={() => navigate("/")} className="px-6 py-2 bg-deepblue text-white rounded-xl font-bold font-paytone hover:opacity-90 transition-opacity">
+                        Play Now
+                    </button>
+                </div>
             ) : (
-                <div className="divide-y divide-slate-50">
-                    {games.map((game) => {
-                        const isPlayerX = user && String(game.player_x) === String(user.id);
-                        const opponentName = isPlayerX ? (game.player_o_name || "Waiting...") : game.player_x_name;
-                        
-                        let result: 'WIN' | 'LOSS' | 'DRAW' | 'ABORTED' = 'DRAW';
-                        if (game.status === 'aborted') {
-                            result = 'ABORTED';
-                        } else if (game.status === 'finished') {
-                            if (game.winner === 'D') result = 'DRAW';
-                            else if ((isPlayerX && game.winner === 'X') || (!isPlayerX && game.winner === 'O')) result = 'WIN';
-                            else result = 'LOSS';
-                        } else {
-                            // Active or waiting games in history? Might happen if we list all.
-                            // Let's call them 'ACTIVE' for now if they aren't finished/aborted
-                            return null; // Don't show active games in history for now, or maybe label them.
-                        }
+                games.map((game, index) => {
+                    const isPlayerX = user && String(game.player_x) === String(user.id);
+                    const opponentName = isPlayerX ? (game.player_o_name || "Waiting...") : game.player_x_name;
+                    
+                    let result: 'WIN' | 'LOSS' | 'DRAW' | 'ABORTED' = 'DRAW';
+                    if (game.status === 'aborted') {
+                        result = 'ABORTED';
+                    } else if (game.status === 'finished') {
+                        if (game.winner === 'D') result = 'DRAW';
+                        else if ((isPlayerX && game.winner === 'X') || (!isPlayerX && game.winner === 'O')) result = 'WIN';
+                        else result = 'LOSS';
+                    } else {
+                        return null; 
+                    }
 
-                        const dateStr = new Date(game.created_at).toLocaleDateString("en-US", {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                        });
+                    const dateStr = new Date(game.created_at).toLocaleDateString("en-US", {
+                        month: 'short',
+                        day: 'numeric'
+                    });
 
-                        return (
-                            <div key={game.id} className="p-4 sm:p-6 flex items-center justify-between hover:bg-slate-50 transition-colors rounded-2xl group cursor-pointer" onClick={() => navigate(`/game/${game.id}`)}>
-                                <div className="flex items-center gap-4 sm:gap-6">
-                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-sm transition-transform group-hover:scale-110 ${
+                    const xpGained = (isPlayerX ? game.player_x_xp_gained : game.player_o_xp_gained) || 0;
+                    const lpChange = (isPlayerX ? game.player_x_lp_change : game.player_o_lp_change) || 0;
+
+                    return (
+                        <div 
+                            key={game.id} 
+                            onClick={() => navigate(`/game/${game.id}`)}
+                            className="group relative w-full bg-white p-5 rounded-3xl shadow-sm hover:shadow-lg border border-slate-100 hover:border-slate-200 transition-all duration-200 cursor-pointer"
+                        >
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                
+                                {/* Bal oldal: Ikon és Infó */}
+                                <div className="flex items-center gap-5">
+                                    {/* Eredmény Ikon - Egyszerű, tiszta színekkel */}
+                                    <div className={`w-16 h-16 flex-shrink-0 rounded-2xl flex items-center justify-center text-2xl font-black shadow-sm ${
                                         result === 'WIN' ? 'bg-mint/10 text-mint' :
                                         result === 'LOSS' ? 'bg-coral/10 text-coral' :
                                         result === 'ABORTED' ? 'bg-slate-100 text-slate-400' :
@@ -83,50 +105,63 @@ export default function History() {
                                     }`}>
                                         {result[0]}
                                     </div>
-                                    <div>
-                                        <h3 className="font-bold text-deepblue text-lg mb-0.5">{opponentName}</h3>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-deepblue/60 uppercase tracking-wider">{game.mode}</span>
-                                            <span className="text-xs text-deepblue/40 font-medium">{dateStr}</span>
+
+                                    <div className="flex flex-col gap-1">
+                                        <h3 className="text-xl font-bold text-deepblue leading-tight group-hover:text-deepblue/80 transition-colors">
+                                            {opponentName}
+                                        </h3>
+                                        <div className="flex items-center gap-2 text-xs font-semibold">
+                                            <span className="px-2 py-0.5 rounded bg-slate-100 text-deepblue/50 uppercase tracking-wider border border-slate-200">
+                                                {game.mode}
+                                            </span>
+                                            <span className="text-slate-400">
+                                                {dateStr}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <div className="text-right">
-                                    <div className={`text-xs font-bold uppercase tracking-widest ${
-                                        result === 'WIN' ? 'text-mint' : 
-                                        result === 'LOSS' ? 'text-coral' : 'text-deepblue/30'
-                                    }`}>
-                                        {result}
-                                    </div>
+                                {/* Jobb oldal: Eredmény szöveg és Jutalmak */}
+                                <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center pl-2 md:pl-0">
                                     
-                                    {/* Rewards Display */}
-                                    <div className="mt-1 text-right flex flex-col items-end gap-0.5">
-                                        {(game.player_x_xp_gained !== undefined && game.player_x_xp_gained !== null) && (
-                                            <span className={`text-[10px] font-black uppercase tracking-widest ${
-                                                (isPlayerX ? game.player_x_xp_gained : game.player_o_xp_gained) === 0 
-                                                  ? "text-slate-400" 
-                                                  : "text-sunshine"
-                                            }`}>
-                                                +{(isPlayerX ? game.player_x_xp_gained : game.player_o_xp_gained) || 0} XP
-                                            </span>
+                                    {/* Eredmény Szöveg - Nincs italic, nincs gradient, csak tiszta bold */}
+                                    <div className={`text-sm md:text-base font-black uppercase tracking-wider mb-1 ${
+                                        result === 'WIN' ? 'text-mint' : 
+                                        result === 'LOSS' ? 'text-coral' : 
+                                        'text-slate-400'
+                                    }`}>
+                                        {result === 'WIN' ? 'Victory' : result === 'LOSS' ? 'Defeat' : result}
+                                    </div>
+
+                                    {/* Jutalmak - Tiszta kapszulák */}
+                                    <div className="flex items-center gap-2">
+                                        {/* XP */}
+                                        {xpGained > 0 && (
+                                            <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-100/50">
+                                                <span className="text-[10px] font-black text-orange-400 uppercase tracking-wider font-paytone">+XP</span>
+                                                <span className="text-xs font-bold text-orange-600">{xpGained}</span>
+                                            </div>
                                         )}
-                                        {game.mode === 'ranked' && (game.player_x_lp_change !== undefined) && (
-                                            <span className={`text-[10px] font-black uppercase tracking-widest ${
-                                                (isPlayerX ? game.player_x_lp_change : game.player_o_lp_change || 0) > 0 
-                                                  ? "text-mint" 
-                                                  : (isPlayerX ? game.player_x_lp_change : game.player_o_lp_change || 0) < 0 
-                                                  ? "text-coral" : "text-slate-400"
+                                        
+                                        {/* LP */}
+                                        {game.mode === 'ranked' && lpChange !== 0 && (
+                                            <div className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border ${
+                                                lpChange > 0 
+                                                ? "bg-mint/5 border-mint/20" 
+                                                : "bg-coral/5 border-coral/20"
                                             }`}>
-                                                {(isPlayerX ? game.player_x_lp_change : game.player_o_lp_change || 0) > 0 ? "+" : ""}{(isPlayerX ? game.player_x_lp_change : game.player_o_lp_change) || 0} LP
-                                            </span>
+                                                <span className={`text-[10px] font-black uppercase tracking-wider font-paytone ${lpChange > 0 ? 'text-mint' : 'text-coral'}`}>LP</span>
+                                                <span className={`text-xs font-bold ${lpChange > 0 ? 'text-mint' : 'text-coral'}`}>
+                                                    {lpChange > 0 ? '+' : ''}{lpChange}
+                                                </span>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
                             </div>
-                        );
-                    })}
-                </div>
+                        </div>
+                    );
+                })
             )}
         </div>
       </div>

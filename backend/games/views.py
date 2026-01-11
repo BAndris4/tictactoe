@@ -271,11 +271,13 @@ class ForfeitGameView(APIView):
                 'type': 'game_update',
                 'data': {
                     'type': 'game_over',
+                    'mode': game.mode,
                     'winner': winner_symbol,
                     'reason': 'forfeit',
                     'xp_results': xp_results,
                     'mmr_results': mmr_results,
-                    'lp_results': lp_results
+                    'lp_results': lp_results,
+                    'ranks': ranking_results.get('ranks', {})
                 }
             }
         )

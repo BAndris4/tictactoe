@@ -4,7 +4,7 @@ import type { Move } from "../models/Move";
 import { isMoveValid } from "../rules/gameRule";
 import { toGlobalCoord } from "../utils";
 import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
-import { getAuthToken } from "../hooks/useAuth";
+import { getAuthToken, useAuth } from "../hooks/useAuth";
 import { getGame } from "../api/game";
 import { useToast } from "./ToastContext";
 
@@ -97,6 +97,13 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   const [matchFoundData, setMatchFoundData] = useState<{ gameId: string; opponent: string; opponentUsername?: string } | null>(null);
   
   const [opponentStatus, setOpponentStatus] = useState<'active' | 'away'>('active');
+  
+  const { user } = useAuth();
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   // Matchmaking Effect
   useEffect(() => {
@@ -141,6 +148,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
       setSearchStartTime(Date.now());
       setIsSearchMinimized(false);
       setMatchFoundData(null); // Clear previous match data
+      setXpResults(null);      // Clear previous game results
   };
 
   const cancelSearch = () => {
@@ -156,7 +164,6 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   const minimizeSearch = (minimized: boolean) => {
       setIsSearchMinimized(minimized);
   };
-
 
   // WebSocket ref
   const ws = useRef<WebSocket | null>(null);
@@ -201,6 +208,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
           }
       }).catch(console.error);
     }
+    setXpResults(null);
   }, [gameId]);
 
   // 2. WebSocket Connection
@@ -249,40 +257,53 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         applyMoveLocally(move, moveData.player as Player);
 
       } else if (data.type === "game_started") {
+          console.log("[GameContext] game_started received:", data);
           setStatus("active");
+          if (data.mode) {
+              setMode(data.mode);
+          }
           setPlayers(prev => ({ 
             ...prev, 
+            x: data.player_x_id || data.player_x,
             o: data.player_o_id || data.player_o, // Handle ID if sent
+            xName: data.player_x_name || data.player_x,
             oName: data.player_o_name || data.player_o // fallback if only username
           })); 
       } else if (data.type === "game_over") {
           setStatus("finished");
+          if (data.mode) {
+              setMode(data.mode);
+          }
           if (data.data && data.data.winner) {
               setWinner(data.data.winner);
           } else if (data.winner) {
               setWinner(data.winner);
           }
 
-          // Combine results
+          // Build a unified results object collecting all IDs from different source fields
           const results: Record<string, any> = {};
-          if (data.xp_results) {
-              Object.keys(data.xp_results).forEach(uid => {
-                  results[uid] = { ...data.xp_results[uid] };
+          
+          // Helper to safely merge by string ID from any source object
+          const mergeSource = (source: any, fieldName?: string) => {
+              if (!source || typeof source !== 'object') return;
+              Object.entries(source).forEach(([uid, val]) => {
+                  const sUid = String(uid);
+                  if (!results[sUid]) results[sUid] = {};
+                  if (fieldName) {
+                      results[sUid][fieldName] = val;
+                  } else if (val && typeof val === 'object') {
+                      // Leveling results are an object itself (xp_gained, new_level, etc.)
+                      results[sUid] = { ...results[sUid], ...val };
+                  }
               });
-          }
-          if (data.mmr_results) {
-              Object.keys(data.mmr_results).forEach(uid => {
-                  if (results[uid]) results[uid].mmr_change = data.mmr_results[uid];
-              });
-          }
-          if (data.lp_results) {
-              Object.keys(data.lp_results).forEach(uid => {
-                  if (results[uid]) results[uid].lp_change = data.lp_results[uid];
-              });
-          }
+          };
+
+          mergeSource(data.xp_results); 
+          mergeSource(data.mmr_results, 'mmr_change');
+          mergeSource(data.lp_results, 'lp_change');
+          mergeSource(data.ranks, 'rank_info');
 
           if (Object.keys(results).length > 0) {
-              console.log("Setting Final Results:", results);
               setXpResults(results);
           }
       } else if (data.type === "game_invitation_rejected") {
@@ -477,9 +498,8 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         minimizeSearch,
         matchFoundData,
         opponentStatus,
-        updatePlayerStatus
+        updatePlayerStatus,
       }}
-
     >
       {children}
     </GameContext.Provider>

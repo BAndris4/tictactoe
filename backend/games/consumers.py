@@ -103,11 +103,13 @@ class GameConsumer(AsyncWebsocketConsumer):
                             'type': 'game_update',
                             'data': {
                                 'type': 'game_over',
+                                'mode': game.mode,
                                 'winner': game.winner,
                                 'reason': 'board_full' if game.winner == 'D' else 'regular',
                                 'xp_results': xp_results,
                                 'mmr_results': mmr_results,
-                                'lp_results': lp_results
+                                'lp_results': lp_results,
+                                'ranks': ranking_results.get('ranks', {})
                             }
                         }
                     )

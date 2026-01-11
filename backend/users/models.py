@@ -46,6 +46,7 @@ class PlayerProfile(models.Model):
     mmr = models.IntegerField(null=True, blank=True, default=None)
     placement_games_played = models.IntegerField(default=0)
     total_lp = models.IntegerField(null=True, blank=True, default=None)
+    current_streak = models.IntegerField(default=0) # positive for wins, negative for losses
     
     def __str__(self) -> str:
         return f"{self.user} (Lvl {self.level})"

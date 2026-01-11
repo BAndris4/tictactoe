@@ -31,6 +31,30 @@ export const RANKS_ORDER = [
   "Master"
 ];
 
+export const RANK_COLORS: Record<string, string> = {
+  "Bronze": "bg-amber-700",
+  "Silver": "bg-slate-400",
+  "Gold": "bg-yellow-500",
+  "Master": "bg-purple-600",
+  "Unranked": "bg-slate-500"
+};
+
+export function getRankColor(rankName: string): string {
+    if (rankName.includes("Bronze")) return RANK_COLORS["Bronze"];
+    if (rankName.includes("Silver")) return RANK_COLORS["Silver"];
+    if (rankName.includes("Gold")) return RANK_COLORS["Gold"];
+    if (rankName.includes("Master")) return RANK_COLORS["Master"];
+    return RANK_COLORS["Unranked"];
+}
+
+export function getRankTextColor(rankName: string): string {
+    if (rankName.includes("Bronze")) return "text-amber-700";
+    if (rankName.includes("Silver")) return "text-slate-500";
+    if (rankName.includes("Gold")) return "text-yellow-600";
+    if (rankName.includes("Master")) return "text-purple-600";
+    return "text-slate-500";
+}
+
 export function getRankImage(rankName: string): string {
   return RANK_MAP[rankName] || unranked;
 }
