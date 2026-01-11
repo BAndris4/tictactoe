@@ -21,6 +21,9 @@ function GameOverModal() {
 
   // XP/Rank Result lookup for the current user
   const myXpResult = (user && game.xpResults) ? (game.xpResults[user.id] || game.xpResults[String(user.id)]) : null;
+  
+  // RANKED CHECK
+  const isRankedGame = game.mode === 'ranked';
 
   useEffect(() => {
     if (game.status !== "finished") {
@@ -38,16 +41,16 @@ function GameOverModal() {
     }
   }, [game.status, game.winner, myXpResult]);
 
-  // Handle Rank Animation Sequence
+  // Handle Rank Animation Sequence (Only if Ranked)
   useEffect(() => {
-    if (visible && myXpResult?.rank_info?.is_change) {
+    if (visible && isRankedGame && myXpResult?.rank_info?.is_change) {
       setIsRankTransitioning(true);
       const timer = setTimeout(() => {
         setShowNewRank(true);
       }, 1800);
       return () => clearTimeout(timer);
     }
-  }, [visible, myXpResult]);
+  }, [visible, isRankedGame, myXpResult]);
 
   useEffect(() => {
     if (visible && !isDismissed) {
@@ -82,7 +85,7 @@ function GameOverModal() {
       bgGradient = "from-slate-500/10 to-transparent";
   } else if (isMe) {
       titleText = "Victory";
-      subText = "Ranked Match Won";
+      subText = isRankedGame ? "Ranked Match Won" : "Unranked Match Won";
       accentColor = "text-mint";
       bgGradient = "from-mint/10 to-transparent";
   } else if (isLoss) {
@@ -93,10 +96,10 @@ function GameOverModal() {
   }
 
   const rankInfo = myXpResult?.rank_info;
-  const rankToShow = rankInfo ? (showNewRank ? rankInfo.new_rank : rankInfo.old_rank) : null;
-  const lpChange = myXpResult?.lp_change ?? 0;
+  const rankToShow = (isRankedGame && rankInfo) ? (showNewRank ? rankInfo.new_rank : rankInfo.old_rank) : null;
+  const lpChange = (isRankedGame && myXpResult?.lp_change) ? myXpResult.lp_change : 0;
   
-  const isPromotion = rankInfo?.is_change && lpChange > 0;
+  const isPromotion = isRankedGame && rankInfo?.is_change && lpChange > 0;
 
   return (
     <div
@@ -122,8 +125,8 @@ function GameOverModal() {
           
           {/* Top Bar: Mini Icons & Close */}
           <div className="absolute top-6 right-6 flex items-center gap-3 z-10">
-              {/* Streak Badge */}
-              {rankInfo && typeof rankInfo.streak !== 'undefined' && (
+              {/* Streak Badge - ONLY SHOW IF RANKED */}
+              {isRankedGame && rankInfo && typeof rankInfo.streak !== 'undefined' && (
                   <div className="group relative">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md border transition-all duration-300 hover:scale-105 ${
                           rankInfo.streak > 0 ? "bg-sunshine/5 text-sunshine border-sunshine/20" : 
@@ -144,15 +147,15 @@ function GameOverModal() {
                   </div>
               )}
 
-              {/* Skill Badge */}
-              {rankInfo && (
+              {/* Skill Badge - ONLY SHOW IF RANKED */}
+              {isRankedGame && rankInfo && (
                   <div className="group relative">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md border transition-all duration-300 hover:scale-105 ${
                           rankInfo.performance_status === 'Climbing' ? "bg-mint/5 text-mint border-mint/20" : 
                           rankInfo.performance_status === 'High LP' ? "bg-sky-400/5 text-sky-400 border-sky-400/20" : 
                           "bg-slate-100/50 text-slate-400 border-slate-200/50"
                       }`}>
-                         {rankInfo.performance_status === 'Climbing' ? (
+                          {rankInfo.performance_status === 'Climbing' ? (
                               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"/></svg>
                           ) : rankInfo.performance_status === 'High LP' ? (
                               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
@@ -191,8 +194,8 @@ function GameOverModal() {
 
           {/* Main Content Area */}
           <div className="space-y-4 mb-8">
-              {/* Rank Display - The "Hero" Element */}
-              {(game.mode === 'ranked' || rankInfo) && rankInfo && (
+              {/* Rank Display - The "Hero" Element - ONLY IF RANKED */}
+              {isRankedGame && rankInfo && (
                 <div className="flex flex-col items-center">
                     {/* Floating Rank Image */}
                     <div className="relative mb-2">
@@ -239,12 +242,12 @@ function GameOverModal() {
                 </div>
               )}
 
-              {/* XP Display - Subtle Footer Card */}
+              {/* XP Display - Subtle Footer Card - Always Visible */}
               {myXpResult && (
                 <div className="mt-6 bg-slate-50/80 rounded-2xl p-4 border border-slate-100/50">
                     <ProgressBar 
-                        currentXp={myXpResult.current_xp} 
-                        nextLevelXp={myXpResult.next_level_xp} 
+                        currentXp={myXpResult.new_xp} 
+                        nextLevelXp={myXpResult.xp_to_next_level} 
                         xpGained={myXpResult.xp_gained}
                         level={myXpResult.new_level}
                         leveledUp={myXpResult.leveled_up}

@@ -10,13 +10,11 @@ from games.models import Game
 User = get_user_model()
 
 # Global Matchmaking Queue
-# Format: { 'channel_name': str, 'user_id': int, 'user': User, 'rating': int, 'mode': str, 'joined_at': float }
 MATCHMAKING_QUEUE = []
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         try:
-            # Extract token from query string
             from urllib.parse import parse_qs
             query_string = self.scope.get("query_string", b"").decode("utf-8")
             query_params = parse_qs(query_string)
@@ -26,7 +24,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 print("Matchmaking: No token provided")
                 await self.close()
                 return
-                
+
             try:
                 self.user = await self.validate_token(token)
             except Exception as e:
@@ -36,9 +34,10 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
             await self.accept()
             print(f"Matchmaking connected: {self.user.username}")
+
         except Exception as e:
-             print(f"Matchmaking: Connection error: {e}")
-             await self.close()
+            print(f"Matchmaking: Connection error: {e}")
+            await self.close()
 
     @database_sync_to_async
     def validate_token(self, token):
@@ -48,64 +47,75 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         return get_user_from_access_token(token)
 
     async def disconnect(self, close_code):
-        # Remove from queue if disconnected
         global MATCHMAKING_QUEUE
+        # Remove from queue if disconnected
         MATCHMAKING_QUEUE = [p for p in MATCHMAKING_QUEUE if p['channel_name'] != self.channel_name]
-        print(f"Matchmaking disconnected: {self.user.username}")
+        print(f"Matchmaking disconnected: {self.user.username if hasattr(self, 'user') else 'Unknown'}")
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
-        action = data.get("action")
-        mode = data.get("mode", "unranked") # 'unranked' or 'ranked'
+        # print(f"Matchmaking received: {text_data}") 
+        try:
+            data = json.loads(text_data)
+            action = data.get("action")
+            mode = data.get("mode", "unranked")
 
-        if action == "search":
-            await self.add_to_queue(mode)
-        elif action == "cancel":
-            await self.remove_from_queue()
+            if action == "search":
+                await self.add_to_queue(mode)
+            elif action == "cancel":
+                await self.remove_from_queue()
+        except Exception as e:
+            print(f"Matchmaking receive error: {e}")
 
     async def add_to_queue(self, mode):
-        # Prevent duplicates
         global MATCHMAKING_QUEUE
-        # Check if already in queue (by user_id)
-        if any(p['user_id'] == self.user.id for p in MATCHMAKING_QUEUE):
-            return
+        
+        # Remove existing for this user
+        MATCHMAKING_QUEUE = [p for p in MATCHMAKING_QUEUE if p['user_id'] != self.user.id]
 
         rating = await self.get_user_rating(mode)
         
+        # JAVÍTÁS: Itt tároljuk el a username-t stringként, hogy könnyebb legyen kezelni
         entry = {
             'channel_name': self.channel_name,
             'user_id': self.user.id,
-            'user': self.user, 
+            'username': self.user.username, # JAVÍTVA: stringet tárolunk
+            'user_obj': self.user,          # Megtartjuk az objektumot a create_game-hez
             'rating': rating,
             'mode': mode,
             'joined_at': time.time()
         }
         
         MATCHMAKING_QUEUE.append(entry)
-        await self.send(text_data=json.dumps({"status": "searching", "mode": mode}))
         
-        # Trigger matchmaking check
+        print(f"Added to queue: {self.user.username} ({mode}, {rating}) - Queue size: {len(MATCHMAKING_QUEUE)}")
+        
+        await self.send(text_data=json.dumps({"status": "searching", "mode": mode}))
+
+        # Trigger check
         asyncio.create_task(self.check_queue())
 
     async def remove_from_queue(self):
         global MATCHMAKING_QUEUE
         MATCHMAKING_QUEUE = [p for p in MATCHMAKING_QUEUE if p['channel_name'] != self.channel_name]
+        print(f"Removed from queue: {self.user.username}")
         await self.send(text_data=json.dumps({"status": "cancelled"}))
 
     @database_sync_to_async
     def get_user_rating(self, mode):
         from users.ranking_service import RankingService
-        profile, _ = PlayerProfile.objects.get_or_create(user=self.user)
-        if mode == "ranked":
-            return profile.mmr if profile.mmr is not None else RankingService.STARTING_MMR
-        return profile.level
-    
+        try:
+            profile, _ = PlayerProfile.objects.get_or_create(user=self.user)
+            if mode == "ranked":
+                return profile.mmr if profile.mmr is not None else RankingService.STARTING_MMR
+            return profile.level
+        except Exception:
+            return 1000
+
     @database_sync_to_async
     def create_game(self, user1_id, user2_id, mode):
         user1 = User.objects.get(id=user1_id)
         user2 = User.objects.get(id=user2_id)
         
-        # Create game
         game = Game.objects.create(
             mode=mode,
             player_x=user1,
@@ -119,73 +129,58 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
     async def check_queue(self):
         global MATCHMAKING_QUEUE
         
-        # Simple greedy match for THIS user
+        # 1. Megkeressük magunkat a sorban
         me = next((p for p in MATCHMAKING_QUEUE if p['channel_name'] == self.channel_name), None)
-        if not me: 
-            return # I'm not in queue
+        if not me:
+            return 
 
-        # Find opponent with SAME mode
-        opponent = None
-        now = time.time()
-        my_wait = now - me['joined_at']
-        
-        # If > 30s, we might expand search
-        force_match = my_wait > 30
-        
-        best_candidate = None
-        min_diff = 999999
-        
-        # Only consider candidates in the same mode
+        # JAVÍTÁS: user object helyett a username mezőt használjuk a logoláshoz, ami már string
+        print(f"Checking queue for {me['username']} (Mode: {me['mode']})...")
+
+        # 2. Keresünk ellenfelet
         candidates = [p for p in MATCHMAKING_QUEUE if p['user_id'] != me['user_id'] and p['mode'] == me['mode']]
         
-        # Thresholds
-        threshold = 100 if me['mode'] == 'ranked' else 10
+        if not candidates:
+            # print("No candidates found yet.")
+            return
 
-        for candidate in candidates:
-            diff = abs(candidate['rating'] - me['rating'])
-            
-            if force_match:
-                if diff < min_diff:
-                    min_diff = diff
-                    best_candidate = candidate
-            else:
-                if diff <= threshold:
-                    best_candidate = candidate
-                    break
+        # 3. Párosítás (egyszerűsített)
+        opponent = candidates[0] 
+
+        print(f"MATCH FOUND: {me['username']} vs {opponent['username']}")
         
-        opponent = best_candidate
+        # Törlés a sorból
+        MATCHMAKING_QUEUE = [p for p in MATCHMAKING_QUEUE if p['channel_name'] not in (me['channel_name'], opponent['channel_name'])]
         
-        if opponent:
-            # We found a match!
-            MATCHMAKING_QUEUE = [p for p in MATCHMAKING_QUEUE if p['channel_name'] not in (me['channel_name'], opponent['channel_name'])]
-            
+        try:
             game_id = await self.create_game(me['user_id'], opponent['user_id'], me['mode'])
             
-            # Notify both
+            # Értesítés
             opponent_label = f"{opponent['rating']} MMR" if me['mode'] == 'ranked' else f"Lvl {opponent['rating']}"
             me_label = f"{me['rating']} MMR" if me['mode'] == 'ranked' else f"Lvl {me['rating']}"
 
-            await self.channel_layer.send(
-                me['channel_name'],
-                {
-                    "type": "match_found",
-                    "game_id": str(game_id),
-                    "opponent": opponent_label,
-                    "opponent_username": opponent['user'].username
-                }
-            )
-            
+            # Én értesítése
+            await self.send(text_data=json.dumps({
+                "status": "match_found",
+                "game_id": str(game_id),
+                "opponent": opponent_label,
+                "opponent_username": opponent['username']
+            }))
+
+            # Ellenfél értesítése
             await self.channel_layer.send(
                 opponent['channel_name'],
                 {
-                    "type": "match_found",
+                    "type": "match_found_event",
                     "game_id": str(game_id),
                     "opponent": me_label,
-                    "opponent_username": me['user'].username
+                    "opponent_username": me['username']
                 }
             )
+        except Exception as e:
+            print(f"Error creating match: {e}")
 
-    async def match_found(self, event):
+    async def match_found_event(self, event):
         await self.send(text_data=json.dumps({
             "status": "match_found",
             "game_id": event["game_id"],
