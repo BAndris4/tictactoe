@@ -92,8 +92,10 @@ class GameConsumer(AsyncWebsocketConsumer):
                     # Process Leveling (XP)
                     xp_results = await database_sync_to_async(LevelingService.process_game_end)(game)
                     
-                    # Process Ranking (MMR)
-                    mmr_results = await database_sync_to_async(RankingService.process_game_end)(game)
+                    # Process Ranking (MMR & LP)
+                    ranking_results = await database_sync_to_async(RankingService.process_game_end)(game)
+                    mmr_results = ranking_results.get('mmr', {})
+                    lp_results = ranking_results.get('lp', {})
                     
                     await self.channel_layer.group_send(
                         self.room_group_name,
@@ -104,7 +106,8 @@ class GameConsumer(AsyncWebsocketConsumer):
                                 'winner': game.winner,
                                 'reason': 'board_full' if game.winner == 'D' else 'regular',
                                 'xp_results': xp_results,
-                                'mmr_results': mmr_results
+                                'mmr_results': mmr_results,
+                                'lp_results': lp_results
                             }
                         }
                     )

@@ -43,8 +43,9 @@ class PlayerProfile(models.Model):
     total_xp = models.IntegerField(default=0)
     
     # Ranked System
-    mmr = models.IntegerField(default=1000)
+    mmr = models.IntegerField(null=True, blank=True, default=None)
     placement_games_played = models.IntegerField(default=0)
+    total_lp = models.IntegerField(null=True, blank=True, default=None)
     
     def __str__(self) -> str:
         return f"{self.user} (Lvl {self.level})"

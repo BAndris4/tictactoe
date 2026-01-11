@@ -94,9 +94,10 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_user_rating(self, mode):
+        from users.ranking_service import RankingService
         profile, _ = PlayerProfile.objects.get_or_create(user=self.user)
         if mode == "ranked":
-            return profile.mmr
+            return profile.mmr if profile.mmr is not None else RankingService.STARTING_MMR
         return profile.level
     
     @database_sync_to_async
