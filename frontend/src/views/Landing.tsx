@@ -14,6 +14,7 @@ import { useAuth } from "../hooks/useAuth";
 import MatchmakingModal from "../components/modals/MatchmakingModal";
 import MatchmakingWidget from "../components/MatchmakingWidget";
 import RankedOverviewModal from "../components/modals/RankedOverviewModal";
+import AIOverviewModal from "../components/modals/AIOverviewModal";
 import { useGame } from "../context/GameContext";
 
 export default function Landing() {
@@ -21,6 +22,7 @@ export default function Landing() {
   const { user, loading, logout } = useAuth();
   const { startSearch } = useGame();
   const [showRankedOverview, setShowRankedOverview] = useState(false);
+  const [showAIOverview, setShowAIOverview] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -42,6 +44,10 @@ export default function Landing() {
           setShowRankedOverview(false);
           startSearch('ranked');
         }}
+      />
+      <AIOverviewModal
+        isOpen={showAIOverview}
+        onClose={() => setShowAIOverview(false)}
       />
       <TopBar />
 
@@ -81,7 +87,7 @@ export default function Landing() {
               dangerouslySetInnerHTML={{ __html: AiIconRaw }}
             />
           }
-          onClick={() => {}}
+          onClick={() => setShowAIOverview(true)}
           iconBgClass="bg-purple-100 text-purple-600"
         />
 
