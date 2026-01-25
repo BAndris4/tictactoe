@@ -200,8 +200,13 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                     <button 
                         onClick={async () => {
                             try {
-                                // For now, all difficulties map to 'bot_easy' until other logics are implemented relative to the prompt
-                                const game = await createGame('bot_easy');
+                                let mode: any = 'bot_easy';
+                                if (selectedDifficulty === 'normal') {
+                                    mode = 'bot_medium';
+                                }
+                                // future: hard -> bot_hard
+                                
+                                const game = await createGame(mode);
                                 navigate(`/game/${game.id}`);
                             } catch (e) {
                                 console.error(e);

@@ -10,7 +10,7 @@ export interface GameMove {
 
 export interface Game {
   id: string;
-  mode: 'local' | 'custom' | 'ai' | 'ranked' | 'unranked' | 'bot_easy';
+  mode: 'local' | 'custom' | 'ai' | 'ranked' | 'unranked' | 'bot_easy' | 'bot_medium';
   status: 'waiting' | 'active' | 'finished' | 'aborted';
   player_x: string | number;
   player_o: string | number | null;
@@ -27,7 +27,7 @@ export interface Game {
   player_o_lp_change?: number;
 }
 
-export const createGame = async (mode: 'local' | 'custom' | 'bot_easy' = 'custom'): Promise<Game> => {
+export const createGame = async (mode: 'local' | 'custom' | 'bot_easy' | 'bot_medium' = 'custom'): Promise<Game> => {
   const response = await fetch(`${API_URL}/games/create/`, {
     method: "POST",
     headers: getHeaders(),
