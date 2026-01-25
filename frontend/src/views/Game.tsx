@@ -102,15 +102,27 @@ function GameContent() {
   }, []);
 
   const { me, opponent } = useMemo(() => {
-    if (!user || !game.players.x) return { me: null, opponent: null };
-    const isX = String(game.players.x) === String(user.id);
+    if (!user) return { me: null, opponent: null };
     
-    return {
-      me: isX ? { name: game.players.xName || user.username, symbol: 'X' as const } : { name: game.players.oName || user.username, symbol: 'O' as const },
-      opponent: isX 
-        ? { name: game.players.oName || (isLocalGame ? user.username : null), symbol: 'O' as const } 
-        : { name: game.players.xName || user.username, symbol: 'X' as const }
-    };
+    // Safely check player assignment
+    const isX = game.players.x && String(game.players.x) === String(user.id);
+    const isO = game.players.o && String(game.players.o) === String(user.id);
+    
+    if (isX) {
+        return {
+            me: { name: game.players.xName || user.username, symbol: 'X' as const },
+            opponent: { name: game.players.oName || (isLocalGame ? user.username : "Opponent"), symbol: 'O' as const }
+        };
+    }
+    
+    if (isO) {
+        return {
+            me: { name: game.players.oName || user.username, symbol: 'O' as const },
+            opponent: { name: game.players.xName || "Opponent", symbol: 'X' as const }
+        };
+    }
+    
+    return { me: null, opponent: null };
   }, [user, game.players, isLocalGame]);
 
   const handleResignClick = () => {

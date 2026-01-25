@@ -5,6 +5,7 @@ import uuid
 
 class GameMode(models.TextChoices):
     AI = 'ai', _('AI')
+    BOT_EASY = 'bot_easy', _('Bot Easy')
     LOCAL = 'local', _('Local')
     CUSTOM = 'custom', _('Custom')
     UNRANKED = 'unranked', _('Unranked')

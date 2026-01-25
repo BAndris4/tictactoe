@@ -123,10 +123,26 @@ class CreateGameView(APIView):
         status_val = GameStatus.WAITING
         if mode == GameMode.LOCAL:
             status_val = GameStatus.ACTIVE
+        
+        player_x = user
+        player_o = None
+        
+        if mode == GameMode.BOT_EASY:
+            import random
+            status_val = GameStatus.ACTIVE
+            if random.choice([True, False]):
+                # User is X
+                player_x = user
+                player_o = None
+            else:
+                # User is O, Bot is X
+                player_x = None
+                player_o = user
 
         game = Game.objects.create(
             mode=mode,
-            player_x=user,
+            player_x=player_x,
+            player_o=player_o,
             status=status_val
         )
         return Response(CreateGameSerializer(game).data, status=status.HTTP_201_CREATED)

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { createGame } from "../../api/game";
 
 interface AIOverviewModalProps {
   isOpen: boolean;
@@ -52,6 +54,7 @@ const BOT_DATA = {
 };
 
 export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProps) {
+  const navigate = useNavigate();
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('normal');
   const activeBot = BOT_DATA[selectedDifficulty];
 
@@ -194,7 +197,19 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                     </div>
 
                     {/* Action Button */}
-                    <button className="flex-shrink-0 w-full py-4 rounded-2xl bg-deepblue text-white font-paytone text-lg uppercase tracking-widest shadow-[0_10px_30px_-10px_rgba(20,30,80,0.4)] hover:bg-[#1a2b5e] hover:scale-[1.01] active:scale-95 transition-all duration-300 flex items-center justify-center gap-3 group relative overflow-hidden">
+                    <button 
+                        onClick={async () => {
+                            try {
+                                // For now, all difficulties map to 'bot_easy' until other logics are implemented relative to the prompt
+                                const game = await createGame('bot_easy');
+                                navigate(`/game/${game.id}`);
+                            } catch (e) {
+                                console.error(e);
+                                alert("Failed to start bot game");
+                            }
+                        }}
+                        className="flex-shrink-0 w-full py-4 rounded-2xl bg-deepblue text-white font-paytone text-lg uppercase tracking-widest shadow-[0_10px_30px_-10px_rgba(20,30,80,0.4)] hover:bg-[#1a2b5e] hover:scale-[1.01] active:scale-95 transition-all duration-300 flex items-center justify-center gap-3 group relative overflow-hidden"
+                    >
                         <span className="relative z-10 flex items-center gap-2">
                             <span>Start Match</span>
                             <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
