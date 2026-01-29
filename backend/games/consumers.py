@@ -42,6 +42,16 @@ class GameConsumer(AsyncWebsocketConsumer):
             )
 
             await self.accept()
+
+            # If it's a bot game and it's bot's turn, trigger it
+            if self.game.mode in ['bot_easy', 'bot_medium']:
+                 user_id = self.user.id
+                 is_player = (user_id == self.game.player_x_id or user_id == self.game.player_o_id)
+                 if is_player:
+                     from .bot_service import BotService
+                     import asyncio
+                     asyncio.create_task(BotService.process_bot_move(self.game_id, self.channel_layer, self.room_group_name))
+
         except Exception:
             await self.close()
 
@@ -129,6 +139,14 @@ class GameConsumer(AsyncWebsocketConsumer):
                             }
                         }
                     )
+                
+                # --- BOT INTEGRATION ---
+                elif game.mode in ['bot_easy', 'bot_medium']:
+                    # Trigger Bot Turn if game is active
+                    from .bot_service import BotService
+                    # Run in background (don't await strictly? or await is fine)
+                    import asyncio
+                    asyncio.create_task(BotService.process_bot_move(self.game_id, self.channel_layer, self.room_group_name))
 
             except ValueError as e:
                 # Send error message to THIS socket only
@@ -176,6 +194,15 @@ class GameConsumer(AsyncWebsocketConsumer):
              # In local mode, the creator plays both sides (or hotseat)
              # We assume the move is for the current turn if validated
              player_char = game.current_turn
+        elif game.mode in ['bot_easy', 'bot_medium']:
+             # Allow move if user is the assigned player
+             if user == game.player_x:
+                 player_char = 'X'
+             elif user == game.player_o:
+                 player_char = 'O'
+             else:
+                 # Spectator or invalid
+                 raise ValueError("You are not playing in this game.")
         elif user == game.player_x:
             player_char = 'X'
         elif user == game.player_o:
