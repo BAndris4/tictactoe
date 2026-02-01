@@ -87,13 +87,21 @@ export default function SocialMenu() {
                         <p className="text-[10px] text-deepblue/40 font-medium">Online</p>
                       </div>
                     </div>
-                    <button 
-                       onClick={() => handleQuickInvite(friend)}
-                       disabled={invitingId === friend.id}
-                       className="px-3 py-1.5 rounded-lg bg-deepblue text-white text-[10px] font-bold font-paytone opacity-0 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95 shadow-sm disabled:opacity-50"
-                    >
-                      {invitingId === friend.id ? "..." : "Invite"}
-                    </button>
+                    <div className="flex gap-1">
+                        <button 
+                           onClick={() => { navigate(`/profile/${friend.username}`); setIsOpen(false); }}
+                           className="px-3 py-1.5 rounded-lg bg-slate-100 text-deepblue text-[10px] font-bold font-paytone opacity-0 group-hover:opacity-100 transition-all hover:bg-slate-200"
+                        >
+                          Profile
+                        </button>
+                        <button 
+                           onClick={() => handleQuickInvite(friend)}
+                           disabled={invitingId === friend.id}
+                           className="px-3 py-1.5 rounded-lg bg-deepblue text-white text-[10px] font-bold font-paytone opacity-0 group-hover:opacity-100 transition-all hover:scale-105 active:scale-95 shadow-sm disabled:opacity-50"
+                        >
+                          {invitingId === friend.id ? "..." : "Invite"}
+                        </button>
+                    </div>
                   </div>
                 ))
               )}

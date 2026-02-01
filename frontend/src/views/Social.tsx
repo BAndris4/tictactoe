@@ -225,6 +225,12 @@ export default function Social() {
                                     </div>
                                     <div className="flex gap-2">
                                         <button 
+                                            onClick={() => navigate(`/profile/${friend.username}`)}
+                                            className="px-4 py-2 rounded-xl bg-slate-100 text-deepblue text-xs font-bold font-paytone opacity-0 group-hover:opacity-100 transition-all hover:bg-slate-200"
+                                        >
+                                            View Profile
+                                        </button>
+                                        <button 
                                             onClick={() => handleUnfriend(friend.username)}
                                             className="px-4 py-2 rounded-xl bg-red-50 text-red-500 text-xs font-bold font-paytone opacity-0 group-hover:opacity-100 transition-all hover:bg-red-100"
                                         >

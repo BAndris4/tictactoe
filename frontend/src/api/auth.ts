@@ -78,5 +78,15 @@ export const authApi = {
     });
     if (!response.ok) throw new Error("Failed to update profile");
     return response.json();
+  },
+
+  getProfile: async (username: string) => {
+    const response = await fetch(`${API_URL}/users/profile/${username}`, {
+      method: "GET",
+      headers: getHeaders(),
+      credentials: "include",
+    });
+    if (!response.ok) throw new Error("Failed to fetch profile");
+    return response.json();
   }
 };
