@@ -101,6 +101,8 @@ class RegisterView(APIView):
                 first_name=data.get("first_name"),
                 last_name=data.get("last_name"),
                 phone_number=data.get("phone_number"),
+                gender=data.get("gender", "M"),
+                avatar_config=data.get("avatar_config"),
             )
         except UsernameAlreadyTaken:
             return Response(

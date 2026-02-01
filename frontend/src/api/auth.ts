@@ -33,6 +33,8 @@ export const authApi = {
           last_name: values.lastName,
           phone_number: serializePhone(values.phone),
           play_tutorial: values.playTutorial,
+          gender: values.gender,
+          avatar_config: values.avatar_config
         }),
       });
 
@@ -66,6 +68,8 @@ export const authApi = {
     email: string;
     phone_number: string;
     username: string;
+    avatar_config: any;
+    gender: 'M' | 'F';
   }>) => {
     const response = await fetch(`${API_URL}/users/me`, {
       method: "PATCH",

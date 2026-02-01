@@ -48,6 +48,14 @@ class PlayerProfile(models.Model):
     total_lp = models.IntegerField(null=True, blank=True, default=None)
     current_streak = models.IntegerField(default=0) # positive for wins, negative for losses
     
+    # Avatar System
+    GENDER_CHOICES = [
+        ('M', 'Male'),
+        ('F', 'Female'),
+    ]
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')
+    avatar_config = models.JSONField(default=dict, blank=True)
+    
     def __str__(self) -> str:
         return f"{self.user} (Lvl {self.level})"
 

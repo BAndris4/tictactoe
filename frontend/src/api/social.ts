@@ -15,6 +15,10 @@ export interface FriendUser {
   first_name: string;
   last_name: string;
   phone_number: string;
+  profile?: {
+    avatar_config?: any;
+    gender?: 'M' | 'F';
+  };
 }
 
 export const sendFriendRequest = async (username: string): Promise<Friendship> => {

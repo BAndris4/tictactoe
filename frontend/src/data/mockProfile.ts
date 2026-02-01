@@ -27,6 +27,8 @@ export interface UserProfile {
       total_lp: number;
       rank: string;
       lp_in_division: number;
+      avatar_config?: any;
+      gender?: 'M' | 'F';
   };
 }
 

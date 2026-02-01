@@ -9,6 +9,7 @@ interface LandingProfileCardProps {
 }
 
 import CircularProgressBar from "./common/CircularProgressBar";
+import Avatar from 'avataaars';
 
 export default function LandingProfileCard({
   user,
@@ -45,8 +46,18 @@ export default function LandingProfileCard({
                  size={135}
                  strokeWidth={5}
              >
-                  <div className="w-full h-full flex items-center justify-center text-4xl font-extrabold text-deepblue font-paytone bg-slate-50">
-                     {getInitials()}
+                  <div className="w-full h-full flex items-center justify-center text-4xl font-extrabold text-deepblue font-paytone bg-slate-50 overflow-hidden">
+                     {(user as any).profile?.avatar_config ? (
+                         <div className="w-[110%] h-[110%] mt-2">
+                            <Avatar
+                                style={{ width: '100%', height: '100%' }}
+                                avatarStyle="Transparent"
+                                {...(user as any).profile.avatar_config}
+                            />
+                         </div>
+                     ) : (
+                         getInitials()
+                     )}
                   </div>
              </CircularProgressBar>
         </div>

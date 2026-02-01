@@ -12,10 +12,15 @@ class RegisterSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
     last_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
     phone_number = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    gender = serializers.ChoiceField(choices=['M', 'F'], default='M')
+    avatar_config = serializers.JSONField(required=False)
 
 
 class UserSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
+
+    avatar_config = serializers.JSONField(required=False, write_only=True)
+    gender = serializers.ChoiceField(choices=['M', 'F'], required=False, write_only=True)
 
     class Meta:
         model = User
@@ -26,8 +31,26 @@ class UserSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "phone_number",
-            "profile"
+            "profile",
+            "avatar_config",
+            "gender"
         ]
+
+    def update(self, instance, validated_data):
+        avatar_config = validated_data.pop('avatar_config', None)
+        gender = validated_data.pop('gender', None)
+        instance = super().update(instance, validated_data)
+        
+        if avatar_config is not None or gender is not None:
+             from ..models import PlayerProfile
+             profile, _ = PlayerProfile.objects.get_or_create(user=instance)
+             if avatar_config is not None:
+                 profile.avatar_config = avatar_config
+             if gender is not None:
+                 profile.gender = gender
+             profile.save()
+        
+        return instance
 
     def get_profile(self, obj):
         # Ensure profile exists
@@ -53,8 +76,11 @@ class UserSerializer(serializers.ModelSerializer):
             "placement_games_played": profile.placement_games_played,
             "total_lp": total_lp,
             "rank": rank_name,
-            "lp_in_division": lp_in_division
+            "lp_in_division": lp_in_division,
+            "gender": profile.gender,
+            "avatar_config": profile.avatar_config
         }
+
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
@@ -112,6 +138,8 @@ class PublicUserSerializer(serializers.ModelSerializer):
             "total_lp": total_lp,
             "lp_in_division": lp_in_division,
             "rank": rank_name,
+            "gender": profile.gender,
+            "avatar_config": profile.avatar_config
         }
 
     def get_stats(self, obj):
