@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { createGame } from "../../api/game";
+import { useState, useEffect } from "react";
+import { createGame, getBotStats } from "../../api/game";
 import UserAvatar from "../common/UserAvatar";
 import { useGame } from "../../context/GameContext";
 
@@ -10,7 +10,7 @@ interface AIOverviewModalProps {
 
 type Difficulty = 'easy' | 'normal' | 'hard' | 'custom';
 
-// MOCK DATA - In real app, this would come from API/Context
+// Bot configuration data - stats loaded from backend API
 const BOT_DATA = {
     easy: {
         id: 'easy',
@@ -32,7 +32,7 @@ const BOT_DATA = {
         bgWithOpacity: "bg-mint/10",
         border: "border-mint/20",
         description: "A friendly opponent who's still learning the ropes. Oliver is here for a good time!",
-        stats: { wins: 12, losses: 0, winRate: 100 }
+        stats: { wins: 0, total_games: 0, win_rate: 0 }
     },
     normal: {
         id: 'normal',
@@ -54,7 +54,7 @@ const BOT_DATA = {
         bgWithOpacity: "bg-blue-500/10",
         border: "border-blue-500/20",
         description: "Sophia plays with logic and poise. She won't give up sub-boards without a fight.",
-        stats: { wins: 5, losses: 8, winRate: 38 }
+        stats: { wins: 0, total_games: 0, win_rate: 0 }
     },
     hard: {
         id: 'hard',
@@ -77,7 +77,7 @@ const BOT_DATA = {
         bgWithOpacity: "bg-coral/10",
         border: "border-coral/20",
         description: "The Grandmaster of TicTacToe. Magnus calculates every move with ruthless precision.",
-        stats: { wins: 0, losses: 24, winRate: 0 }
+        stats: { wins: 0, total_games: 0, win_rate: 0 }
     },
     custom: {
         id: 'custom',
@@ -99,15 +99,40 @@ const BOT_DATA = {
         bgWithOpacity: "bg-deepblue/5",
         border: "border-deepblue/10",
         description: "A highly adaptable AI that changes its behavior based on your parameters. Configure its chaos levels!",
-        stats: { wins: 0, losses: 0, winRate: 0 }
+        stats: { wins: 0, total_games: 0, win_rate: 0 }
     }
 };
 
 export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProps) {
+  console.log('[AI MODAL] Component rendered, isOpen:', isOpen);
+  
   const { setMatchFoundData } = useGame();
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('normal');
   const [customDifficulty, setCustomDifficulty] = useState(50);
-  const activeBot = BOT_DATA[selectedDifficulty];
+  const [botStats, setBotStats] = useState<any>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+        console.log('[BOT STATS] Fetching from backend...');
+        getBotStats()
+            .then(data => {
+                console.log('[BOT STATS] Received from backend:', data);
+                setBotStats(data);
+            })
+            .catch(err => {
+                console.error('[BOT STATS] Failed to fetch:', err);
+            });
+    }
+  }, [isOpen]);
+
+  const activeBotBase = BOT_DATA[selectedDifficulty];
+  const activeBot = {
+      ...activeBotBase,
+      stats: botStats ? botStats[selectedDifficulty] : activeBotBase.stats
+  };
+
+  console.log('[BOT STATS] Current botStats:', botStats);
+  console.log('[BOT STATS] Active bot stats:', activeBot.stats);
 
   if (!isOpen) return null;
 
@@ -232,9 +257,9 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                     {/* Stats Row */}
                     <div className="grid grid-cols-3 gap-3 flex-shrink-0">
                         {[
-                            { label: "vs " + activeBot.name, value: `${activeBot.stats.wins} - ${activeBot.stats.losses}`, color: 'text-deepblue' },
-                            { label: "Win Rate", value: activeBot.stats.winRate + "%", color: activeBot.stats.winRate >= 50 ? 'text-mint' : 'text-coral' },
-                            { label: "Status", value: "READY", color: 'text-deepblue/60' }
+                            { label: "vs " + activeBot.name, value: `${activeBot.stats.wins} - ${activeBot.stats.total_games - activeBot.stats.wins}`, color: 'text-deepblue' },
+                            { label: "Win Rate", value: activeBot.stats.win_rate + "%", color: activeBot.stats.win_rate >= 50 ? 'text-mint' : 'text-coral' },
+                            { label: "Total Games", value: activeBot.stats.total_games, color: 'text-deepblue/60' }
                         ].map((stat, i) => (
                             <div key={i} className="bg-white p-3 rounded-2xl border border-slate-50 shadow-sm flex flex-col items-center justify-center">
                                  <span className="text-[10px] font-black text-deepblue/30 uppercase tracking-tighter mb-0.5">{stat.label}</span>

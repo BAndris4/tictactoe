@@ -152,3 +152,15 @@ export const respondToGameInvitation = async (invitationId: number, action: 'acc
 
   return response.json();
 };
+
+export const getBotStats = async (): Promise<any> => {
+    const response = await fetch(`${API_URL}/games/bot-stats/`, {
+        headers: getHeaders(),
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch bot stats");
+    }
+
+    return response.json();
+};
