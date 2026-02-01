@@ -62,6 +62,31 @@ export const authApi = {
     return response.json();
   },
 
+  requestPasswordReset: async (email: string) => {
+    const response = await fetch(`${API_URL}/users/request-password-reset`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    // Even if it fails, we usually don't want to leak info, 
+    // but here we throw if the actual request fails (e.g. network)
+    if (!response.ok) throw new Error("Request failed");
+    return response.json();
+  },
+
+  confirmPasswordReset: async (token: string, newPassword: string) => {
+     const response = await fetch(`${API_URL}/users/confirm-password-reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, new_password: newPassword }),
+      });
+      if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.detail || "Reset failed");
+      }
+      return response.json();
+  },
+
   getMe: async () => {
     const response = await fetch(`${API_URL}/users/me`, {
       method: "GET",
