@@ -7,6 +7,7 @@ import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
 import { getAuthToken, useAuth } from "../hooks/useAuth";
 import { getGame } from "../api/game";
 import { useToast } from "./ToastContext";
+import { reconstructGameStateAtMove } from "../utils/gameStateUtils";
 
 type Player = "X" | "O";
 
@@ -50,6 +51,14 @@ interface GameContextType {
   setMatchFoundData: (data: any) => void;
   opponentStatus: 'active' | 'away';
   updatePlayerStatus: (status: 'active' | 'away') => void;
+  // Move History Navigation
+  currentHistoryIndex: number | null; // null = live position, number = reviewing history
+  isReviewingHistory: boolean;
+  goToMove: (index: number) => void;
+  stepForward: () => void;
+  stepBackward: () => void;
+  goToLive: () => void;
+  goToStart: () => void;
 }
 
 export const GameContext = createContext<GameContextType | undefined>(
@@ -93,6 +102,9 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   
   const [matchFoundData, setMatchFoundData] = useState<{ gameId: string; opponent: string; opponentUsername?: string; opponentAvatar?: any; mySymbol?: 'X' | 'O' } | null>(null);
   const [opponentStatus, setOpponentStatus] = useState<'active' | 'away'>('active');
+  
+  // Move History Navigation
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState<number | null>(null);
   
   const { user } = useAuth();
   const userRef = useRef(user);
@@ -487,6 +499,57 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
       }
   };
 
+  // History Navigation Methods
+  const goToMove = (index: number) => {
+    if (index < -1 || index >= moves.length) return;
+    setCurrentHistoryIndex(index);
+    
+    // Reconstruct board state at this move
+    const reconstructed = reconstructGameStateAtMove(moves, index);
+    setCells(reconstructed.cells);
+    setSmallWinners(reconstructed.smallWinners);
+    setCurrentPlayer(reconstructed.currentPlayer);
+    setPreviousMove(reconstructed.previousMove);
+    setWinner(reconstructed.winner);
+  };
+
+  const stepBackward = () => {
+    const newIndex = currentHistoryIndex === null 
+      ? moves.length - 2  // From live, go to second-to-last
+      : currentHistoryIndex - 1;
+    
+    if (newIndex >= -1) {
+      goToMove(newIndex);
+    }
+  };
+
+  const stepForward = () => {
+    if (currentHistoryIndex === null || currentHistoryIndex >= moves.length - 1) {
+      goToLive();
+      return;
+    }
+    goToMove(currentHistoryIndex + 1);
+  };
+
+  const goToStart = () => {
+    goToMove(-1); // -1 represents initial empty board
+  };
+
+  const goToLive = () => {
+    setCurrentHistoryIndex(null);
+    // Reconstruct current live state
+    if (moves.length > 0) {
+      const reconstructed = reconstructGameStateAtMove(moves, moves.length - 1);
+      setCells(reconstructed.cells);
+      setSmallWinners(reconstructed.smallWinners);
+      setCurrentPlayer(reconstructed.currentPlayer);
+      setPreviousMove(reconstructed.previousMove);
+      setWinner(reconstructed.winner);
+    }
+  };
+
+  const isReviewingHistory = currentHistoryIndex !== null;
+
   return (
     <GameContext.Provider
       value={{
@@ -520,7 +583,15 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         matchFoundData,
         setMatchFoundData,
         opponentStatus,
-        updatePlayerStatus
+        updatePlayerStatus,
+        // History Navigation
+        currentHistoryIndex,
+        isReviewingHistory,
+        goToMove,
+        stepForward,
+        stepBackward,
+        goToLive,
+        goToStart
       }}
     >
       {children}
