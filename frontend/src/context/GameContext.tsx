@@ -46,7 +46,8 @@ interface GameContextType {
   startSearch: (mode?: 'unranked' | 'ranked' | any) => void; // Megengedjük az 'any'-t a javításhoz
   cancelSearch: () => void;
   minimizeSearch: (minimized: boolean) => void;
-  matchFoundData: { gameId: string; opponent: string; opponentUsername?: string; opponentAvatar?: any } | null;
+  matchFoundData: { gameId: string; opponent: string; opponentUsername?: string; opponentAvatar?: any; mySymbol?: 'X' | 'O' } | null;
+  setMatchFoundData: (data: any) => void;
   opponentStatus: 'active' | 'away';
   updatePlayerStatus: (status: 'active' | 'away') => void;
 }
@@ -90,7 +91,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   const [searchMode, setSearchMode] = useState<'unranked' | 'ranked'>('unranked');
   const [matchmakingSocket, setMatchmakingSocket] = useState<WebSocket | null>(null);
   
-  const [matchFoundData, setMatchFoundData] = useState<{ gameId: string; opponent: string; opponentUsername?: string; opponentAvatar?: any } | null>(null);
+  const [matchFoundData, setMatchFoundData] = useState<{ gameId: string; opponent: string; opponentUsername?: string; opponentAvatar?: any; mySymbol?: 'X' | 'O' } | null>(null);
   const [opponentStatus, setOpponentStatus] = useState<'active' | 'away'>('active');
   
   const { user } = useAuth();
@@ -156,7 +157,8 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
             gameId: data.game_id,
             opponent: data.opponent,
             opponentUsername: data.opponent_username,
-            opponentAvatar: data.opponent_avatar
+            opponentAvatar: data.opponent_avatar,
+            mySymbol: data.my_symbol
           });
         }
       };
@@ -351,6 +353,10 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
              return;
           }
           setOpponentStatus(data.status);
+      } else if (data.type === "error") {
+          showToast(data.message || "An error occurred", "error");
+          triggerShake();
+          triggerFlash();
       }
     };
 
@@ -512,6 +518,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         cancelSearch,
         minimizeSearch,
         matchFoundData,
+        setMatchFoundData,
         opponentStatus,
         updatePlayerStatus
       }}

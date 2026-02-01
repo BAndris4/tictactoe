@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { createGame } from "../../api/game";
+import { useState, useEffect } from "react";
+import { createGame, getBotStats } from "../../api/game";
+import UserAvatar from "../common/UserAvatar";
+import { useGame } from "../../context/GameContext";
 
 interface AIOverviewModalProps {
   isOpen: boolean;
@@ -9,61 +10,136 @@ interface AIOverviewModalProps {
 
 type Difficulty = 'easy' | 'normal' | 'hard' | 'custom';
 
-// MOCK DATA - In real app, this would come from API/Context
+// Bot configuration data - stats loaded from backend API
 const BOT_DATA = {
     easy: {
         id: 'easy',
-        name: "Tiny Bot",
+        name: "Oliver",
         icon: "🐣",
+        avatar: {
+            topType: 'ShortHairShaggyMullet',
+            accessoriesType: 'Blank',
+            hairColor: 'Blonde',
+            facialHairType: 'Blank',
+            clotheType: 'Hoodie',
+            clotheColor: 'PastelOrange',
+            eyeType: 'Default',
+            eyebrowType: 'DefaultNatural',
+            mouthType: 'Smile',
+            skinColor: 'Light',
+        },
         color: "text-mint",
         bgWithOpacity: "bg-mint/10",
         border: "border-mint/20",
-        description: "Perfect for beginners. Tiny Bot moves randomly and makes frequent mistakes.",
-        stats: { wins: 12, losses: 0, winRate: 100 }
+        description: "A friendly opponent who's still learning the ropes. Oliver is here for a good time!",
+        stats: { wins: 0, total_games: 0, win_rate: 0 }
     },
     normal: {
         id: 'normal',
-        name: "Beta Unit",
+        name: "Sophia",
         icon: "🤖",
+        avatar: {
+            topType: 'LongHairStraight',
+            accessoriesType: 'Prescription02',
+            hairColor: 'BrownDark',
+            facialHairType: 'Blank',
+            clotheType: 'BlazerShirt',
+            clotheColor: 'Blue03',
+            eyeType: 'Default',
+            eyebrowType: 'RaisedExcitedNatural',
+            mouthType: 'Default',
+            skinColor: 'Pale',
+        },
         color: "text-blue-500",
         bgWithOpacity: "bg-blue-500/10",
         border: "border-blue-500/20",
-        description: "A balanced opponent. Beta Unit thinks ahead but leaves openings.",
-        stats: { wins: 5, losses: 8, winRate: 38 }
+        description: "Sophia plays with logic and poise. She won't give up sub-boards without a fight.",
+        stats: { wins: 0, total_games: 0, win_rate: 0 }
     },
     hard: {
         id: 'hard',
-        name: "Omega AI",
+        name: "Magnus",
         icon: "👿",
+        avatar: {
+            topType: 'ShortHairTheCaesar',
+            accessoriesType: 'Sunglasses',
+            hairColor: 'Black',
+            facialHairType: 'BeardMedium',
+            facialHairColor: 'Black',
+            clotheType: 'BlazerSweater',
+            clotheColor: 'Gray01',
+            eyeType: 'Default',
+            eyebrowType: 'Default',
+            mouthType: 'Serious',
+            skinColor: 'Tanned',
+        },
         color: "text-coral",
         bgWithOpacity: "bg-coral/10",
         border: "border-coral/20",
-        description: "The ultimate challenge. Omega calculates deep into the future. No mercy.",
-        stats: { wins: 0, losses: 24, winRate: 0 }
+        description: "The Grandmaster of TicTacToe. Magnus calculates every move with ruthless precision.",
+        stats: { wins: 0, total_games: 0, win_rate: 0 }
     },
     custom: {
         id: 'custom',
-        name: "Custom Bot",
+        name: "Neuro",
         icon: "⚙️",
+        avatar: {
+            topType: 'NoHair',
+            accessoriesType: 'Blank',
+            hairColor: 'Blank',
+            facialHairType: 'Blank',
+            clotheType: 'GraphicShirt',
+            clotheColor: 'Black',
+            eyeType: 'Dizzy',
+            eyebrowType: 'Default',
+            mouthType: 'Smile',
+            skinColor: 'Light',
+        },
         color: "text-deepblue",
         bgWithOpacity: "bg-deepblue/5",
         border: "border-deepblue/10",
-        description: "Configure your opponent's parameters to creating a unique training scenario.",
-        stats: { wins: 0, losses: 0, winRate: 0 }
+        description: "A highly adaptable AI that changes its behavior based on your parameters. Configure its chaos levels!",
+        stats: { wins: 0, total_games: 0, win_rate: 0 }
     }
 };
 
 export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProps) {
-  const navigate = useNavigate();
+  console.log('[AI MODAL] Component rendered, isOpen:', isOpen);
+  
+  const { setMatchFoundData } = useGame();
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('normal');
-  const activeBot = BOT_DATA[selectedDifficulty];
+  const [customDifficulty, setCustomDifficulty] = useState(50);
+  const [botStats, setBotStats] = useState<any>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+        console.log('[BOT STATS] Fetching from backend...');
+        getBotStats()
+            .then(data => {
+                console.log('[BOT STATS] Received from backend:', data);
+                setBotStats(data);
+            })
+            .catch(err => {
+                console.error('[BOT STATS] Failed to fetch:', err);
+            });
+    }
+  }, [isOpen]);
+
+  const activeBotBase = BOT_DATA[selectedDifficulty];
+  const activeBot = {
+      ...activeBotBase,
+      stats: botStats ? botStats[selectedDifficulty] : activeBotBase.stats
+  };
+
+  console.log('[BOT STATS] Current botStats:', botStats);
+  console.log('[BOT STATS] Active bot stats:', activeBot.stats);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-[#0F172A]/80 backdrop-blur-sm animate-fadeIn" onClick={onClose} />
-      <div className="relative bg-[#F3F4FF] w-full max-w-5xl h-[90vh] max-h-[700px] rounded-[2.5rem] overflow-hidden shadow-2xl animate-fadeScaleIn border-[8px] border-white flex flex-col">
+      <div className="relative bg-[#F3F4FF] w-full max-w-5xl h-[90vh] max-h-[850px] rounded-[2.5rem] overflow-hidden shadow-2xl animate-fadeScaleIn border-[8px] border-white flex flex-col">
         
         {/* Decorative Background */}
         <div className={`absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full blur-[120px] pointer-events-none transition-colors duration-700 ${selectedDifficulty === 'easy' ? 'bg-mint/10' : selectedDifficulty === 'normal' ? 'bg-blue-500/10' : selectedDifficulty === 'hard' ? 'bg-coral/10' : 'bg-slate-500/10'}`}></div>
@@ -109,7 +185,7 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                         <div className="relative h-full flex flex-col items-center p-6 z-10 overflow-y-auto scrollbar-hide">
                             
                             <div className="w-full flex justify-between items-center mb-4 flex-shrink-0">
-                                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full bg-white/50 backdrop-blur-sm ${activeBot.color}`}>
+                                <span className={`text-xs font-black uppercase tracking-widest px-2 py-1 rounded-full bg-white/50 backdrop-blur-sm ${activeBot.color}`}>
                                     {selectedDifficulty}
                                 </span>
                                 {selectedDifficulty === 'hard' && <span className="text-xl">🔥</span>}
@@ -120,7 +196,13 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                                 <div className={`absolute inset-0 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 ${activeBot.bgWithOpacity}`}></div>
                                 
                                 <div className="text-[100px] leading-none drop-shadow-2xl transform transition-transform duration-500 group-hover:scale-110 motion-safe:animate-bounce-slow">
-                                    {activeBot.icon}
+                                    {activeBot.avatar ? (
+                                        <div className="w-32 h-32 rounded-full border-4 border-white shadow-xl overflow-hidden">
+                                            <UserAvatar avatarConfig={activeBot.avatar} size="100%" className="w-full h-full" />
+                                        </div>
+                                    ) : (
+                                        activeBot.icon
+                                    )}
                                 </div>
                                 
                                 <h3 className={`text-3xl font-black font-paytone text-center mt-4 uppercase tracking-tight ${activeBot.color}`}>
@@ -128,11 +210,43 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                                 </h3>
                             </div>
 
-                            <div className="w-full bg-white/60 backdrop-blur-md rounded-xl p-3 text-center border border-white/50 shadow-sm mt-4 flex-shrink-0">
-                                <p className="text-[11px] font-medium text-deepblue/70 leading-relaxed">
+                            <div className="w-full bg-white/60 backdrop-blur-md rounded-xl p-4 text-center border border-white/50 shadow-sm mt-4 flex-shrink-0">
+                                <p className="text-sm font-medium text-deepblue/70 leading-relaxed">
                                     "{activeBot.description}"
                                 </p>
                             </div>
+
+                            {selectedDifficulty === 'custom' && (
+                                <div className="w-full mt-6 space-y-4 animate-fadeIn">
+                                    <div className="flex justify-between items-center px-1">
+                                        <span className="text-xs font-black uppercase tracking-widest text-deepblue/40">Intelligence</span>
+                                        <span className={`text-sm font-black font-paytone ${customDifficulty < 30 ? 'text-coral' : customDifficulty < 70 ? 'text-blue-500' : 'text-mint'}`}>
+                                            {customDifficulty}% Chaos
+                                        </span>
+                                    </div>
+                                    <input 
+                                        type="range" 
+                                        min="0" 
+                                        max="100" 
+                                        value={customDifficulty}
+                                        onChange={(e) => setCustomDifficulty(parseInt(e.target.value))}
+                                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-deepblue"
+                                    />
+                                    <div className="flex justify-between text-xs font-bold text-deepblue/30 uppercase">
+                                        <span>Perfect</span>
+                                        <span>Random</span>
+                                    </div>
+                                    <div className="bg-white/40 p-3 rounded-lg border border-white/20 text-center">
+                                         <p className="text-sm font-bold text-deepblue/60 italic">
+                                             {customDifficulty === 0 ? "Magnus Level: Unbeatable logic." :
+                                              customDifficulty === 100 ? "Chaos Mode: Every move is a surprise." :
+                                              customDifficulty < 30 ? "Advanced AI with occasional quirks." :
+                                              customDifficulty > 70 ? "Mostly random, but follows rules." :
+                                              "A balanced opponent with human-like mistakes."}
+                                         </p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -143,13 +257,13 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                     {/* Stats Row */}
                     <div className="grid grid-cols-3 gap-3 flex-shrink-0">
                         {[
-                            { label: "vs " + activeBot.name, value: `${activeBot.stats.wins} - ${activeBot.stats.losses}`, color: 'text-deepblue' },
-                            { label: "Win Rate", value: activeBot.stats.winRate + "%", color: activeBot.stats.winRate >= 50 ? 'text-mint' : 'text-coral' },
-                            { label: "Status", value: "READY", color: 'text-deepblue/60' }
+                            { label: "vs " + activeBot.name, value: `${activeBot.stats.wins} - ${activeBot.stats.total_games - activeBot.stats.wins}`, color: 'text-deepblue' },
+                            { label: "Win Rate", value: activeBot.stats.win_rate + "%", color: activeBot.stats.win_rate >= 50 ? 'text-mint' : 'text-coral' },
+                            { label: "Total Games", value: activeBot.stats.total_games, color: 'text-deepblue/60' }
                         ].map((stat, i) => (
                             <div key={i} className="bg-white p-3 rounded-2xl border border-slate-50 shadow-sm flex flex-col items-center justify-center">
-                                 <span className="text-[9px] font-black text-deepblue/30 uppercase tracking-tighter mb-0.5">{stat.label}</span>
-                                 <span className={`text-base font-black font-paytone ${stat.color}`}>{stat.value}</span>
+                                 <span className="text-[10px] font-black text-deepblue/30 uppercase tracking-tighter mb-0.5">{stat.label}</span>
+                                 <span className={`text-lg font-black font-paytone ${stat.color}`}>{stat.value}</span>
                             </div>
                         ))}
                     </div>
@@ -172,17 +286,19 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                                     `}
                                 >
                                     <div className={`
-                                        w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-transform duration-300 flex-shrink-0
+                                        w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-transform duration-300 flex-shrink-0 overflow-hidden
                                         ${isSelected ? 'scale-110 rotate-3' : 'group-hover:scale-110'}
                                         ${bot.bgWithOpacity}
                                     `}>
-                                        {bot.icon}
+                                        {bot.avatar ? (
+                                             <UserAvatar avatarConfig={bot.avatar} size="100%" className="w-8 h-8 scale-150" />
+                                        ) : bot.icon}
                                     </div>
                                     <div className="flex-1 text-left z-10">
-                                        <h4 className={`font-black font-paytone uppercase text-sm ${isSelected ? 'text-deepblue' : 'text-deepblue/60'}`}>
+                                        <h4 className={`font-black font-paytone uppercase text-base ${isSelected ? 'text-deepblue' : 'text-deepblue/60'}`}>
                                             {bot.name}
                                         </h4>
-                                        <p className="text-[9px] font-bold text-deepblue/30 uppercase tracking-wider">
+                                        <p className="text-xs font-bold text-deepblue/30 uppercase tracking-wider">
                                             {diff}
                                         </p>
                                     </div>
@@ -203,11 +319,34 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                                 let mode: any = 'bot_easy';
                                 if (selectedDifficulty === 'normal') {
                                     mode = 'bot_medium';
+                                } else if (selectedDifficulty === 'hard') {
+                                    mode = 'bot_hard';
+                                } else if (selectedDifficulty === 'custom') {
+                                    mode = 'bot_custom';
                                 }
-                                // future: hard -> bot_hard
                                 
-                                const game = await createGame(mode);
-                                navigate(`/game/${game.id}`);
+                                const gameData: any = { mode };
+                                if (selectedDifficulty === 'custom') {
+                                    gameData.bot_difficulty = customDifficulty;
+                                }
+
+                                const game = await createGame(gameData);
+                                
+                                // Instead of navigating immediately, trigger the fancy MatchFoundModal
+                                const mySymbol = game.player_x === null ? 'O' : 'X';
+                                const opponentName = mySymbol === 'X' ? game.player_o_name : game.player_x_name;
+                                const opponentAvatar = mySymbol === 'X' ? game.player_o_avatar : game.player_x_avatar;
+
+                                onClose();
+                                
+                                setMatchFoundData({
+                                    gameId: game.id,
+                                    opponent: opponentName || "Neuro",
+                                    opponentUsername: opponentName || "Neuro",
+                                    opponentAvatar: opponentAvatar,
+                                    mySymbol: mySymbol
+                                });
+
                             } catch (e) {
                                 console.error(e);
                                 alert("Failed to start bot game");

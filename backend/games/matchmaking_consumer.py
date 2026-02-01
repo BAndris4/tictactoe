@@ -169,7 +169,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 "game_id": str(game_id),
                 "opponent": opponent_label,
                 "opponent_username": opponent['username'],
-                "opponent_avatar": opponent.get('avatar_config')
+                "opponent_avatar": opponent.get('avatar_config'),
+                "my_symbol": "X"
             }))
 
             # Ellenfél értesítése
@@ -192,5 +193,6 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             "game_id": event["game_id"],
             "opponent": event.get("opponent"),
             "opponent_username": event.get("opponent_username"),
-            "opponent_avatar": event.get("opponent_avatar")
+            "opponent_avatar": event.get("opponent_avatar"),
+            "my_symbol": "O"
         }))

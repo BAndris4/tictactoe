@@ -44,7 +44,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.accept()
 
             # If it's a bot game and it's bot's turn, trigger it
-            if self.game.mode in ['bot_easy', 'bot_medium']:
+            if self.game.mode in ['bot_easy', 'bot_medium', 'bot_hard', 'bot_custom']:
                  user_id = self.user.id
                  is_player = (user_id == self.game.player_x_id or user_id == self.game.player_o_id)
                  if is_player:
@@ -95,53 +95,11 @@ class GameConsumer(AsyncWebsocketConsumer):
 
                 # If game finished, broadcast game_over
                 if game.status == 'finished':
-                    xp_results = {}
-                    ranking_results = {}
-                    
-                    try:
-                        from users.services import LevelingService
-                        
-                        # Process Leveling (XP) - This runs for all modes
-                        try:
-                            xp_results = await database_sync_to_async(LevelingService.process_game_end)(game)
-                        except Exception as e:
-                             print(f"Error processing XP results: {e}")
-
-                        # Process Ranking (MMR & LP) - ONLY if game is rated (ranked mode)
-                        if game.rated:
-                            from users.ranking_service import RankingService
-                            try:
-                                ranking_results = await database_sync_to_async(RankingService.process_game_end)(game)
-                            except Exception as e:
-                                print(f"Error processing Ranking results: {e}")
-                                
-                    except Exception as e:
-                        print(f"CRITICAL ERROR in game end processing: {e}")
-                        # Even if stats fail, we MUST send game_over to client
-                    
-                    mmr_results = ranking_results.get('mmr', {})
-                    lp_results = ranking_results.get('lp', {})
-                    ranks = ranking_results.get('ranks', {})
-
-                    await self.channel_layer.group_send(
-                        self.room_group_name,
-                        {
-                            'type': 'game_update',
-                            'data': {
-                                'type': 'game_over',
-                                'mode': game.mode,
-                                'winner': game.winner,
-                                'reason': 'board_full' if game.winner == 'D' else 'regular',
-                                'xp_results': xp_results,
-                                'mmr_results': mmr_results,
-                                'lp_results': lp_results,
-                                'ranks': ranks
-                            }
-                        }
-                    )
+                    from .broadcast_service import BroadcastService
+                    await BroadcastService.broadcast_game_over(self.game_id)
                 
                 # --- BOT INTEGRATION ---
-                elif game.mode in ['bot_easy', 'bot_medium']:
+                elif game.mode in ['bot_easy', 'bot_medium', 'bot_hard', 'bot_custom']:
                     # Trigger Bot Turn if game is active
                     from .bot_service import BotService
                     # Run in background (don't await strictly? or await is fine)
@@ -194,7 +152,7 @@ class GameConsumer(AsyncWebsocketConsumer):
              # In local mode, the creator plays both sides (or hotseat)
              # We assume the move is for the current turn if validated
              player_char = game.current_turn
-        elif game.mode in ['bot_easy', 'bot_medium']:
+        elif game.mode in ['bot_easy', 'bot_medium', 'bot_hard', 'bot_custom']:
              # Allow move if user is the assigned player
              if user == game.player_x:
                  player_char = 'X'

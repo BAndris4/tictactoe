@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
-    CreateGameView, JoinGameView, GameDetailView, 
-    ForfeitGameView, UserGameListView, 
+    CreateGameView, JoinGameView, GameDetailView,
+    ForfeitGameView, UserGameListView, BotStatsView,
     GameInvitationView, PendingGameInvitationsView, GameInvitationActionView
 )
 
@@ -14,4 +14,5 @@ urlpatterns = [
     path('invitations/<int:pk>/', GameInvitationActionView.as_view(), name='game_invitation_action'),
     path('<uuid:pk>/', GameDetailView.as_view(), name='game_detail'),
     path('<uuid:pk>/forfeit/', ForfeitGameView.as_view(), name='forfeit_game'),
+    path('bot-stats/', BotStatsView.as_view(), name='bot_stats'),
 ]

@@ -2,6 +2,7 @@ from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
+from django.db.models import Count, Q
 from .models import Game, GameStatus, GameMode, GameInvitation, GameInvitationStatus
 from .serializers import CreateGameSerializer, JoinGameSerializer, GameSerializer, GameInvitationSerializer
 
@@ -127,15 +128,13 @@ class CreateGameView(APIView):
         player_x = user
         player_o = None
         
-        if mode == GameMode.BOT_EASY or mode == GameMode.BOT_MEDIUM:
+        if mode in [GameMode.BOT_EASY, GameMode.BOT_MEDIUM, GameMode.BOT_HARD, GameMode.BOT_CUSTOM]:
             import random
             status_val = GameStatus.ACTIVE
             if random.choice([True, False]):
-                # User is X
                 player_x = user
                 player_o = None
             else:
-                # User is O, Bot is X
                 player_x = None
                 player_o = user
 
@@ -143,9 +142,10 @@ class CreateGameView(APIView):
             mode=mode,
             player_x=player_x,
             player_o=player_o,
-            status=status_val
+            status=status_val,
+            bot_difficulty=serializer.validated_data.get('bot_difficulty', 0)
         )
-        return Response(CreateGameSerializer(game).data, status=status.HTTP_201_CREATED)
+        return Response(GameSerializer(game).data, status=status.HTTP_201_CREATED)
 
 class JoinGameView(APIView):
     permission_classes = [] # Manual handling
@@ -319,3 +319,50 @@ class UserGameListView(generics.ListAPIView):
         if error_response:
             return error_response
         return super().list(request, *args, **kwargs)
+
+class BotStatsView(APIView):
+    permission_classes = [] # Manual handling for auth
+
+    def get(self, request):
+        # Get authenticated user
+        user, error_response = get_user_from_request(request)
+        if error_response:
+            return error_response
+
+        bot_modes = [GameMode.BOT_EASY, GameMode.BOT_MEDIUM, GameMode.BOT_HARD, GameMode.BOT_CUSTOM]
+        stats = {}
+
+        for mode in bot_modes:
+            # Filter games where this specific user played against the bot
+            user_games = Game.objects.filter(
+                mode=mode, 
+                status=GameStatus.FINISHED
+            ).filter(
+                Q(player_x=user) | Q(player_o=user)
+            )
+            
+            total_count = user_games.count()
+            
+            # Calculate USER wins (when user's symbol matches winner)
+            user_wins = user_games.filter(
+                (Q(player_x=user) & Q(winner='X')) |
+                (Q(player_o=user) & Q(winner='O'))
+            ).count()
+
+            win_rate = 0
+            if total_count > 0:
+                win_rate = round((user_wins / total_count) * 100)
+
+            # Map backend mode to frontend key
+            frontend_key = 'easy'
+            if mode == GameMode.BOT_MEDIUM: frontend_key = 'normal'
+            elif mode == GameMode.BOT_HARD: frontend_key = 'hard'
+            elif mode == GameMode.BOT_CUSTOM: frontend_key = 'custom'
+
+            stats[frontend_key] = {
+                "total_games": total_count,
+                "win_rate": win_rate,
+                "wins": user_wins
+            }
+
+        return Response(stats)

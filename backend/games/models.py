@@ -7,8 +7,10 @@ class GameMode(models.TextChoices):
     AI = 'ai', _('AI')
     BOT_EASY = 'bot_easy', _('Bot Easy')
     BOT_MEDIUM = 'bot_medium', _('Bot Medium')
+    BOT_HARD = 'bot_hard', _('Bot Hard')
     LOCAL = 'local', _('Local')
     CUSTOM = 'custom', _('Custom')
+    BOT_CUSTOM = 'bot_custom', _('Bot Custom')
     UNRANKED = 'unranked', _('Unranked')
     RANKED = 'ranked', _('Ranked')
 
@@ -28,6 +30,7 @@ class Game(models.Model):
     player_o = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='games_as_o')
 
     current_turn = models.CharField(max_length=1, default='X')
+    bot_difficulty = models.IntegerField(default=0, help_text="0-100, probability of random move (for custom bot)")
     next_board_constraint = models.IntegerField(null=True, blank=True, help_text="Cache: Which sub-board must be played? NULL = any")
     move_count = models.IntegerField(default=0)
     last_move_at = models.DateTimeField(null=True, blank=True)
