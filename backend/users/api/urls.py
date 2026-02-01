@@ -3,7 +3,7 @@ from .views import (
     RegisterView, LoginView, LogoutView, MeView,
     FriendRequestView, PendingFriendRequestsView,
     FriendRequestActionView, FriendsListView,
-    UnfriendView, BlockUserView
+    UnfriendView, BlockUserView, UserProfileView
 )
 
 urlpatterns = [
@@ -17,4 +17,5 @@ urlpatterns = [
     path("friends", FriendsListView.as_view(), name="friends-list"),
     path("friends/<str:username>", UnfriendView.as_view(), name="unfriend"),
     path("friends/block", BlockUserView.as_view(), name="block-user"),
+    path("profile/<str:username>", UserProfileView.as_view(), name="user-profile"),
 ]

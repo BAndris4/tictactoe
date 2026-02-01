@@ -33,6 +33,8 @@ interface GameContextType {
     o?: string | number | null;
     xName?: string | null;
     oName?: string | null;
+    xAvatar?: any;
+    oAvatar?: any;
   };
   // Matchmaking
   moves: any[];
@@ -44,7 +46,7 @@ interface GameContextType {
   startSearch: (mode?: 'unranked' | 'ranked' | any) => void; // Megengedjük az 'any'-t a javításhoz
   cancelSearch: () => void;
   minimizeSearch: (minimized: boolean) => void;
-  matchFoundData: { gameId: string; opponent: string; opponentUsername?: string } | null;
+  matchFoundData: { gameId: string; opponent: string; opponentUsername?: string; opponentAvatar?: any } | null;
   opponentStatus: 'active' | 'away';
   updatePlayerStatus: (status: 'active' | 'away') => void;
 }
@@ -71,6 +73,8 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
     o?: string | number | null;
     xName?: string | null;
     oName?: string | null;
+    xAvatar?: any;
+    oAvatar?: any;
   }>({});
   
   const [moves, setMoves] = useState<any[]>([]);
@@ -86,7 +90,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   const [searchMode, setSearchMode] = useState<'unranked' | 'ranked'>('unranked');
   const [matchmakingSocket, setMatchmakingSocket] = useState<WebSocket | null>(null);
   
-  const [matchFoundData, setMatchFoundData] = useState<{ gameId: string; opponent: string; opponentUsername?: string } | null>(null);
+  const [matchFoundData, setMatchFoundData] = useState<{ gameId: string; opponent: string; opponentUsername?: string; opponentAvatar?: any } | null>(null);
   const [opponentStatus, setOpponentStatus] = useState<'active' | 'away'>('active');
   
   const { user } = useAuth();
@@ -151,7 +155,8 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
           setMatchFoundData({
             gameId: data.game_id,
             opponent: data.opponent,
-            opponentUsername: data.opponent_username
+            opponentUsername: data.opponent_username,
+            opponentAvatar: data.opponent_avatar
           });
         }
       };
@@ -213,7 +218,9 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
             x: g.player_x,
             o: g.player_o,
             xName: g.player_x_name,
-            oName: g.player_o_name
+            oName: g.player_o_name,
+            xAvatar: g.player_x_avatar,
+            oAvatar: g.player_o_avatar
         });
         
         if (g.moves && g.moves.length > 0) {
@@ -288,7 +295,9 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
               x: data.player_x_id || data.player_x,
               o: data.player_o_id || data.player_o,
               xName: data.player_x_name || data.player_x,
-              oName: data.player_o_name || data.player_o 
+              oName: data.player_o_name || data.player_o,
+              xAvatar: data.player_x_avatar,
+              oAvatar: data.player_o_avatar
           }));
       } else if (data.type === "game_over") {
           setStatus("finished");
@@ -370,7 +379,9 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
             x: g.player_x,
             o: g.player_o,
             xName: g.player_x_name,
-            oName: g.player_o_name
+            oName: g.player_o_name,
+            xAvatar: g.player_x_avatar,
+            oAvatar: g.player_o_avatar
         });
     } catch (err: any) {
         console.error("Join failed:", err);

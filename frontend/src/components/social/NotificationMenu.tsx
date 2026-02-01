@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getPendingRequests, respondToFriendRequest, type Friendship } from "../../api/social";
 import { getPendingInvitations, respondToGameInvitation, type GameInvitation } from "../../api/game";
 import { useToast } from "../../context/ToastContext";
+import UserAvatar from "../common/UserAvatar";
 
 type Notification = 
   | { type: 'friend_request'; data: Friendship }
@@ -106,12 +107,15 @@ export default function NotificationMenu() {
                     {notif.type === 'friend_request' ? (
                       <>
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 rounded-xl bg-sunshine/10 flex items-center justify-center text-sunshine font-paytone text-sm border border-sunshine/5">
-                            {notif.data.from_user[0].toUpperCase()}
+                          <div className="w-10 h-10 rounded-xl bg-sunshine/10 flex items-center justify-center text-sunshine font-paytone text-sm border border-sunshine/5 overflow-hidden">
+                            <UserAvatar 
+                                username={notif.data.from_user.username}
+                                avatarConfig={notif.data.from_user.profile?.avatar_config}
+                            />
                           </div>
                           <div className="flex-1">
                             <p className="text-xs font-medium text-deepblue/60">
-                              <span className="font-black text-deepblue">@{notif.data.from_user}</span> wants to be friends!
+                              <span className="font-black text-deepblue">@{notif.data.from_user.username}</span> wants to be friends!
                             </p>
                           </div>
                         </div>
@@ -133,8 +137,11 @@ export default function NotificationMenu() {
                     ) : (
                       <>
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 rounded-xl bg-mint/10 flex items-center justify-center text-mint font-paytone text-sm border border-mint/5">
-                            {notif.data.from_user_name[0].toUpperCase()}
+                          <div className="w-10 h-10 rounded-xl bg-mint/10 flex items-center justify-center text-mint font-paytone text-sm border border-mint/5 overflow-hidden">
+                            <UserAvatar 
+                                username={notif.data.from_user_name}
+                                avatarConfig={notif.data.from_user_avatar}
+                            />
                           </div>
                           <div className="flex-1">
                             <p className="text-xs font-medium text-deepblue/60">

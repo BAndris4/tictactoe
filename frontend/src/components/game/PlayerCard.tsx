@@ -1,12 +1,14 @@
 import { useGame } from "../../context/GameContext";
+import UserAvatar from "../common/UserAvatar";
 
 interface PlayerCardProps {
   player: { name: string | null | undefined; symbol: 'X' | 'O' } | null;
+  avatarConfig?: any;
   isMe?: boolean;
   isLocalGame?: boolean;
 }
 
-export default function PlayerCard({ player, isMe, isLocalGame }: PlayerCardProps) {
+export default function PlayerCard({ player, avatarConfig, isMe, isLocalGame }: PlayerCardProps) {
   const game = useGame();
   const isThinking = game.currentPlayer === player?.symbol;
   // In local game, don't show turn indicator for the "opponent" card (which is actually you playing both sides)
@@ -32,11 +34,15 @@ export default function PlayerCard({ player, isMe, isLocalGame }: PlayerCardProp
       <div className="flex items-center gap-2.5">
         <div className={`
           w-10 h-10 rounded-full flex items-center justify-center font-bold text-white 
-          transition-all duration-300
+          transition-all duration-300 overflow-hidden
           ${isThinking ? 'scale-110 shadow-lg' : 'scale-100'}
           ${player?.symbol === 'X' ? 'bg-coral' : 'bg-sunshine'}
         `}>
-          {player?.symbol || '?'}
+          <UserAvatar 
+            username={player?.name || "?"} 
+            avatarConfig={avatarConfig} 
+            className="w-full h-full"
+          />
         </div>
         <div className="flex flex-col">
           <span className="font-semibold text-deepblue text-sm truncate max-w-[120px]">

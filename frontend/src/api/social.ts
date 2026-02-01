@@ -2,8 +2,14 @@ import { API_URL, getHeaders } from "./client";
 
 export interface Friendship {
   id: number;
-  from_user: string;
-  to_user: string;
+  from_user: {
+      username: string;
+      profile?: { avatar_config?: any; gender?: string; };
+  };
+  to_user: {
+      username: string;
+      profile?: { avatar_config?: any; gender?: string; };
+  };
   status: 'pending' | 'accepted' | 'rejected' | 'blocked';
   created_at: string;
 }
@@ -15,6 +21,10 @@ export interface FriendUser {
   first_name: string;
   last_name: string;
   phone_number: string;
+  profile?: {
+    avatar_config?: any;
+    gender?: 'M' | 'F';
+  };
 }
 
 export const sendFriendRequest = async (username: string): Promise<Friendship> => {

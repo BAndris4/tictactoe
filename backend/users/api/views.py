@@ -10,7 +10,8 @@ from .serializers import (
     UserSerializer, 
     LoginSerializer,
     FriendshipSerializer,
-    FriendRequestActionSerializer
+    FriendRequestActionSerializer,
+    PublicUserSerializer
 )
 from ..services import (
     register_user,
@@ -100,6 +101,8 @@ class RegisterView(APIView):
                 first_name=data.get("first_name"),
                 last_name=data.get("last_name"),
                 phone_number=data.get("phone_number"),
+                gender=data.get("gender", "M"),
+                avatar_config=data.get("avatar_config"),
             )
         except UsernameAlreadyTaken:
             return Response(
@@ -383,3 +386,22 @@ class BlockUserView(BaseFriendView):
             return Response(FriendshipSerializer(friendship).data)
         except User.DoesNotExist:
             return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+class UserProfileView(APIView):
+    @swagger_auto_schema(
+        operation_description="Get public profile of a user",
+        tags=["User"],
+        responses={
+            200: PublicUserSerializer,
+            404: "User not found",
+        },
+    )
+    def get(self, request, username):
+        from django.shortcuts import get_object_or_404
+        
+        target_user = get_object_or_404(User, username=username)
+        
+        # Context is needed for mutual friends check in serializer
+        serializer = PublicUserSerializer(target_user, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)

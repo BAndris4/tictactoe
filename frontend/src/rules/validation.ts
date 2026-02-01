@@ -8,6 +8,8 @@ export type RegisterFormValues = {
   country: string;
   termsAccepted: boolean;
   playTutorial: boolean;
+  gender: 'M' | 'F';
+  avatar_config?: any;
 };
 
 export type RegisterFormErrors = Partial<

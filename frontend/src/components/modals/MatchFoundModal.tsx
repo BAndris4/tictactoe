@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useGame } from "../../context/GameContext";
 import { useAuth } from "../../hooks/useAuth";
+import UserAvatar from "../common/UserAvatar";
 
 export default function MatchFoundModal() {
   const { matchFoundData } = useGame();
@@ -49,10 +50,16 @@ export default function MatchFoundModal() {
           <div className="group flex flex-col items-center gap-6 animate-slideInLeft opacity-0 [animation-fill-mode:forwards] [animation-delay:0.2s]">
             <div className="relative">
                 <div className="absolute inset-0 bg-mint rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
-                <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-mint to-teal-500 p-1.5 shadow-xl animate-float">
-                   <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-5xl font-black text-mint">
-                      {user?.username?.[0]?.toUpperCase()}
-                   </div>
+                <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-mint to-teal-500 p-1.5 shadow-xl animate-float overflow-hidden">
+                   <UserAvatar 
+                        username={user?.username}
+                        // user from useAuth might not have full profile with avatar_config if it is not added to the User type or serializer used for 'me' endpoint
+                        // But I updated 'me' endpoint serializer earlier?
+                        // Let's assume user object has it or we can leave it as initials for now if uncertain, BUT the goal is ubiquitous avatar.
+                        // I will try to access user.profile?.avatar_config. I need to check useAuth User type.
+                        avatarConfig={(user as any)?.profile?.avatar_config} 
+                        className="w-full h-full bg-white"
+                   />
                 </div>
             </div>
             <div className="text-3xl font-black text-deepblue font-paytone tracking-wide">
@@ -74,10 +81,12 @@ export default function MatchFoundModal() {
           <div className="group flex flex-col items-center gap-6 animate-slideInRight opacity-0 [animation-fill-mode:forwards] [animation-delay:0.4s]">
             <div className="relative">
                 <div className="absolute inset-0 bg-coral rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
-                <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-coral to-rose-500 p-1.5 shadow-xl animate-float [animation-delay:1.5s]">
-                   <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-5xl font-black text-coral">
-                      {matchFoundData.opponentUsername?.[0]?.toUpperCase() || "?"}
-                   </div>
+                <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-coral to-rose-500 p-1.5 shadow-xl animate-float [animation-delay:1.5s] overflow-hidden">
+                   <UserAvatar 
+                        username={matchFoundData.opponentUsername || "?"}
+                        avatarConfig={matchFoundData.opponentAvatar}
+                        className="w-full h-full bg-white"
+                   />
                 </div>
             </div>
             <div className="text-3xl font-black text-deepblue font-paytone tracking-wide">

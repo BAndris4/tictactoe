@@ -110,15 +110,15 @@ function GameContent() {
     
     if (isX) {
         return {
-            me: { name: game.players.xName || user.username, symbol: 'X' as const },
-            opponent: { name: game.players.oName || (isLocalGame ? user.username : "Opponent"), symbol: 'O' as const }
+            me: { name: game.players.xName || user.username, symbol: 'X' as const, avatar: game.players.xAvatar },
+            opponent: { name: game.players.oName || (isLocalGame ? user.username : "Opponent"), symbol: 'O' as const, avatar: game.players.oAvatar }
         };
     }
     
     if (isO) {
         return {
-            me: { name: game.players.oName || user.username, symbol: 'O' as const },
-            opponent: { name: game.players.xName || "Opponent", symbol: 'X' as const }
+            me: { name: game.players.oName || user.username, symbol: 'O' as const, avatar: game.players.oAvatar },
+            opponent: { name: game.players.xName || "Opponent", symbol: 'X' as const, avatar: game.players.xAvatar }
         };
     }
     
@@ -185,7 +185,7 @@ function GameContent() {
         <div className="flex flex-col items-center justify-center gap-8 flex-[1.5] py-4">
           {/* Opponent Info */}
           <div className="flex-shrink-0">
-            <PlayerCard player={opponent} isLocalGame={isLocalGame} />
+            <PlayerCard player={opponent} avatarConfig={opponent?.avatar} isLocalGame={isLocalGame} />
           </div>
 
           {/* Board Container - scales to fit available space */}
@@ -197,7 +197,7 @@ function GameContent() {
 
           {/* User Info */}
           <div className="flex-shrink-0">
-            <PlayerCard player={me} isMe isLocalGame={isLocalGame} />
+            <PlayerCard player={me} avatarConfig={me?.avatar} isMe isLocalGame={isLocalGame} />
           </div>
           
            {/* Opponent Away Warning */}

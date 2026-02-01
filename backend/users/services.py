@@ -133,6 +133,8 @@ def register_user(
     first_name: str | None = None,
     last_name: str | None = None,
     phone_number: str | None = None,
+    gender: str = 'M',
+    avatar_config: dict | None = None,
 ) -> "User":
     if User.objects.filter(email=email).exists():
         raise EmailAlreadyTaken()
@@ -148,6 +150,19 @@ def register_user(
             )
             user.phone_number = phone_number
             user.save()
+            
+            # Create Profile with Avatar
+            if avatar_config is None:
+                from .avatar_service import AvatarService
+                # Generate random avatar config
+                avatar_config = AvatarService.generate_random_avatar(gender)
+            
+            PlayerProfile.objects.create(
+                user=user,
+                gender=gender,
+                avatar_config=avatar_config
+            )
+            
             return user
     except IntegrityError as e:
         if "username" in str(e):

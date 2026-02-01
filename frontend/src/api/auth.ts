@@ -33,6 +33,8 @@ export const authApi = {
           last_name: values.lastName,
           phone_number: serializePhone(values.phone),
           play_tutorial: values.playTutorial,
+          gender: values.gender,
+          avatar_config: values.avatar_config
         }),
       });
 
@@ -66,6 +68,8 @@ export const authApi = {
     email: string;
     phone_number: string;
     username: string;
+    avatar_config: any;
+    gender: 'M' | 'F';
   }>) => {
     const response = await fetch(`${API_URL}/users/me`, {
       method: "PATCH",
@@ -77,6 +81,16 @@ export const authApi = {
       body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error("Failed to update profile");
+    return response.json();
+  },
+
+  getProfile: async (username: string) => {
+    const response = await fetch(`${API_URL}/users/profile/${username}`, {
+      method: "GET",
+      headers: getHeaders(),
+      credentials: "include",
+    });
+    if (!response.ok) throw new Error("Failed to fetch profile");
     return response.json();
   }
 };

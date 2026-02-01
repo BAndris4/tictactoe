@@ -17,15 +17,18 @@ const initialValues: RegisterFormValues = {
   firstName: "",
   lastName: "",
   phone: "",
+  country: "",
   termsAccepted: false,
   playTutorial: true,
+  gender: 'M',
+  avatar_config: undefined,
 };
 
 type TouchedState = Partial<Record<keyof RegisterFormValues, boolean>>;
 
 const STEP_FIELDS: Record<RegisterStep, (keyof RegisterFormValues)[]> = {
   1: ["username", "email", "password"],
-  2: ["firstName", "lastName", "phone", "termsAccepted"],
+  2: ["firstName", "lastName", "phone", "termsAccepted", "gender"],
   3: ["playTutorial"],
 };
 

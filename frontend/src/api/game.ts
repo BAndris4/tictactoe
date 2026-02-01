@@ -25,6 +25,8 @@ export interface Game {
   player_o_xp_gained?: number;
   player_x_lp_change?: number;
   player_o_lp_change?: number;
+  player_x_avatar?: any;
+  player_o_avatar?: any;
 }
 
 export const createGame = async (mode: 'local' | 'custom' | 'bot_easy' | 'bot_medium' = 'custom'): Promise<Game> => {
@@ -99,8 +101,10 @@ export interface GameInvitation {
   game: string;
   from_user: number;
   from_user_name: string;
+  from_user_avatar?: any;
   to_user: number;
   to_user_name: string;
+  to_user_avatar?: any;
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
 }

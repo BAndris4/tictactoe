@@ -55,7 +55,7 @@ export default function Landing() {
 
         <LandingProfileCard
           user={user}
-          onEdit={() => navigate("/profile")}
+          onProfileNavigate={() => navigate("/profile")}
           onHistory={() => navigate("/history")}
           onLogout={logout}
         />
