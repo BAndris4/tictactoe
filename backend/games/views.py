@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.db.models import Count, Q
-from .models import Game, GameStatus, GameMode, GameInvitation, GameInvitationStatus
+from .models import Game, GameStatus, GameMode, GameInvitation, GameInvitationStatus, GameMove
 from .serializers import CreateGameSerializer, JoinGameSerializer, GameSerializer, GameInvitationSerializer
 
 class GameInvitationView(APIView):
@@ -366,3 +366,87 @@ class BotStatsView(APIView):
             }
 
         return Response(stats)
+
+class GameEvaluationView(APIView):
+    permission_classes = [] 
+
+    def get(self, request, pk):
+        try:
+            game = Game.objects.get(pk=pk)
+        except Game.DoesNotExist:
+            return Response({"error": "Game not found"}, status=404)
+
+        if game.status != 'finished':
+             # Allow active games too for debugging? Or restrict? 
+             # Let's handle it gracefully: return partial evaluation or error.
+             # For now, let's just return what we have.
+             pass
+
+        moves = GameMove.objects.filter(game=game).order_by('move_no')
+        
+        # We need to replay the game
+        board = [None] * 81
+        winners = [None] * 9  # Subboard winners
+        
+        evaluations = []
+        
+        from .bot_service import HardBotLogic
+
+        # Evaluation map: move_index -> score
+        # Initial state (move -1 or 0) can be considered 0.
+        
+        current_constraint = None
+
+        for move in moves:
+            # Apply move
+            idx = move.cell * 9 + move.subcell
+            board[idx] = move.player
+            
+            # Update local winner for that board
+            sub_grid = board[move.cell*9 : (move.cell+1)*9]
+            winners[move.cell] = HardBotLogic.check_line_local_array(sub_grid)
+            
+            # Update constraint for the NEXT move
+            # Logic: If target subboard is won or full, constraint is None (anywhere)
+            target_sub = move.subcell
+            if winners[target_sub] is not None or all(board[target_sub*9+k] is not None for k in range(9)):
+                current_constraint = None
+            else:
+                current_constraint = target_sub
+            
+            # Global winner check
+            global_winner = HardBotLogic.check_line_local_array(winners)
+            
+            score = 0
+            if global_winner == 'X':
+                score = 100000
+            elif global_winner == 'O':
+                score = -100000
+            else:
+                try:
+                    # determine who moves NEXT
+                    # If current move was by X, next is O (minimizing)
+                    # If current move was by O, next is X (maximizing)
+                    next_is_max = (move.player == 'O') 
+
+                    # Run minimax with depth 4 to match Magnus Bot Logic's deeper lookahead.
+                    # This provides a much more accurate "who stands better" metric.
+                    score = HardBotLogic.minimax(
+                         board, winners, current_constraint, 
+                         depth=4, 
+                         is_max=next_is_max, 
+                         alpha=-float('inf'), 
+                         beta=float('inf'), 
+                         bot='X', 
+                         opp='O'
+                     )
+                except Exception as e:
+                    print(f"Error evaluating move {move.move_no}: {e}")
+                    score = 0
+            
+            evaluations.append({
+                'move_no': move.move_no,
+                'score': score
+            })
+            
+        return Response(evaluations)

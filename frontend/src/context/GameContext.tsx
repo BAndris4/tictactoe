@@ -5,7 +5,7 @@ import { isMoveValid } from "../rules/gameRule";
 import { toGlobalCoord } from "../utils";
 import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
 import { getAuthToken, useAuth } from "../hooks/useAuth";
-import { getGame } from "../api/game";
+import { getGame, getGameEvaluation, type EvaluationNode } from "../api/game";
 import { useToast } from "./ToastContext";
 import { reconstructGameStateAtMove } from "../utils/gameStateUtils";
 
@@ -59,6 +59,10 @@ interface GameContextType {
   stepBackward: () => void;
   goToLive: () => void;
   goToStart: () => void;
+  // Evaluation
+  evaluationData: EvaluationNode[] | null;
+  currentEvaluation: number | null;
+  game: any | null; // Full game object for status check
 }
 
 export const GameContext = createContext<GameContextType | undefined>(
@@ -106,6 +110,10 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   // Move History Navigation
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState<number | null>(null);
   
+  // Evaluation
+  const [evaluationData, setEvaluationData] = useState<EvaluationNode[] | null>(null);
+  const [game, setGame] = useState<any | null>(null);
+
   const { user } = useAuth();
   const userRef = useRef(user);
 
@@ -226,6 +234,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   useEffect(() => {
     if (gameId) {
       getGame(gameId).then((g) => {
+        setGame(g);
         setStatus(g.status);
         setMode(g.mode);
         setPlayers({
@@ -252,9 +261,15 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
             });
         }
 
+        // Fetch Evaluation if finished
+        if (g.status === 'finished') {
+             getGameEvaluation(gameId).then(setEvaluationData).catch(console.error);
+        }
+
       }).catch(console.error);
 
       setXpResults(null);
+      setEvaluationData(null);
     }
   }, [gameId]);
 
@@ -317,6 +332,14 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
           setStatus("finished");
           if (data.mode) {
              setMode(data.mode);
+          }
+          if (game) {
+              setGame({ ...game, status: "finished" });
+          }
+          
+          // Fetch evaluation
+          if (gameId) {
+              getGameEvaluation(gameId).then(setEvaluationData).catch(console.error);
           }
 
           if (data.data && data.data.winner) {
@@ -591,7 +614,13 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         stepForward,
         stepBackward,
         goToLive,
-        goToStart
+        goToStart,
+        // Evaluation
+        evaluationData,
+        currentEvaluation: evaluationData && currentHistoryIndex !== null
+            ? (currentHistoryIndex === -1 ? 0 : (evaluationData.find(e => e.move_no === currentHistoryIndex + 1)?.score ?? 0))
+            : (evaluationData && evaluationData.length > 0 ? evaluationData[evaluationData.length - 1].score : 0),
+        game
       }}
     >
       {children}

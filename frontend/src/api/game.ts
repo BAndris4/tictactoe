@@ -164,3 +164,20 @@ export const getBotStats = async (): Promise<any> => {
 
     return response.json();
 };
+
+export interface EvaluationNode {
+    move_no: number;
+    score: number;
+}
+
+export const getGameEvaluation = async (gameId: string): Promise<EvaluationNode[]> => {
+    const response = await fetch(`${API_URL}/games/${gameId}/evaluation/`, {
+        headers: getHeaders(),
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch game evaluation");
+    }
+
+    return response.json();
+};

@@ -15,6 +15,7 @@ import { getAuthToken } from "../hooks/useAuth";
 import GameSidebar from "../components/game/GameSidebar";
 import MoveHistory from "../components/game/MoveHistory";
 import HistoryNavigationControls from "../components/game/HistoryNavigationControls";
+import EvaluationBar from "../components/game/EvaluationBar";
 
 function GameContent() {
   const game = useGame();
@@ -191,7 +192,12 @@ function GameContent() {
           </div>
 
           {/* Board Container - scales to fit available space */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 flex items-center justify-center gap-4 sm:gap-6 h-full max-h-[600px]">
+            {/* Evaluation Bar - Only visible when game finished */}
+            <div className="h-[80%] sm:h-[90%] flex-shrink-0">
+                <EvaluationBar className="w-4 sm:w-6 shadow-xl" />
+            </div>
+
             <div className="p-2 sm:p-3 bg-white/30 backdrop-blur-xl rounded-[32px] sm:rounded-[40px] shadow-2xl border border-white/40 transform origin-center scale-90 sm:scale-100 transition-transform">
               <Table />
             </div>
