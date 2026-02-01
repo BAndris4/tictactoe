@@ -29,11 +29,13 @@ export interface Game {
   player_o_avatar?: any;
 }
 
-export const createGame = async (mode: 'local' | 'custom' | 'bot_easy' | 'bot_medium' = 'custom'): Promise<Game> => {
+export const createGame = async (payload: string | { mode: string; [key: string]: any }): Promise<Game> => {
+  const data = typeof payload === 'string' ? { mode: payload } : payload;
+  
   const response = await fetch(`${API_URL}/games/create/`, {
     method: "POST",
     headers: getHeaders(),
-    body: JSON.stringify({ mode }),
+    body: JSON.stringify(data),
   });
 
   if (!response.ok) {

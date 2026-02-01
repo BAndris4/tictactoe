@@ -511,7 +511,7 @@ class HardBotLogic:
             return val
 
     @staticmethod
-    def perform_move(game_id):
+    def perform_move(game_id, difficulty=0):
         game = Game.objects.get(id=game_id)
         bot_symbol = 'X' if game.player_x is None else 'O'
         opp_symbol = 'O' if bot_symbol == 'X' else 'X'
@@ -531,6 +531,13 @@ class HardBotLogic:
             print("[HardBot] No valid moves found!")
             return None
         
+        # RANDOMNESS LOGIC:
+        # difficulty is 0-100 (probability of random move).
+        if difficulty > 0 and random.randint(1, 100) <= difficulty:
+            print(f"[Bot] Difficulty {difficulty}%: Dropping perfect play for randomness!")
+            best_move = random.choice(valid)
+            return GameMove.objects.create(game=game, move_no=game.move_count+1, player=bot_symbol, cell=best_move[0], subcell=best_move[1])
+
         print(f"[HardBot] Thinking... (Valid moves: {len(valid)})")
         
         # Iterative Deepening to depth 5 (safe for Python performance)
@@ -574,9 +581,14 @@ class BotService:
         if not is_bot_turn:
             return
 
+        # Ensure we are in a bot mode
+        bot_modes = ['bot_easy', 'bot_medium', 'bot_hard', 'bot_custom']
+        if game.mode not in bot_modes:
+            return
+
         move = None
-        if game.mode == 'bot_hard':
-             move = await database_sync_to_async(HardBotLogic.perform_move)(game_id)
+        if game.mode == 'bot_hard' or game.mode == 'bot_custom':
+             move = await database_sync_to_async(HardBotLogic.perform_move)(game_id, difficulty=game.bot_difficulty)
         elif game.mode == 'bot_medium':
              move = await database_sync_to_async(MediumBotLogic.perform_move)(game_id)
         elif game.mode == 'bot_easy':

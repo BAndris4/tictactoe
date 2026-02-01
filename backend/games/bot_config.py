@@ -47,5 +47,21 @@ BOT_CONFIGS = {
             'mouthType': 'Serious',
             'skinColor': 'Tanned',
         }
+    },
+    'bot_custom': {
+        'name': 'Neuro',
+        'tagline': 'I am what you make of me.',
+        'avatar': {
+            'topType': 'NoHair',
+            'accessoriesType': 'Blank',
+            'hairColor': 'Blank',
+            'facialHairType': 'Blank',
+            'clotheType': 'GraphicShirt',
+            'clotheColor': 'Black',
+            'eyeType': 'Dizzy',
+            'eyebrowType': 'Default',
+            'mouthType': 'Smile',
+            'skinColor': 'Light',
+        }
     }
 }

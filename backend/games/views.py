@@ -127,15 +127,13 @@ class CreateGameView(APIView):
         player_x = user
         player_o = None
         
-        if mode in [GameMode.BOT_EASY, GameMode.BOT_MEDIUM, GameMode.BOT_HARD]:
+        if mode in [GameMode.BOT_EASY, GameMode.BOT_MEDIUM, GameMode.BOT_HARD, GameMode.BOT_CUSTOM]:
             import random
             status_val = GameStatus.ACTIVE
             if random.choice([True, False]):
-                # User is X
                 player_x = user
                 player_o = None
             else:
-                # User is O, Bot is X
                 player_x = None
                 player_o = user
 
@@ -143,7 +141,8 @@ class CreateGameView(APIView):
             mode=mode,
             player_x=player_x,
             player_o=player_o,
-            status=status_val
+            status=status_val,
+            bot_difficulty=serializer.validated_data.get('bot_difficulty', 0)
         )
         return Response(CreateGameSerializer(game).data, status=status.HTTP_201_CREATED)
 

@@ -26,7 +26,7 @@ class GameInvitationSerializer(serializers.ModelSerializer):
 class CreateGameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
-        fields = ['id', 'mode']
+        fields = ['id', 'mode', 'bot_difficulty']
         read_only_fields = ['id']
 
 class JoinGameSerializer(serializers.Serializer):
@@ -47,7 +47,7 @@ class GameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
         fields = [
-            'id', 'mode', 'status', 'rated', 
+            'id', 'mode', 'status', 'rated', 'bot_difficulty',
             'player_x', 'player_o',
             'player_x_name', 'player_o_name',
             'player_x_avatar', 'player_o_avatar',

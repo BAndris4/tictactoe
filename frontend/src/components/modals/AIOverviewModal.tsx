@@ -81,13 +81,24 @@ const BOT_DATA = {
     },
     custom: {
         id: 'custom',
-        name: "Custom Bot",
+        name: "Neuro",
         icon: "⚙️",
-        avatar: null,
+        avatar: {
+            topType: 'NoHair',
+            accessoriesType: 'Blank',
+            hairColor: 'Blank',
+            facialHairType: 'Blank',
+            clotheType: 'GraphicShirt',
+            clotheColor: 'Black',
+            eyeType: 'Dizzy',
+            eyebrowType: 'Default',
+            mouthType: 'Smile',
+            skinColor: 'Light',
+        },
         color: "text-deepblue",
         bgWithOpacity: "bg-deepblue/5",
         border: "border-deepblue/10",
-        description: "Configure your opponent's parameters to creating a unique training scenario.",
+        description: "A highly adaptable AI that changes its behavior based on your parameters. Configure its chaos levels!",
         stats: { wins: 0, losses: 0, winRate: 0 }
     }
 };
@@ -95,6 +106,7 @@ const BOT_DATA = {
 export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProps) {
   const navigate = useNavigate();
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('normal');
+  const [customDifficulty, setCustomDifficulty] = useState(50);
   const activeBot = BOT_DATA[selectedDifficulty];
 
   if (!isOpen) return null;
@@ -102,7 +114,7 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-[#0F172A]/80 backdrop-blur-sm animate-fadeIn" onClick={onClose} />
-      <div className="relative bg-[#F3F4FF] w-full max-w-5xl h-[90vh] max-h-[700px] rounded-[2.5rem] overflow-hidden shadow-2xl animate-fadeScaleIn border-[8px] border-white flex flex-col">
+      <div className="relative bg-[#F3F4FF] w-full max-w-5xl h-[90vh] max-h-[850px] rounded-[2.5rem] overflow-hidden shadow-2xl animate-fadeScaleIn border-[8px] border-white flex flex-col">
         
         {/* Decorative Background */}
         <div className={`absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full blur-[120px] pointer-events-none transition-colors duration-700 ${selectedDifficulty === 'easy' ? 'bg-mint/10' : selectedDifficulty === 'normal' ? 'bg-blue-500/10' : selectedDifficulty === 'hard' ? 'bg-coral/10' : 'bg-slate-500/10'}`}></div>
@@ -148,7 +160,7 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                         <div className="relative h-full flex flex-col items-center p-6 z-10 overflow-y-auto scrollbar-hide">
                             
                             <div className="w-full flex justify-between items-center mb-4 flex-shrink-0">
-                                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full bg-white/50 backdrop-blur-sm ${activeBot.color}`}>
+                                <span className={`text-xs font-black uppercase tracking-widest px-2 py-1 rounded-full bg-white/50 backdrop-blur-sm ${activeBot.color}`}>
                                     {selectedDifficulty}
                                 </span>
                                 {selectedDifficulty === 'hard' && <span className="text-xl">🔥</span>}
@@ -173,11 +185,43 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                                 </h3>
                             </div>
 
-                            <div className="w-full bg-white/60 backdrop-blur-md rounded-xl p-3 text-center border border-white/50 shadow-sm mt-4 flex-shrink-0">
-                                <p className="text-[11px] font-medium text-deepblue/70 leading-relaxed">
+                            <div className="w-full bg-white/60 backdrop-blur-md rounded-xl p-4 text-center border border-white/50 shadow-sm mt-4 flex-shrink-0">
+                                <p className="text-sm font-medium text-deepblue/70 leading-relaxed">
                                     "{activeBot.description}"
                                 </p>
                             </div>
+
+                            {selectedDifficulty === 'custom' && (
+                                <div className="w-full mt-6 space-y-4 animate-fadeIn">
+                                    <div className="flex justify-between items-center px-1">
+                                        <span className="text-xs font-black uppercase tracking-widest text-deepblue/40">Intelligence</span>
+                                        <span className={`text-sm font-black font-paytone ${customDifficulty < 30 ? 'text-coral' : customDifficulty < 70 ? 'text-blue-500' : 'text-mint'}`}>
+                                            {customDifficulty}% Chaos
+                                        </span>
+                                    </div>
+                                    <input 
+                                        type="range" 
+                                        min="0" 
+                                        max="100" 
+                                        value={customDifficulty}
+                                        onChange={(e) => setCustomDifficulty(parseInt(e.target.value))}
+                                        className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-deepblue"
+                                    />
+                                    <div className="flex justify-between text-xs font-bold text-deepblue/30 uppercase">
+                                        <span>Perfect</span>
+                                        <span>Random</span>
+                                    </div>
+                                    <div className="bg-white/40 p-3 rounded-lg border border-white/20 text-center">
+                                         <p className="text-sm font-bold text-deepblue/60 italic">
+                                             {customDifficulty === 0 ? "Magnus Level: Unbeatable logic." :
+                                              customDifficulty === 100 ? "Chaos Mode: Every move is a surprise." :
+                                              customDifficulty < 30 ? "Advanced AI with occasional quirks." :
+                                              customDifficulty > 70 ? "Mostly random, but follows rules." :
+                                              "A balanced opponent with human-like mistakes."}
+                                         </p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -193,8 +237,8 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                             { label: "Status", value: "READY", color: 'text-deepblue/60' }
                         ].map((stat, i) => (
                             <div key={i} className="bg-white p-3 rounded-2xl border border-slate-50 shadow-sm flex flex-col items-center justify-center">
-                                 <span className="text-[9px] font-black text-deepblue/30 uppercase tracking-tighter mb-0.5">{stat.label}</span>
-                                 <span className={`text-base font-black font-paytone ${stat.color}`}>{stat.value}</span>
+                                 <span className="text-[10px] font-black text-deepblue/30 uppercase tracking-tighter mb-0.5">{stat.label}</span>
+                                 <span className={`text-lg font-black font-paytone ${stat.color}`}>{stat.value}</span>
                             </div>
                         ))}
                     </div>
@@ -226,10 +270,10 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                                         ) : bot.icon}
                                     </div>
                                     <div className="flex-1 text-left z-10">
-                                        <h4 className={`font-black font-paytone uppercase text-sm ${isSelected ? 'text-deepblue' : 'text-deepblue/60'}`}>
+                                        <h4 className={`font-black font-paytone uppercase text-base ${isSelected ? 'text-deepblue' : 'text-deepblue/60'}`}>
                                             {bot.name}
                                         </h4>
-                                        <p className="text-[9px] font-bold text-deepblue/30 uppercase tracking-wider">
+                                        <p className="text-xs font-bold text-deepblue/30 uppercase tracking-wider">
                                             {diff}
                                         </p>
                                     </div>
@@ -252,9 +296,16 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                                     mode = 'bot_medium';
                                 } else if (selectedDifficulty === 'hard') {
                                     mode = 'bot_hard';
+                                } else if (selectedDifficulty === 'custom') {
+                                    mode = 'bot_custom';
                                 }
                                 
-                                const game = await createGame(mode);
+                                const gameData: any = { mode };
+                                if (selectedDifficulty === 'custom') {
+                                    gameData.bot_difficulty = customDifficulty;
+                                }
+
+                                const game = await createGame(gameData);
                                 navigate(`/game/${game.id}`);
                             } catch (e) {
                                 console.error(e);
