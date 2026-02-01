@@ -56,6 +56,8 @@ export default function Profile() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [gender, setGender] = useState<'M' | 'F' | undefined>(undefined);
+  const [genderDropdownOpen, setGenderDropdownOpen] = useState(false);
   const [avatarConfig, setAvatarConfig] = useState<any>({});
   const [activeTab, setActiveTab] = useState<'details' | 'avatar'>('details');
   const [saving, setSaving] = useState(false);
@@ -75,6 +77,7 @@ export default function Profile() {
       setLastName(user.lastName || "");
       setEmail(user.email || "");
       setPhone(user.phoneNumber || "");
+      setGender(user.profile?.gender);
       if (user.profile?.avatar_config) {
           setAvatarConfig(user.profile.avatar_config);
       }
@@ -82,8 +85,13 @@ export default function Profile() {
   }, [isOwner, user]);
 
   useEffect(() => {
-      if (profileData && isOwner && profileData.profile.avatar_config) {
-          setAvatarConfig(profileData.profile.avatar_config);
+      if (profileData && isOwner) {
+          if (profileData.profile.avatar_config) {
+              setAvatarConfig(profileData.profile.avatar_config);
+          }
+           if (profileData.profile.gender) {
+              setGender(profileData.profile.gender);
+          }
       }
   }, [profileData, isOwner]);
 
@@ -109,6 +117,7 @@ export default function Profile() {
         last_name: lastName,
         email,
         phone_number: phone,
+        gender,
         avatar_config: avatarConfig
       });
       await refetch();
@@ -342,33 +351,6 @@ export default function Profile() {
                     <form onSubmit={handleSave} className="space-y-6">
                         {activeTab === 'details' ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-deepblue/30 ml-4">Gender</label>
-                                    <div className="flex gap-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => setAvatarConfig({...avatarConfig, gender: 'M'})} 
-                                            // Ideally we should have a separate state for gender or update avatarConfig logic if we rely on that.
-                                            // Actually, gender is part of profile. Let's fix state.
-                                            className={`flex-1 py-4 rounded-2xl font-paytone text-lg border-2 transition-all ${avatarConfig?.gender === 'M' || (!avatarConfig?.gender && user?.profile?.gender === 'M') ? 'border-deepblue bg-deepblue/5 text-deepblue' : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'}`}
-                                            // Wait, avatarConfig doesn't usually store gender. User profile does.
-                                            // We need a local gender state in Profile.tsx
-                                        >
-                                            Male
-                                        </button>
-                                         <button
-                                            type="button"
-                                            onClick={() => {
-                                                // We need to update local gender state.
-                                                // I'll assume we add `gender` state to Profile.tsx. 
-                                                // For now, let's use a temporary hack or better, add the state in next step.
-                                            }}
-                                            className={`flex-1 py-4 rounded-2xl font-paytone text-lg border-2 transition-all ${'F' === 'F' ? 'border-deepblue bg-deepblue/5 text-deepblue' : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'}`}
-                                        >
-                                            Female
-                                        </button>
-                                    </div>
-                                </div>
                                 {/* ... other fields ... */}
 
                                 <div className="space-y-2">
@@ -411,11 +393,80 @@ export default function Profile() {
                                         placeholder="+36..."
                                     />
                                 </div>
+                                <div className="space-y-2 relative">
+                                    <label className="text-xs font-black uppercase tracking-widest text-deepblue/30 ml-4">Gender</label>
+                                    
+                                    {/* Backdrop for closing dropdown */}
+                                    {genderDropdownOpen && (
+                                        <div 
+                                            className="fixed inset-0 z-10"
+                                            onClick={() => setGenderDropdownOpen(false)}
+                                        />
+                                    )}
+
+                                    <div className="relative z-20">
+                                        <div
+                                            onClick={() => setGenderDropdownOpen(!genderDropdownOpen)}
+                                            className={`
+                                                w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 
+                                                flex items-center justify-between cursor-pointer transition-all
+                                                ${genderDropdownOpen ? 'border-deepblue/20 bg-white ring-4 ring-deepblue/5' : 'border-slate-100 hover:border-slate-200'}
+                                            `}
+                                        >
+                                            <span className={`font-bold text-lg ${gender ? 'text-deepblue' : 'text-slate-400 font-medium'}`}>
+                                                {gender === 'M' ? 'Male' : gender === 'F' ? 'Female' : 'Select gender...'}
+                                            </span>
+                                            <svg 
+                                                xmlns="http://www.w3.org/2000/svg" 
+                                                fill="none" 
+                                                viewBox="0 0 24 24" 
+                                                strokeWidth={2.5} 
+                                                stroke="currentColor" 
+                                                className={`w-5 h-5 text-deepblue/40 transition-transform duration-200 ${genderDropdownOpen ? 'rotate-180' : ''}`}
+                                            >
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                            </svg>
+                                        </div>
+
+                                        {genderDropdownOpen && (
+                                            <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white rounded-2xl border border-slate-100 shadow-xl shadow-deepblue/5 overflow-hidden animate-fadeIn">
+                                                <div 
+                                                    onClick={() => {
+                                                        setGender('M');
+                                                        setGenderDropdownOpen(false);
+                                                    }}
+                                                    className={`px-6 py-4 font-bold text-deepblue cursor-pointer transition-colors flex items-center justify-between ${gender === 'M' ? 'bg-deepblue/5' : 'hover:bg-slate-50'}`}
+                                                >
+                                                    Male
+                                                    {gender === 'M' && (
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-deepblue">
+                                                            <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                                                        </svg>
+                                                    )}
+                                                </div>
+                                                <div 
+                                                    onClick={() => {
+                                                        setGender('F');
+                                                        setGenderDropdownOpen(false);
+                                                    }}
+                                                    className={`px-6 py-4 font-bold text-deepblue cursor-pointer transition-colors flex items-center justify-between ${gender === 'F' ? 'bg-deepblue/5' : 'hover:bg-slate-50'}`}
+                                                >
+                                                    Female
+                                                    {gender === 'F' && (
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-deepblue">
+                                                            <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                                                        </svg>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         ) : (
                             <AvatarEditor 
                                 config={avatarConfig} 
-                                gender={user?.profile?.gender}
+                                gender={gender}
                                 onChange={setAvatarConfig} 
                             />
                         )}

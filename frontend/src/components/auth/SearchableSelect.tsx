@@ -17,6 +17,7 @@ type Props = {
   disabled?: boolean;
   placeholder?: string;
   required?: boolean;
+  disableSearch?: boolean;
 };
 
 export default function SearchableSelect({
@@ -29,6 +30,7 @@ export default function SearchableSelect({
   disabled,
   placeholder = "Search...",
   required,
+  disableSearch = false,
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -135,26 +137,28 @@ export default function SearchableSelect({
 
       {isOpen && (
         <div className="absolute top-[calc(100%+8px)] left-0 right-0 z-[100] bg-white rounded-[1.25rem] border border-[#5570F1]/20 shadow-[0_20px_60px_-15px_rgba(15,23,42,0.3)] p-3 animate-in fade-in zoom-in duration-200 overflow-hidden max-h-[350px] flex flex-col">
-          <div className="relative mb-3">
-            <svg
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5570F1]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              ref={inputRef}
-              autoFocus
-              type="text"
-              placeholder={placeholder}
-              className="w-full bg-[#F8FAFF] rounded-[0.75rem] py-3 pl-11 pr-4 text-[15px] font-medium outline-none border-2 border-transparent focus:border-[#5570F1]/30 transition-all placeholder:text-[#9CA3AF] text-[#374151]"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
+          {!disableSearch && (
+            <div className="relative mb-3">
+              <svg
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5570F1]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                ref={inputRef}
+                autoFocus
+                type="text"
+                placeholder={placeholder}
+                className="w-full bg-[#F8FAFF] rounded-[0.75rem] py-3 pl-11 pr-4 text-[15px] font-medium outline-none border-2 border-transparent focus:border-[#5570F1]/30 transition-all placeholder:text-[#9CA3AF] text-[#374151]"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          )}
 
           <div className="overflow-y-auto flex-1 custom-scrollbar pr-1 -mr-1">
             {filteredOptions.length > 0 ? (
