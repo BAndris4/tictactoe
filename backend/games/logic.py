@@ -157,11 +157,10 @@ class GameLogic:
         # The next player must play in 'move.subcell'
         target_subboard = move.subcell
         
-        # If that subboard is full (or won?), then constraint is NULL (free choice)
-        # Rules vary: usually "if full". Some say "if full OR won".
-        # Let's stick to "is_subboard_full".
-        # Assuming frontend rule: "if isFull(previousMove.cell) return true"
-        if GameLogic.is_subboard_full(game.id, target_subboard):
+        # If that subboard is full OR won, then constraint is NULL (free choice)
+        # New rule: If someone already won that subboard, you can play anywhere too.
+        is_target_won = small_winners[target_subboard] is not None
+        if is_target_won or GameLogic.is_subboard_full(game.id, target_subboard):
              game.next_board_constraint = None
         else:
              game.next_board_constraint = target_subboard

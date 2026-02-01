@@ -32,9 +32,12 @@ class EasyBotLogic:
         
         possible_boards = []
         if target_subboard is not None:
-            if not GameLogic.is_subboard_full(game.id, target_subboard):
+             target_won = GameLogic.check_subboard_winner(game.id, target_subboard) is not None
+             target_full = GameLogic.is_subboard_full(game.id, target_subboard)
+             if not target_won and not target_full:
                  possible_boards = [target_subboard]
-            else:
+             else:
+                 # Constraint lifted because target is won or full
                  possible_boards = [i for i in range(9) if not GameLogic.is_subboard_full(game.id, i)]
         else:
              possible_boards = [i for i in range(9) if not GameLogic.is_subboard_full(game.id, i)]
@@ -182,15 +185,15 @@ class MediumBotLogic:
         valid_moves = []
         possible_boards = []
         
-        # Rule Fix: Only 'Full' board releases constraint. 'Won' board does NOT release constraint.
+        # Rule: Both 'Full' and 'Won' boards release constraint.
         if constraint is not None:
              is_full = all(board[constraint*9 + i] is not None for i in range(9))
-             if not is_full:
+             is_won = small_board_winners[constraint] is not None
+             if not is_full and not is_won:
                  possible_boards = [constraint]
              else:
-                 # Constraint is FULL, so free move
+                 # Constraint is FULL or WON, so free move
                  # Valid boards are those that are NOT full.
-                 # (Playing in won board is allowed if not full)
                  possible_boards = [i for i in range(9) if not all(board[i*9+k] is not None for k in range(9))]
         else:
              possible_boards = [i for i in range(9) if not all(board[i*9+k] is not None for k in range(9))]

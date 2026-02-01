@@ -22,10 +22,13 @@ export default function SmallTable({
 
     const prev = game.previousMove.cell;
 
-    if (isFull(game.cells, prev)) return true;
+    // Check if target board is won
+    const isTargetWon = game.smallWinners && game.smallWinners[prev.row][prev.col];
+
+    if (isFull(game.cells, prev) || isTargetWon) return true;
 
     return prev.row === blockRow && prev.col === blockCol;
-  }, [game.previousMove, game.cells, blockRow, blockCol, game.winner]);
+  }, [game.previousMove, game.cells, game.smallWinners, blockRow, blockCol, game.winner]);
 
   const handleCellClick = (row: number, col: number) => {
     if (game.winner) return;

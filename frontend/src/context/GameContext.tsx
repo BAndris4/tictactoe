@@ -429,7 +429,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
     if (winner) return;
 
     try {
-        isMoveValid(cells, move, previousMove);
+        isMoveValid(cells, move, previousMove, smallWinners);
     } catch (err) {
         triggerFlash();
         triggerShake();

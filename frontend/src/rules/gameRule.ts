@@ -17,13 +17,25 @@ function isOccupied(cells: (string | null)[][], move: Move) {
     return !!cells[globalRow][globalCol];
 }
 
-export function isMoveValid(cells: (string | null)[][], move: Move, previousMove: Move | undefined) {
+export function isMoveValid(
+    cells: (string | null)[][], 
+    move: Move, 
+    previousMove: Move | undefined,
+    smallWinners?: (string | undefined)[][]
+) {
 
     if (isOccupied(cells, move)) throw new Error("Invalid move: Occupied");
 
     if (!previousMove) return true;
     
+    // Check if the board we are sent to is full
     if (isFull(cells, previousMove.cell)) return true;
+
+    // Check if the board we are sent to is already won (if we have that info)
+    if (smallWinners) {
+        const targetBlockWinner = smallWinners[previousMove.cell.row][previousMove.cell.col];
+        if (targetBlockWinner) return true; // Can play anywhere if target board is won
+    }
     
     if (previousMove.cell.col === move.block.col &&
         previousMove.cell.row === move.block.row) return true;
