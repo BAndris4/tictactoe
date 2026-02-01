@@ -2,7 +2,7 @@ import json
 from urllib.parse import parse_qs
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import Game, GameMove
+from .models import Game, GameMove, ChatMessage
 from .logic import GameLogic
 from .serializers import GameMoveSerializer
 from users.tokens import get_user_from_access_token
@@ -52,7 +52,10 @@ class GameConsumer(AsyncWebsocketConsumer):
                      import asyncio
                      asyncio.create_task(BotService.process_bot_move(self.game_id, self.channel_layer, self.room_group_name))
 
-        except Exception:
+        except Exception as e:
+            print(f"[GameConsumer] Critical Error in connect: {e}")
+            import traceback
+            traceback.print_exc()
             await self.close()
 
     async def disconnect(self, close_code):
@@ -112,6 +115,36 @@ class GameConsumer(AsyncWebsocketConsumer):
                     'type': 'error',
                     'message': str(e)
                 }))
+            except Exception as e:
+                print(f"[GameConsumer] Critical Error processing move: {e}")
+                import traceback
+                traceback.print_exc()
+                await self.send(text_data=json.dumps({
+                    'type': 'error',
+                    'message': "Internal Server Error during move processing."
+                }))
+
+        elif action == 'chat_message':
+            content = text_data_json.get('content')
+            if content:
+                # Save message
+                msg = await self.save_chat_message(content)
+                
+                # Broadcast
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'chat_message',
+                        'message': {
+                            'id': msg.id,
+                            'sender': self.user.id,
+                            'sender_name': self.user.username,
+                            'content': msg.content,
+                            'is_bot': False,
+                            'timestamp': msg.timestamp.isoformat()
+                        }
+                    }
+                )
 
         elif action == 'status_update':
             status_val = text_data_json.get('status') # 'active' or 'away'
@@ -130,6 +163,25 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def player_status_update(self, event):
         await self.send(text_data=json.dumps(event['data']))
+
+    async def chat_message(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'chat_message',
+            'message': event['message']
+        }))
+        
+    @database_sync_to_async
+    def has_chat_messages(self, game):
+        return ChatMessage.objects.filter(game=game).exists()
+
+    @database_sync_to_async
+    def save_chat_message(self, content):
+        return ChatMessage.objects.create(
+            game=self.game,
+            sender=self.user,
+            sender_name=self.user.username,
+            content=content
+        )
 
     @database_sync_to_async
     def validate_token(self, token):

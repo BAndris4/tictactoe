@@ -27,6 +27,7 @@ export interface Game {
   player_o_lp_change?: number;
   player_x_avatar?: any;
   player_o_avatar?: any;
+  chat_messages?: any[];
 }
 
 export const createGame = async (payload: string | { mode: string; [key: string]: any }): Promise<Game> => {

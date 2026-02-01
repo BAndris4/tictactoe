@@ -31,11 +31,7 @@ export default function SmallTable({
   }, [game.previousMove, game.cells, game.smallWinners, blockRow, blockCol, game.winner]);
 
   const handleCellClick = (row: number, col: number) => {
-    // Block moves if reviewing history
-    if (game.isReviewingHistory) {
-      console.log("Cannot make moves while reviewing history");
-      return;
-    }
+
     
     if (game.winner) return;
 

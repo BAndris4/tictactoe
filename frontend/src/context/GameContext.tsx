@@ -62,7 +62,19 @@ interface GameContextType {
   // Evaluation
   evaluationData: EvaluationNode[] | null;
   currentEvaluation: number | null;
+  // Chat
+  chatMessages: ChatMessage[];
+  sendChatMessage: (content: string) => void;
   game: any | null; // Full game object for status check
+}
+
+export interface ChatMessage {
+  id: number;
+  sender: number | 'Bot';
+  sender_name: string;
+  content: string;
+  is_bot: boolean;
+  timestamp: string;
 }
 
 export const GameContext = createContext<GameContextType | undefined>(
@@ -96,6 +108,9 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   const [error, setError] = useState<string | null>(null);
   const [flash, setFlash] = useState(false);
   const [shake, setShake] = useState(false);
+  
+  // Chat State
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   // Matchmaking State
   const [isSearching, setIsSearching] = useState(false);
@@ -220,6 +235,15 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
 
   const ws = useRef<WebSocket | null>(null);
 
+  const sendChatMessage = (content: string) => {
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+          ws.current.send(JSON.stringify({
+              action: 'chat_message',
+              content: content
+          }));
+      }
+  };
+
   const triggerFlash = () => {
     setFlash(true);
     setTimeout(() => setFlash(false), 180);
@@ -259,6 +283,10 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
                 };
                 applyMoveLocally(move, m.player as Player);
             });
+        }
+
+        if (g.chat_messages) {
+             setChatMessages(g.chat_messages);
         }
 
         // Fetch Evaluation if finished
@@ -392,6 +420,8 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
           showToast(data.message || "An error occurred", "error");
           triggerShake();
           triggerFlash();
+      } else if (data.type === 'chat_message') {
+          setChatMessages(prev => [...prev, data.message]);
       }
     };
 
@@ -467,7 +497,16 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   };
 
   const makeMove = (move: Move) => {
-    if (winner) return;
+    if (isReviewingHistory) {
+      showToast("Cannot move while reviewing history", "error");
+      triggerShake();
+      return;
+    }
+    if (winner) {
+       showToast("The game is already over!", "error");
+       triggerShake();
+       return;
+    }
 
     try {
         isMoveValid(cells, move, previousMove, smallWinners);
@@ -620,7 +659,9 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         currentEvaluation: evaluationData && currentHistoryIndex !== null
             ? (currentHistoryIndex === -1 ? 0 : (evaluationData.find(e => e.move_no === currentHistoryIndex + 1)?.score ?? 0))
             : (evaluationData && evaluationData.length > 0 ? evaluationData[evaluationData.length - 1].score : 0),
-        game
+        game,
+        chatMessages,
+        sendChatMessage
       }}
     >
       {children}

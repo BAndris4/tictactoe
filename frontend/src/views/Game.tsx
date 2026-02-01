@@ -15,7 +15,9 @@ import { getAuthToken } from "../hooks/useAuth";
 import GameSidebar from "../components/game/GameSidebar";
 import MoveHistory from "../components/game/MoveHistory";
 import HistoryNavigationControls from "../components/game/HistoryNavigationControls";
+
 import EvaluationBar from "../components/game/EvaluationBar";
+import ChatPanel from "../components/game/ChatPanel";
 
 function GameContent() {
   const game = useGame();
@@ -182,8 +184,15 @@ function GameContent() {
     >
       <BackgroundShapes activePlayer={game.currentPlayer} />
 
-      <div className="relative flex flex-col md:flex-row gap-6 items-stretch justify-center z-10 p-4 md:p-8 w-full max-w-7xl h-full max-h-[900px]">
+      <div className="relative flex flex-col xl:flex-row gap-6 items-stretch justify-center z-10 p-4 md:p-8 w-full max-w-[1600px] h-full max-h-[900px]">
         
+        {/* Left Sidebar - Chat */}
+        {!isLocalGame && (
+            <div className="hidden xl:flex flex-col w-80 h-full flex-shrink-0">
+                <ChatPanel className="h-full" />
+            </div>
+        )}
+
         {/* Main Game Area */}
         <div className="flex flex-col items-center justify-center gap-8 flex-[1.5] py-4">
           {/* Opponent Info */}

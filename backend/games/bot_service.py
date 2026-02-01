@@ -1,7 +1,68 @@
 import random
 from channels.db import database_sync_to_async
-from .models import Game, GameMove
+from .models import Game, GameMove, ChatMessage
 from .logic import GameLogic
+from .bot_config import BOT_CONFIGS
+
+class BotChatService:
+    @staticmethod
+    async def maybe_send_chat(game, bot_symbol, trigger, channel_layer, group_name):
+        # 1. Check chance (e.g. 30% for moves, 100% for GG/Greeting)
+        chance = 30
+        if trigger in ['greeting', 'gg_win', 'gg_loss']:
+            chance = 100
+            
+        if random.randint(1, 100) > chance:
+            return
+
+        # 2. Get Config
+        config = BOT_CONFIGS.get(game.mode)
+        if not config: return
+
+        phrases = config.get('chat_phrases', {}).get(trigger, [])
+        if not phrases: return
+
+        content = random.choice(phrases)
+        
+        # 3. Save to DB
+        from .models import ChatMessage
+        # Wait, ChatMessage is in .models now.
+        
+        # We need user for sender... Bot doesn't have a user ID usually???
+        # Actually, standard is sender=None for system/bot, but we use sender_name
+        
+        # Sender ID? If bot is linked to a user (unlikely for these simple bots), use it.
+        # But our models say sender can be null.
+        
+        sender_id = None
+        # Try to find if there is a bot user? No, simplify.
+        
+        sender_name = config['name']
+        
+        msg = await database_sync_to_async(ChatMessage.objects.create)(
+            game=game,
+            sender=None,
+            sender_name=sender_name,
+            content=content,
+            is_bot=True
+        )
+
+        # 4. Broadcast
+        await channel_layer.group_send(
+            group_name,
+            {
+                'type': 'chat_message',
+                'message': {
+                    'id': msg.id,
+                    'sender': 'Bot', # Special flag for frontend? Or just null?
+                    'sender_name': sender_name,
+                    'content': content,
+                    'is_bot': True,
+                    'timestamp': msg.timestamp.isoformat()
+                }
+            }
+        )
+
 
 class EasyBotLogic:
     @staticmethod
@@ -581,6 +642,29 @@ class BotService:
         if not is_bot_turn:
             return
 
+        # --- BOT CHAT AGENT (Greeting & Chatter) ---
+        bot_symbol = game.current_turn
+        if game.move_count <= 1:
+             await BotChatService.maybe_send_chat(game, bot_symbol, 'greeting', channel_layer, group_name)
+        # else:
+        #      # Comment on previous move?
+        #      # For now just random chatter during turn
+        #      await BotChatService.maybe_send_chat(game, bot_symbol, 'good_move', channel_layer, group_name)
+        # -------------------------------------------
+        
+        # --- REACTION TO OPPONENT MOVE ---
+        # Did the opponent just win a subgrid?
+        # We can check the board corresponding to the previous move.
+        # But we don't easily know which move was last without query.
+        last_move = await database_sync_to_async(GameMove.objects.filter(game=game).last)()
+        if last_move and last_move.player != bot_symbol:
+            # Opponent just moved. Did they win that subboard?
+            w = await database_sync_to_async(GameLogic.check_subboard_winner)(game_id, last_move.cell)
+            if w and w == last_move.player:
+                 # Opponent won a subgrid
+                 await BotChatService.maybe_send_chat(game, bot_symbol, 'subgrid_loss', channel_layer, group_name)
+        # -------------------------------------------
+
         # Ensure we are in a bot mode
         bot_modes = ['bot_easy', 'bot_medium', 'bot_hard', 'bot_custom']
         if game.mode not in bot_modes:
@@ -595,7 +679,61 @@ class BotService:
              move = await database_sync_to_async(EasyBotLogic.perform_move)(game_id)
         
         if move:
+            # Capture state BEFORE finalizing move (which updates DB)
+            # Actually, finalize_move updates the DB. We need to check what changed.
+            # Easiest way: Check the subcell's winner status AFTER the move.
+            
+            # But we need to know if it JUST happened. 
+            # We can check if the subgrid was already won before.
+            # But 'game' object is from before the move.
+            
+            prev_winners = {}
+            # We need to calculate small board winners from the current moves
+            # This is expensive.
+            # Alternative: GameLogic returns info? No.
+            
+            # Let's trust the 'game' object acts as snapshot BEFORE move.
+            # But we need to parse its state? 'game' model doesn't store small winners easily (cache is complex).
+            
+            # OPTIMIZATION: Just check the specific board the move was played on.
+            # If that board is now won, and wasn't won before.
+            
+            # 1. Get status of the board where move happened (move.cell) BEFORE move.
+            # We need to query moves to see if it was won.
+            
+            # Actually, let's keep it simple.
+            # We will finalize the move. Then check if the board (move.cell) is now won by bot or opponent.
+            # If it is won, and we assume it wasn't won before (otherwise we couldn't play there... unless free move mode which we don't support fully yet).
+            # Wait, if board is won, you can't play there usually.
+            # EXCEPT if we just closed it.
+            
             await database_sync_to_async(EasyBotLogic.finalize_move)(move)
+            
+            # 2. Check if the specific subboard (move.cell) is now won
+            # We need to re-fetch or calculate.
+            # Let's use GameLogic to check the specific subboard status
+            winner_of_subboard = await database_sync_to_async(GameLogic.check_subboard_winner)(game_id, move.cell)
+            
+            if winner_of_subboard:
+                if winner_of_subboard == move.player:
+                    # Bot won the subgrid
+                    await BotChatService.maybe_send_chat(game, move.player, 'subgrid_win', channel_layer, group_name)
+                elif winner_of_subboard == ('X' if move.player == 'O' else 'O'):
+                     # Bot lost the subgrid (played into a loss? unlikely for bot to play into loss unless forced)
+                     # Or maybe the opponent won it previously?
+                     # If I play in a board, I can only WIN it for myself. I cannot make the opponent win it by my move.
+                     pass
+            
+            # 3. Check if we just GAVE the opponent a free subboard or advantage? 
+            # Too complex. Let's stick to "I won a subgrid".
+            
+            # What about "I lost a subgrid"? 
+            # That happens when the OPPONENT plays.
+            # We are in 'process_bot_move'. We are the bot.
+            # So we only react to OUR moves here.
+            
+            # To react to OPPONENT moves (e.g. "Oh no, you won a grid"), 
+            # we need to check the board state at the START of process_bot_move (which is right after opponent played).
             
             await channel_layer.group_send(
                 group_name,
@@ -614,6 +752,23 @@ class BotService:
                 }
             )
             
+            # Check for win to say GG
+            # We can check game state after finalize_move (which calls update_game_state)
+            # But game object here is stale? 
+            # finalize_move updates the DB object.
+            
+            # Reload game to check winner
+            # game.refresh_from_db() # Sync - REMOVED to fix Async error
+            
+            # Wait, we are in async.
+            updated_game = await database_sync_to_async(Game.objects.get)(id=game_id)
+
+            if updated_game.status == 'finished':
+                if updated_game.winner == move.player:
+                     await BotChatService.maybe_send_chat(updated_game, move.player, 'gg_win', channel_layer, group_name)
+                else:
+                     await BotChatService.maybe_send_chat(updated_game, move.player, 'gg_loss', channel_layer, group_name)
+
             await BotService.check_game_over_broadcast(game_id, channel_layer, group_name)
 
     @staticmethod
