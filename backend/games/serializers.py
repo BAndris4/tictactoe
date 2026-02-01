@@ -61,9 +61,11 @@ class GameSerializer(serializers.ModelSerializer):
         if obj.mode == 'local' and obj.player_x:
             return f"{obj.player_x.username} (X)"
         if obj.mode == 'bot_easy' and not obj.player_x:
-            return "Bot (Easy)"
+            return "Tiny Bot (Easy)"
         if obj.mode == 'bot_medium' and not obj.player_x:
-             return "Bot (Medium)"
+             return "Beta Unit (Medium)"
+        if obj.mode == 'bot_hard' and not obj.player_x:
+             return "Omega AI (Hard)"
         return obj.player_x.username if obj.player_x else None
 
     def get_player_o_name(self, obj):
@@ -71,9 +73,11 @@ class GameSerializer(serializers.ModelSerializer):
             # In local mode, player_x plays both sides, so we use player_x's name for O too
             return f"{obj.player_x.username} (O)"
         if obj.mode == 'bot_easy' and not obj.player_o:
-            return "Bot (Easy)"
+            return "Tiny Bot (Easy)"
         if obj.mode == 'bot_medium' and not obj.player_o:
-             return "Bot (Medium)"
+             return "Beta Unit (Medium)"
+        if obj.mode == 'bot_hard' and not obj.player_o:
+             return "Omega AI (Hard)"
         return obj.player_o.username if obj.player_o else None
 
     def get_player_x_avatar(self, obj):

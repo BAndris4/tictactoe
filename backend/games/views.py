@@ -127,7 +127,7 @@ class CreateGameView(APIView):
         player_x = user
         player_o = None
         
-        if mode == GameMode.BOT_EASY or mode == GameMode.BOT_MEDIUM:
+        if mode in [GameMode.BOT_EASY, GameMode.BOT_MEDIUM, GameMode.BOT_HARD]:
             import random
             status_val = GameStatus.ACTIVE
             if random.choice([True, False]):

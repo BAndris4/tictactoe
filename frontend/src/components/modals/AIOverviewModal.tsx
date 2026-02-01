@@ -203,8 +203,9 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                                 let mode: any = 'bot_easy';
                                 if (selectedDifficulty === 'normal') {
                                     mode = 'bot_medium';
+                                } else if (selectedDifficulty === 'hard') {
+                                    mode = 'bot_hard';
                                 }
-                                // future: hard -> bot_hard
                                 
                                 const game = await createGame(mode);
                                 navigate(`/game/${game.id}`);

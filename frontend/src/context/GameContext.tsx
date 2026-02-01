@@ -351,6 +351,10 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
              return;
           }
           setOpponentStatus(data.status);
+      } else if (data.type === "error") {
+          showToast(data.message || "An error occurred", "error");
+          triggerShake();
+          triggerFlash();
       }
     };
 
