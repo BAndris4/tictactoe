@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createGame } from "../../api/game";
+import UserAvatar from "../common/UserAvatar";
 
 interface AIOverviewModalProps {
   isOpen: boolean;
@@ -13,38 +14,76 @@ type Difficulty = 'easy' | 'normal' | 'hard' | 'custom';
 const BOT_DATA = {
     easy: {
         id: 'easy',
-        name: "Tiny Bot",
+        name: "Oliver",
         icon: "🐣",
+        avatar: {
+            topType: 'ShortHairShaggyMullet',
+            accessoriesType: 'Blank',
+            hairColor: 'Blonde',
+            facialHairType: 'Blank',
+            clotheType: 'Hoodie',
+            clotheColor: 'PastelOrange',
+            eyeType: 'Default',
+            eyebrowType: 'DefaultNatural',
+            mouthType: 'Smile',
+            skinColor: 'Light',
+        },
         color: "text-mint",
         bgWithOpacity: "bg-mint/10",
         border: "border-mint/20",
-        description: "Perfect for beginners. Tiny Bot moves randomly and makes frequent mistakes.",
+        description: "A friendly opponent who's still learning the ropes. Oliver is here for a good time!",
         stats: { wins: 12, losses: 0, winRate: 100 }
     },
     normal: {
         id: 'normal',
-        name: "Beta Unit",
+        name: "Sophia",
         icon: "🤖",
+        avatar: {
+            topType: 'LongHairStraight',
+            accessoriesType: 'Prescription02',
+            hairColor: 'BrownDark',
+            facialHairType: 'Blank',
+            clotheType: 'BlazerShirt',
+            clotheColor: 'Blue03',
+            eyeType: 'Default',
+            eyebrowType: 'RaisedExcitedNatural',
+            mouthType: 'Default',
+            skinColor: 'Pale',
+        },
         color: "text-blue-500",
         bgWithOpacity: "bg-blue-500/10",
         border: "border-blue-500/20",
-        description: "A balanced opponent. Beta Unit thinks ahead but leaves openings.",
+        description: "Sophia plays with logic and poise. She won't give up sub-boards without a fight.",
         stats: { wins: 5, losses: 8, winRate: 38 }
     },
     hard: {
         id: 'hard',
-        name: "Omega AI",
+        name: "Magnus",
         icon: "👿",
+        avatar: {
+            topType: 'ShortHairTheCaesar',
+            accessoriesType: 'Sunglasses',
+            hairColor: 'Black',
+            facialHairType: 'BeardMedium',
+            facialHairColor: 'Black',
+            clotheType: 'BlazerSweater',
+            clotheColor: 'Gray01',
+            eyeType: 'Default',
+            eyebrowType: 'Default',
+            mouthType: 'Serious',
+            skinColor: 'Tanned',
+        },
         color: "text-coral",
         bgWithOpacity: "bg-coral/10",
         border: "border-coral/20",
-        description: "The ultimate challenge. Omega calculates deep into the future. No mercy.",
+        description: "The Grandmaster of TicTacToe. Magnus calculates every move with ruthless precision.",
         stats: { wins: 0, losses: 24, winRate: 0 }
     },
     custom: {
         id: 'custom',
         name: "Custom Bot",
         icon: "⚙️",
+        avatar: null,
         color: "text-deepblue",
         bgWithOpacity: "bg-deepblue/5",
         border: "border-deepblue/10",
@@ -120,7 +159,13 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                                 <div className={`absolute inset-0 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 ${activeBot.bgWithOpacity}`}></div>
                                 
                                 <div className="text-[100px] leading-none drop-shadow-2xl transform transition-transform duration-500 group-hover:scale-110 motion-safe:animate-bounce-slow">
-                                    {activeBot.icon}
+                                    {activeBot.avatar ? (
+                                        <div className="w-32 h-32 rounded-full border-4 border-white shadow-xl overflow-hidden">
+                                            <UserAvatar avatarConfig={activeBot.avatar} size="100%" className="w-full h-full" />
+                                        </div>
+                                    ) : (
+                                        activeBot.icon
+                                    )}
                                 </div>
                                 
                                 <h3 className={`text-3xl font-black font-paytone text-center mt-4 uppercase tracking-tight ${activeBot.color}`}>
@@ -172,11 +217,13 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                                     `}
                                 >
                                     <div className={`
-                                        w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-transform duration-300 flex-shrink-0
+                                        w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-transform duration-300 flex-shrink-0 overflow-hidden
                                         ${isSelected ? 'scale-110 rotate-3' : 'group-hover:scale-110'}
                                         ${bot.bgWithOpacity}
                                     `}>
-                                        {bot.icon}
+                                        {bot.avatar ? (
+                                             <UserAvatar avatarConfig={bot.avatar} size="100%" className="w-8 h-8 scale-150" />
+                                        ) : bot.icon}
                                     </div>
                                     <div className="flex-1 text-left z-10">
                                         <h4 className={`font-black font-paytone uppercase text-sm ${isSelected ? 'text-deepblue' : 'text-deepblue/60'}`}>

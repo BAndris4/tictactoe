@@ -4,15 +4,17 @@ import Avatar from 'avataaars';
 interface UserAvatarProps {
   username?: string;
   avatarConfig?: any;
+  config?: any; // Added for compatibility
   className?: string;
   size?: number | string;
 }
 
-export default function UserAvatar({ username, avatarConfig, className = "", size = "100%" }: UserAvatarProps) {
-  
+export default function UserAvatar({ username, avatarConfig, config, className = "", size = "100%" }: UserAvatarProps) {
+  const finalConfig = avatarConfig || config;
+
   const hasAvatar = useMemo(() => {
-    return avatarConfig && Object.keys(avatarConfig).length > 0;
-  }, [avatarConfig]);
+    return finalConfig && typeof finalConfig === 'object' && Object.keys(finalConfig).length > 0;
+  }, [finalConfig]);
 
   if (hasAvatar) {
     return (
@@ -20,7 +22,7 @@ export default function UserAvatar({ username, avatarConfig, className = "", siz
          <Avatar
             style={{ width: '100%', height: '100%' }}
             avatarStyle="Transparent"
-            {...avatarConfig}
+            {...finalConfig}
         />
       </div>
     );

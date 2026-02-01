@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Game, GameMove, GameMode, GameStatus, GameInvitation
+from .bot_config import BOT_CONFIGS
 
 class GameInvitationSerializer(serializers.ModelSerializer):
     from_user_name = serializers.ReadOnlyField(source='from_user.username')
@@ -60,34 +61,32 @@ class GameSerializer(serializers.ModelSerializer):
     def get_player_x_name(self, obj):
         if obj.mode == 'local' and obj.player_x:
             return f"{obj.player_x.username} (X)"
-        if obj.mode == 'bot_easy' and not obj.player_x:
-            return "Tiny Bot (Easy)"
-        if obj.mode == 'bot_medium' and not obj.player_x:
-             return "Beta Unit (Medium)"
-        if obj.mode == 'bot_hard' and not obj.player_x:
-             return "Omega AI (Hard)"
+        if obj.mode in BOT_CONFIGS and not obj.player_x:
+            return BOT_CONFIGS[obj.mode]['name']
         return obj.player_x.username if obj.player_x else None
 
     def get_player_o_name(self, obj):
         if obj.mode == 'local' and obj.player_x:
             # In local mode, player_x plays both sides, so we use player_x's name for O too
             return f"{obj.player_x.username} (O)"
-        if obj.mode == 'bot_easy' and not obj.player_o:
-            return "Tiny Bot (Easy)"
-        if obj.mode == 'bot_medium' and not obj.player_o:
-             return "Beta Unit (Medium)"
-        if obj.mode == 'bot_hard' and not obj.player_o:
-             return "Omega AI (Hard)"
+        if obj.mode in BOT_CONFIGS and not obj.player_o:
+            return BOT_CONFIGS[obj.mode]['name']
         return obj.player_o.username if obj.player_o else None
 
     def get_player_x_avatar(self, obj):
-        if not obj.player_x: return None
+        if not obj.player_x:
+            if obj.mode in BOT_CONFIGS:
+                return BOT_CONFIGS[obj.mode]['avatar']
+            return None
         from users.models import PlayerProfile
         profile, _ = PlayerProfile.objects.get_or_create(user=obj.player_x)
         return profile.avatar_config
 
     def get_player_o_avatar(self, obj):
-        if not obj.player_o: return None
+        if not obj.player_o:
+            if obj.mode in BOT_CONFIGS:
+                return BOT_CONFIGS[obj.mode]['avatar']
+            return None
         from users.models import PlayerProfile
         profile, _ = PlayerProfile.objects.get_or_create(user=obj.player_o)
         return profile.avatar_config
