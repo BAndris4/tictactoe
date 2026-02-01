@@ -2,8 +2,14 @@ import { API_URL, getHeaders } from "./client";
 
 export interface Friendship {
   id: number;
-  from_user: string;
-  to_user: string;
+  from_user: {
+      username: string;
+      profile?: { avatar_config?: any; gender?: string; };
+  };
+  to_user: {
+      username: string;
+      profile?: { avatar_config?: any; gender?: string; };
+  };
   status: 'pending' | 'accepted' | 'rejected' | 'blocked';
   created_at: string;
 }

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getFriendsList, type FriendUser } from "../../api/social";
 import { createGame, inviteFriend } from "../../api/game";
 import { useToast } from "../../context/ToastContext";
-import Avatar from 'avataaars';
+import UserAvatar from "../common/UserAvatar";
 
 export default function SocialMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -81,17 +81,10 @@ export default function SocialMenu() {
                   <div key={friend.id} className="p-3 flex items-center justify-between hover:bg-slate-50 transition-colors rounded-2xl group">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-mint/10 flex items-center justify-center text-mint font-paytone text-sm border border-mint/5 overflow-hidden">
-                        {friend.profile?.avatar_config ? (
-                           <div className="w-[110%] h-[110%] mt-1">
-                               <Avatar
-                                   style={{ width: '100%', height: '100%' }}
-                                   avatarStyle="Transparent"
-                                   {...friend.profile.avatar_config}
-                               />
-                           </div>
-                        ) : (
-                           friend.username[0].toUpperCase()
-                        )}
+                        <UserAvatar 
+                            username={friend.username}
+                            avatarConfig={friend.profile?.avatar_config}
+                        />
                       </div>
                       <div>
                         <p className="font-bold text-xs text-deepblue">@{friend.username}</p>

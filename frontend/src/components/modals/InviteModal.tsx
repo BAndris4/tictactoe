@@ -4,6 +4,7 @@ import { useGame } from "../../context/GameContext";
 import { useAuth } from "../../hooks/useAuth";
 import { getFriendsList, type FriendUser } from "../../api/social";
 import { inviteFriend, forfeitGame } from "../../api/game";
+import UserAvatar from "../common/UserAvatar";
 
 export default function InviteModal() {
   const { gameId, status, players, error, setError } = useGame();
@@ -118,8 +119,11 @@ export default function InviteModal() {
                     {friends.map(friend => (
                         <div key={friend.id} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-transparent hover:border-sunshine/20 hover:bg-white transition-all group">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-mint/10 flex items-center justify-center text-mint font-paytone text-lg">
-                                    {friend.username[0].toUpperCase()}
+                                <div className="w-12 h-12 rounded-xl bg-mint/10 flex items-center justify-center text-mint font-paytone text-lg overflow-hidden">
+                                    <UserAvatar 
+                                        username={friend.username}
+                                        avatarConfig={friend.profile?.avatar_config}
+                                    />
                                 </div>
                                 <div className="text-left">
                                     <p className="font-black text-deepblue text-sm">@{friend.username}</p>

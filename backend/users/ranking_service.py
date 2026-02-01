@@ -183,9 +183,9 @@ class RankingService:
             rank_old, lp_old_div = cls.get_rank_from_lp(old_lp)
             rank_new, lp_new_div = cls.get_rank_from_lp(cur_lp)
             
-            # Performance indicator (based on MMR vs LP)
             expected_mmr = cls.calculate_expected_mmr_for_lp(cur_lp)
-            mmr_diff = profile.mmr - expected_mmr
+            current_mmr = profile.mmr if profile.mmr is not None else cls.STARTING_MMR
+            mmr_diff = current_mmr - expected_mmr
             if mmr_diff > 100:
                 perf = "Climbing"
             elif mmr_diff < -100:

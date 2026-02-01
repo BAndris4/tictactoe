@@ -75,6 +75,9 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         rating = await self.get_user_rating(mode)
         
         # JAVÍTÁS: Itt tároljuk el a username-t stringként, hogy könnyebb legyen kezelni
+        profile, _ = await database_sync_to_async(PlayerProfile.objects.get_or_create)(user=self.user)
+        avatar_config = profile.avatar_config
+
         entry = {
             'channel_name': self.channel_name,
             'user_id': self.user.id,
@@ -82,6 +85,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             'user_obj': self.user,          # Megtartjuk az objektumot a create_game-hez
             'rating': rating,
             'mode': mode,
+            'avatar_config': avatar_config,
             'joined_at': time.time()
         }
         
@@ -164,7 +168,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                 "status": "match_found",
                 "game_id": str(game_id),
                 "opponent": opponent_label,
-                "opponent_username": opponent['username']
+                "opponent_username": opponent['username'],
+                "opponent_avatar": opponent.get('avatar_config')
             }))
 
             # Ellenfél értesítése
@@ -174,7 +179,8 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
                     "type": "match_found_event",
                     "game_id": str(game_id),
                     "opponent": me_label,
-                    "opponent_username": me['username']
+                    "opponent_username": me['username'],
+                    "opponent_avatar": me.get('avatar_config')
                 }
             )
         except Exception as e:
@@ -185,5 +191,6 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             "status": "match_found",
             "game_id": event["game_id"],
             "opponent": event.get("opponent"),
-            "opponent_username": event.get("opponent_username")
+            "opponent_username": event.get("opponent_username"),
+            "opponent_avatar": event.get("opponent_avatar")
         }))

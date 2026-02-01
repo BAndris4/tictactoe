@@ -82,14 +82,30 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
 
+class SimpleUserSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = ["username", "profile"]
+
+    def get_profile(self, obj):
+        from ..models import PlayerProfile
+        profile, _ = PlayerProfile.objects.get_or_create(user=obj)
+        return {
+            "avatar_config": profile.avatar_config,
+            "gender": profile.gender,
+            # "rank": profile.rank  # Removed as it does not exist on model
+        }
+
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
     stay_logged_in = serializers.BooleanField(required=False, default=False)
 
 class FriendshipSerializer(serializers.ModelSerializer):
-    from_user = serializers.StringRelatedField()
-    to_user = serializers.StringRelatedField()
+    from_user = SimpleUserSerializer(read_only=True)
+    to_user = SimpleUserSerializer(read_only=True)
     
     class Meta:
         model = Friendship

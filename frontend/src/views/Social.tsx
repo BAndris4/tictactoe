@@ -13,6 +13,7 @@ import {
 
 import { createGame, inviteFriend } from "../api/game";
 import { useToast } from "../context/ToastContext";
+import UserAvatar from "../components/common/UserAvatar";
 
 type Tab = 'friends' | 'pending' | 'add';
 
@@ -215,8 +216,11 @@ export default function Social() {
                             {friends.map(friend => (
                                 <div key={friend.id} className="p-4 sm:p-6 flex items-center justify-between hover:bg-slate-50 transition-colors group">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 rounded-2xl bg-mint/10 flex items-center justify-center text-mint font-black text-xl font-paytone">
-                                            {friend.username[0].toUpperCase()}
+                                        <div className="w-14 h-14 rounded-2xl bg-mint/10 flex items-center justify-center text-mint font-black text-xl font-paytone overflow-hidden">
+                                            <UserAvatar 
+                                                username={friend.username}
+                                                avatarConfig={friend.profile?.avatar_config}
+                                            />
                                         </div>
                                         <div>
                                             <h3 className="font-bold text-deepblue text-lg mb-0.5">@{friend.username}</h3>
@@ -266,11 +270,14 @@ export default function Social() {
                             {pending.map(req => (
                                 <div key={req.id} className="p-4 sm:p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 rounded-2xl bg-sunshine/10 flex items-center justify-center text-sunshine font-black text-xl font-paytone">
-                                            {req.from_user[0].toUpperCase()}
+                                        <div className="w-14 h-14 rounded-2xl bg-sunshine/10 flex items-center justify-center text-sunshine font-black text-xl font-paytone overflow-hidden">
+                                            <UserAvatar 
+                                                username={req.from_user.username}
+                                                avatarConfig={req.from_user.profile?.avatar_config}
+                                            />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-deepblue text-lg mb-0.5">@{req.from_user}</h3>
+                                            <h3 className="font-bold text-deepblue text-lg mb-0.5">@{req.from_user.username}</h3>
                                             <p className="text-xs text-deepblue/40 font-medium">Sent a friend request</p>
                                         </div>
                                     </div>

@@ -4,11 +4,23 @@ from .models import Game, GameMove, GameMode, GameStatus, GameInvitation
 class GameInvitationSerializer(serializers.ModelSerializer):
     from_user_name = serializers.ReadOnlyField(source='from_user.username')
     to_user_name = serializers.ReadOnlyField(source='to_user.username')
+    from_user_avatar = serializers.SerializerMethodField()
+    to_user_avatar = serializers.SerializerMethodField()
     
     class Meta:
         model = GameInvitation
-        fields = ['id', 'game', 'from_user', 'from_user_name', 'to_user', 'to_user_name', 'status', 'created_at']
+        fields = ['id', 'game', 'from_user', 'from_user_name', 'from_user_avatar', 'to_user', 'to_user_name', 'to_user_avatar', 'status', 'created_at']
         read_only_fields = ['id', 'from_user', 'status', 'created_at']
+
+    def get_from_user_avatar(self, obj):
+        from users.models import PlayerProfile
+        profile, _ = PlayerProfile.objects.get_or_create(user=obj.from_user)
+        return profile.avatar_config
+
+    def get_to_user_avatar(self, obj):
+        from users.models import PlayerProfile
+        profile, _ = PlayerProfile.objects.get_or_create(user=obj.to_user)
+        return profile.avatar_config
 
 class CreateGameSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,6 +40,8 @@ class GameSerializer(serializers.ModelSerializer):
     moves = GameMoveSerializer(many=True, read_only=True)
     player_x_name = serializers.SerializerMethodField()
     player_o_name = serializers.SerializerMethodField()
+    player_x_avatar = serializers.SerializerMethodField()
+    player_o_avatar = serializers.SerializerMethodField()
     
     class Meta:
         model = Game
@@ -35,6 +49,7 @@ class GameSerializer(serializers.ModelSerializer):
             'id', 'mode', 'status', 'rated', 
             'player_x', 'player_o',
             'player_x_name', 'player_o_name',
+            'player_x_avatar', 'player_o_avatar',
             'current_turn', 'next_board_constraint', 
             'winner', 'moves', 'created_at',
             'player_x_xp_gained', 'player_o_xp_gained',
@@ -60,3 +75,15 @@ class GameSerializer(serializers.ModelSerializer):
         if obj.mode == 'bot_medium' and not obj.player_o:
              return "Bot (Medium)"
         return obj.player_o.username if obj.player_o else None
+
+    def get_player_x_avatar(self, obj):
+        if not obj.player_x: return None
+        from users.models import PlayerProfile
+        profile, _ = PlayerProfile.objects.get_or_create(user=obj.player_x)
+        return profile.avatar_config
+
+    def get_player_o_avatar(self, obj):
+        if not obj.player_o: return None
+        from users.models import PlayerProfile
+        profile, _ = PlayerProfile.objects.get_or_create(user=obj.player_o)
+        return profile.avatar_config

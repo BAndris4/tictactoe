@@ -11,8 +11,8 @@ import CircularProgressBar from "../components/common/CircularProgressBar";
 const unrankedIcon = new URL("../assets/ranks/unranked.svg", import.meta.url).href;
 const rankIcons = import.meta.glob('../assets/ranks/*.svg', { eager: true, as: 'raw' });
 
-import Avatar from 'avataaars';
 import AvatarEditor from "../components/profile/AvatarEditor";
+import UserAvatar from "../components/common/UserAvatar";
 
 interface ProfileData {
   username: string;
@@ -197,17 +197,12 @@ export default function Profile() {
                            strokeWidth={8}
                        >
                            <div className="w-full h-full flex items-center justify-center text-6xl font-black text-deepblue font-paytone bg-slate-50 overflow-hidden">
-                               {profileData.profile.avatar_config ? (
-                                   <div className="w-[110%] h-[110%] mt-4">
-                                       <Avatar
-                                           style={{ width: '100%', height: '100%' }}
-                                           avatarStyle="Transparent"
-                                           {...profileData.profile.avatar_config}
-                                       />
-                                   </div>
-                               ) : (
-                                   profileData.username.substring(0, 2).toUpperCase()
-                               )}
+                               <UserAvatar 
+                                    username={profileData.username}
+                                    avatarConfig={profileData.profile.avatar_config}
+                                    className="w-full h-full"
+                                    size="100%"
+                               />
                            </div>
                        </CircularProgressBar>
                    </div>
