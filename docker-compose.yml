@@ -32,6 +32,9 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - FRONTEND_URL=${FRONTEND_URL}
     env_file:
       - .env
 

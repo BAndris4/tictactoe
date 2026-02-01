@@ -3,11 +3,16 @@ from .views import (
     RegisterView, LoginView, LogoutView, MeView,
     FriendRequestView, PendingFriendRequestsView,
     FriendRequestActionView, FriendsListView,
-    UnfriendView, BlockUserView, UserProfileView
+    UnfriendView, BlockUserView, UserProfileView, EmailCheckView, UsernameCheckView,
+    PasswordResetRequestView, PasswordResetConfirmView
 )
 
 urlpatterns = [
     path("register", RegisterView.as_view(), name="register"),
+    path("check-email", EmailCheckView.as_view(), name="check-email"),
+    path("check-username", UsernameCheckView.as_view(), name="check-username"),
+    path("request-password-reset", PasswordResetRequestView.as_view(), name="request-password-reset"),
+    path("confirm-password-reset", PasswordResetConfirmView.as_view(), name="confirm-password-reset"),
     path("login", LoginView.as_view(), name="login"),
     path("logout", LogoutView.as_view(), name="logout"),
     path("me", MeView.as_view(), name="me"),

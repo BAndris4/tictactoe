@@ -405,3 +405,147 @@ class UserProfileView(APIView):
         # Context is needed for mutual friends check in serializer
         serializer = PublicUserSerializer(target_user, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class EmailCheckView(APIView):
+    @swagger_auto_schema(
+        operation_description="Check if an email is already taken",
+        tags=["Auth"],
+        manual_parameters=[
+            openapi.Parameter(
+                'email', 
+                openapi.IN_QUERY, 
+                description="Email address to check", 
+                type=openapi.TYPE_STRING,
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "available": openapi.Schema(type=openapi.TYPE_BOOLEAN)
+                }
+            ),
+            400: "Email parameter is missing",
+        },
+    )
+    def get(self, request):
+        email = request.query_params.get("email")
+        if not email:
+            return Response({"detail": "Email parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        exists = User.objects.filter(email=email).exists()
+        return Response({"available": not exists}, status=status.HTTP_200_OK)
+
+
+class UsernameCheckView(APIView):
+    @swagger_auto_schema(
+        operation_description="Check if a username is already taken",
+        tags=["Auth"],
+        manual_parameters=[
+            openapi.Parameter(
+                'username', 
+                openapi.IN_QUERY, 
+                description="Username to check", 
+                type=openapi.TYPE_STRING,
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "available": openapi.Schema(type=openapi.TYPE_BOOLEAN)
+                }
+            ),
+            400: "Username parameter is missing",
+        },
+    )
+    def get(self, request):
+        username = request.query_params.get("username")
+        if not username:
+            return Response({"detail": "Username parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        exists = User.objects.filter(username=username).exists()
+        return Response({"available": not exists}, status=status.HTTP_200_OK)
+
+
+class PasswordResetRequestView(APIView):
+    @swagger_auto_schema(
+        operation_description="Request a password reset email",
+        tags=["Auth"],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["email"],
+            properties={
+                "email": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL),
+            },
+        ),
+        responses={
+            200: "Email sent if user exists",
+            400: "Email is required",
+        },
+    )
+    def post(self, request):
+        from ..models import PasswordResetToken
+        from ..email_service import send_password_reset_email
+        
+        email = request.data.get("email")
+        if not email:
+            return Response({"detail": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = User.objects.filter(email=email).first()
+        if user:
+            # Create token
+            token_obj = PasswordResetToken.objects.create(user=user)
+            # Send email
+            send_password_reset_email(email, str(token_obj.token))
+        
+        # Always return 200 to prevent email enumeration
+        return Response({"detail": "If an account exists with this email, a reset link has been sent."}, status=status.HTTP_200_OK)
+
+
+class PasswordResetConfirmView(APIView):
+    @swagger_auto_schema(
+        operation_description="Reset password using a token",
+        tags=["Auth"],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["token", "new_password"],
+            properties={
+                "token": openapi.Schema(type=openapi.TYPE_STRING),
+                "new_password": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_PASSWORD),
+            },
+        ),
+        responses={
+            200: "Password reset successful",
+            400: "Invalid or expired token",
+        },
+    )
+    def post(self, request):
+        from ..models import PasswordResetToken
+        
+        token = request.data.get("token")
+        new_password = request.data.get("new_password")
+        
+        if not token or not new_password:
+            return Response({"detail": "Token and new password are required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            token_obj = PasswordResetToken.objects.get(token=token)
+            if not token_obj.is_valid():
+                return Response({"detail": "Token has expired or already been used."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Reset password
+            user = token_obj.user
+            user.set_password(new_password)
+            user.save()
+            
+            # Mark token as used
+            token_obj.is_used = True
+            token_obj.save()
+            
+            return Response({"detail": "Password has been reset successfully."}, status=status.HTTP_200_OK)
+        except (PasswordResetToken.DoesNotExist, ValueError):
+            return Response({"detail": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST)

@@ -79,6 +79,7 @@ export default function LoginCard({ onSuccess }: LoginCardProps) {
             <div className="mt-1 flex justify-end">
               <button
                 type="button"
+                onClick={() => navigate("/forgot-password")}
                 className="text-[12px] text-[#5570F1] hover:text-[#4356C4] underline-offset-2 hover:underline transition"
               >
                 Forgot your password?
