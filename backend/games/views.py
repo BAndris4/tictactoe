@@ -144,7 +144,7 @@ class CreateGameView(APIView):
             status=status_val,
             bot_difficulty=serializer.validated_data.get('bot_difficulty', 0)
         )
-        return Response(CreateGameSerializer(game).data, status=status.HTTP_201_CREATED)
+        return Response(GameSerializer(game).data, status=status.HTTP_201_CREATED)
 
 class JoinGameView(APIView):
     permission_classes = [] # Manual handling

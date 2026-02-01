@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { createGame } from "../../api/game";
 import UserAvatar from "../common/UserAvatar";
+import { useGame } from "../../context/GameContext";
 
 interface AIOverviewModalProps {
   isOpen: boolean;
@@ -104,7 +104,7 @@ const BOT_DATA = {
 };
 
 export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProps) {
-  const navigate = useNavigate();
+  const { setMatchFoundData } = useGame();
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('normal');
   const [customDifficulty, setCustomDifficulty] = useState(50);
   const activeBot = BOT_DATA[selectedDifficulty];
@@ -306,7 +306,22 @@ export default function AIOverviewModal({ isOpen, onClose }: AIOverviewModalProp
                                 }
 
                                 const game = await createGame(gameData);
-                                navigate(`/game/${game.id}`);
+                                
+                                // Instead of navigating immediately, trigger the fancy MatchFoundModal
+                                const mySymbol = game.player_x === null ? 'O' : 'X';
+                                const opponentName = mySymbol === 'X' ? game.player_o_name : game.player_x_name;
+                                const opponentAvatar = mySymbol === 'X' ? game.player_o_avatar : game.player_x_avatar;
+
+                                onClose();
+                                
+                                setMatchFoundData({
+                                    gameId: game.id,
+                                    opponent: opponentName || "Neuro",
+                                    opponentUsername: opponentName || "Neuro",
+                                    opponentAvatar: opponentAvatar,
+                                    mySymbol: mySymbol
+                                });
+
                             } catch (e) {
                                 console.error(e);
                                 alert("Failed to start bot game");
