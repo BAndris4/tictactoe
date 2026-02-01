@@ -3,11 +3,13 @@ from .views import (
     RegisterView, LoginView, LogoutView, MeView,
     FriendRequestView, PendingFriendRequestsView,
     FriendRequestActionView, FriendsListView,
-    UnfriendView, BlockUserView, UserProfileView
+    UnfriendView, BlockUserView, UserProfileView, EmailCheckView, UsernameCheckView
 )
 
 urlpatterns = [
     path("register", RegisterView.as_view(), name="register"),
+    path("check-email", EmailCheckView.as_view(), name="check-email"),
+    path("check-username", UsernameCheckView.as_view(), name="check-username"),
     path("login", LoginView.as_view(), name="login"),
     path("logout", LogoutView.as_view(), name="logout"),
     path("me", MeView.as_view(), name="me"),

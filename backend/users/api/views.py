@@ -405,3 +405,67 @@ class UserProfileView(APIView):
         # Context is needed for mutual friends check in serializer
         serializer = PublicUserSerializer(target_user, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class EmailCheckView(APIView):
+    @swagger_auto_schema(
+        operation_description="Check if an email is already taken",
+        tags=["Auth"],
+        manual_parameters=[
+            openapi.Parameter(
+                'email', 
+                openapi.IN_QUERY, 
+                description="Email address to check", 
+                type=openapi.TYPE_STRING,
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "available": openapi.Schema(type=openapi.TYPE_BOOLEAN)
+                }
+            ),
+            400: "Email parameter is missing",
+        },
+    )
+    def get(self, request):
+        email = request.query_params.get("email")
+        if not email:
+            return Response({"detail": "Email parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        exists = User.objects.filter(email=email).exists()
+        return Response({"available": not exists}, status=status.HTTP_200_OK)
+
+
+class UsernameCheckView(APIView):
+    @swagger_auto_schema(
+        operation_description="Check if a username is already taken",
+        tags=["Auth"],
+        manual_parameters=[
+            openapi.Parameter(
+                'username', 
+                openapi.IN_QUERY, 
+                description="Username to check", 
+                type=openapi.TYPE_STRING,
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "available": openapi.Schema(type=openapi.TYPE_BOOLEAN)
+                }
+            ),
+            400: "Username parameter is missing",
+        },
+    )
+    def get(self, request):
+        username = request.query_params.get("username")
+        if not username:
+            return Response({"detail": "Username parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        exists = User.objects.filter(username=username).exists()
+        return Response({"available": not exists}, status=status.HTTP_200_OK)

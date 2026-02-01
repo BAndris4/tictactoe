@@ -42,6 +42,26 @@ export const authApi = {
       return response.json();
   },
 
+  checkEmail: async (email: string): Promise<{ available: boolean }> => {
+    const response = await fetch(`${API_URL}/users/check-email?email=${encodeURIComponent(email)}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) throw new Error("Failed to check email availability");
+    return response.json();
+  },
+
+  checkUsername: async (username: string): Promise<{ available: boolean }> => {
+    const response = await fetch(`${API_URL}/users/check-username?username=${encodeURIComponent(username)}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!response.ok) throw new Error("Failed to check username availability");
+    return response.json();
+  },
+
   getMe: async () => {
     const response = await fetch(`${API_URL}/users/me`, {
       method: "GET",

@@ -91,10 +91,47 @@ export function useRegister(onSuccess?: (playTutorial?: boolean) => void) {
     return stepErrs;
   };
 
-  const goNext = () => {
+  const goNext = async () => {
     const stepErrs = markStepTouchedAndValidate(step);
     const hasError = STEP_FIELDS[step].some((f) => stepErrs[f]);
-    if (!hasError && step < 3) {
+    
+    if (hasError) return;
+
+    // Custom Async Validation for Step 1: Email and Username availability
+    if (step === 1) {
+        setIsSubmitting(true);
+        try {
+            const [emailResult, userResult] = await Promise.all([
+                authApi.checkEmail(values.email),
+                authApi.checkUsername(values.username)
+            ]);
+
+            let hasAsyncError = false;
+            const newErrors: RegisterFormErrors = {};
+
+            if (!emailResult.available) {
+                newErrors.email = "This email address is already in use.";
+                hasAsyncError = true;
+            }
+            if (!userResult.available) {
+                newErrors.username = "This username is already taken.";
+                hasAsyncError = true;
+            }
+
+            if (hasAsyncError) {
+                setErrors(prev => ({ ...prev, ...newErrors }));
+                return;
+            }
+        } catch (err) {
+            console.error("Availability check failed", err);
+            setErrors(prev => ({ ...prev, email: "Validation failed. Please try again." }));
+            return;
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
+    if (step < 3) {
       setStep((s) => (s + 1) as RegisterStep);
     }
   };
