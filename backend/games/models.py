@@ -85,6 +85,7 @@ class ChatMessage(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     is_bot = models.BooleanField(default=False)
+    message_type = models.CharField(max_length=20, default='chat', choices=[('chat', 'Chat'), ('evaluation', 'Evaluation')])
 
     def __str__(self):
-        return f"{self.sender_name}: {self.content[:20]}"
+        return f"{self.sender_name} ({self.message_type}): {self.content[:20]}"

@@ -101,8 +101,9 @@ class GameConsumer(AsyncWebsocketConsumer):
                     from .broadcast_service import BroadcastService
                     await BroadcastService.broadcast_game_over(self.game_id)
                 
+
                 # --- BOT INTEGRATION ---
-                elif game.mode in ['bot_easy', 'bot_medium', 'bot_hard', 'bot_custom']:
+                if game.mode in ['bot_easy', 'bot_medium', 'bot_hard', 'bot_custom'] and game.status != 'finished':
                     # Trigger Bot Turn if game is active
                     from .bot_service import BotService
                     # Run in background (don't await strictly? or await is fine)

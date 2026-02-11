@@ -70,11 +70,12 @@ interface GameContextType {
 
 export interface ChatMessage {
   id: number;
-  sender: number | 'Bot';
+  sender: number | null;
   sender_name: string;
   content: string;
   is_bot: boolean;
   timestamp: string;
+  message_type?: 'chat' | 'evaluation';
 }
 
 export const GameContext = createContext<GameContextType | undefined>(

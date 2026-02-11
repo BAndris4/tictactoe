@@ -54,6 +54,12 @@ BOT_CONFIGS = {
                 "I knew you would win! well played! 👏",
                 "That was fun even though I lost. Rematch?",
                 "GG! I learned a lot from playing you."
+            ],
+            'draw': [
+                "A draw? Wow, we are evenly matched!",
+                "No winner today! Want to try again?",
+                "Phew, that was close! Good game!",
+                "Tie game! Neither of us gave up! 🤝"
             ]
         }
     },
@@ -111,6 +117,12 @@ BOT_CONFIGS = {
                 "I concede. You played an excellent game.",
                 "A worthy opponent. I shall study this match for future improvement.",
                 "Well played. Your strategy was superior today."
+            ],
+            'draw': [
+                "A stalemate. Efficient defense from both sides.",
+                "Neither of us could find the advantage. Acceptable.",
+                "A draw. The logical conclusion of perfect play.",
+                "Interesting. We have neutralized each other's strategies."
             ]
         }
     },
@@ -169,6 +181,12 @@ BOT_CONFIGS = {
                 "You defeated me? Remarkable.",
                 "I must analyze this failure. Well played, human.",
                 "You are a statistical anomaly. I demand a rematch."
+            ],
+            'draw': [
+                "Analysis inconclusive. Loop detected.",
+                "A draw? You managed to survive. Impressive.",
+                "My calculations did not predict this stalemate.",
+                "You defended optimally. I will not underestimate you next time."
             ]
         }
     },
@@ -195,7 +213,8 @@ BOT_CONFIGS = {
             'subgrid_win': ["Sub-routine complete. Sector captured.", "Memory block allocated.", "Expansion successful."],
             'subgrid_loss': ["Error. Sector lost.", "Data corruption in sector 4.", "Alert: Opponent advancing."],
             'gg_win': ["Task complete. Winner determined. GG.", "System shuts down with VICTORY status.", "Execution finished successfully."],
-            'gg_loss': ["Critical Failure. System Crash.", "You won. Updating heavy_weights.json...", "GG. Rebooting..."]
+            'gg_loss': ["Critical Failure. System Crash.", "You won. Updating heavy_weights.json...", "GG. Rebooting..."],
+            'draw': ["System Halted. Infinite Loop.", "0 == 0. Equality confirmed.", "Resource exhaustion. Game ends in DRAW.", "Parity bit checked. No winner."]
         }
     }
 }

@@ -27,7 +27,17 @@ export interface Game {
   player_o_lp_change?: number;
   player_x_avatar?: any;
   player_o_avatar?: any;
-  chat_messages?: any[];
+  chat_messages?: ChatMessage[];
+}
+
+export interface ChatMessage {
+    id: number;
+    sender: number | null;
+    sender_name: string;
+    content: string;
+    is_bot: boolean;
+    timestamp: string;
+    message_type?: 'chat' | 'evaluation';
 }
 
 export const createGame = async (payload: string | { mode: string; [key: string]: any }): Promise<Game> => {
@@ -168,7 +178,15 @@ export const getBotStats = async (): Promise<any> => {
 
 export interface EvaluationNode {
     move_no: number;
+    player: 'X' | 'O';
     score: number;
+    best_score: number;
+    diff: number;
+    classification: 'best' | 'good' | 'inaccuracy' | 'mistake' | 'blunder' | 'forced' | 'brilliant';
+    feedback: string;
+    best_move?: [number, number];   // (cell, subcell) of best move
+    notation: string; // e.g. "e5"
+    refutation?: string; // e.g. "Allows f6"
 }
 
 export const getGameEvaluation = async (gameId: string): Promise<EvaluationNode[]> => {

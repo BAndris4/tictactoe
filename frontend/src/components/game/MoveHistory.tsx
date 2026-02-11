@@ -54,7 +54,15 @@ export default function MoveHistory() {
                     {move.player}
                   </span>
                   <span className={`text-sm ${isCurrentPosition ? 'text-white/90' : ''}`}>
-                    B{move.cell} C{move.subcell}
+                    {(() => {
+                        const cell = move.cell;
+                        const subcell = move.subcell;
+                        const globalRow = Math.floor(cell / 3) * 3 + Math.floor(subcell / 3);
+                        const globalCol = (cell % 3) * 3 + (subcell % 3);
+                        const colChar = String.fromCharCode(97 + globalCol); // 'a' code is 97
+                        const rowChar = globalRow + 1;
+                        return `${colChar}${rowChar}`;
+                    })()}
                   </span>
                   {isLivePosition && !isCurrentPosition && (
                     <span className="text-xs font-bold text-mint">● LIVE</span>
