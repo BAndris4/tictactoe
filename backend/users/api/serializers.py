@@ -78,7 +78,9 @@ class UserSerializer(serializers.ModelSerializer):
             "rank": rank_name,
             "lp_in_division": lp_in_division,
             "gender": profile.gender,
-            "avatar_config": profile.avatar_config
+            "avatar_config": profile.avatar_config,
+            "demotion_shield": profile.demotion_shield,
+            "current_streak": profile.current_streak
         }
 
 
@@ -155,7 +157,9 @@ class PublicUserSerializer(serializers.ModelSerializer):
             "lp_in_division": lp_in_division,
             "rank": rank_name,
             "gender": profile.gender,
-            "avatar_config": profile.avatar_config
+            "avatar_config": profile.avatar_config,
+            "demotion_shield": profile.demotion_shield,
+            "current_streak": profile.current_streak
         }
 
     def get_stats(self, obj):

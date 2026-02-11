@@ -50,6 +50,7 @@ class PlayerProfile(models.Model):
     placement_games_played = models.IntegerField(default=0)
     total_lp = models.IntegerField(null=True, blank=True, default=None)
     current_streak = models.IntegerField(default=0) # positive for wins, negative for losses
+    demotion_shield = models.IntegerField(default=0) # Number of games protected at 0 LP
     
     # Avatar System
     GENDER_CHOICES = [

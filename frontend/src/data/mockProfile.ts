@@ -29,6 +29,8 @@ export interface UserProfile {
       lp_in_division: number;
       avatar_config?: any;
       gender?: 'M' | 'F';
+      demotion_shield: number;
+      current_streak: number;
   };
 }
 
@@ -81,6 +83,8 @@ export const mockUser: UserProfile = {
       placement_games_played: 10,
       total_lp: 235,
       rank: "Bronze 3",
-      lp_in_division: 35
+      lp_in_division: 35,
+      demotion_shield: 0,
+      current_streak: 0
   }
 };

@@ -289,7 +289,7 @@ function MatchCard({ game, user, navigate }: { game: Game, user: any, navigate: 
                             </div>
                          )}
                          
-                         {lpChange !== 0 && (
+                         {lpChange !== 0 ? (
                             <div className="relative flex flex-col items-center group/lp">
                                 <span className={`text-[10px] font-black uppercase tracking-widest mb-1 transition-colors ${lpChange > 0 ? 'text-slate-300 group-hover/lp:text-mint/60' : 'text-slate-300 group-hover/lp:text-coral/60'}`}>
                                     Ranked LP
@@ -300,13 +300,11 @@ function MatchCard({ game, user, navigate }: { game: Game, user: any, navigate: 
                                     </span>
                                     <span className={`text-[10px] font-bold ${lpChange > 0 ? 'text-mint/60' : 'text-coral/60'}`}>LP</span>
                                 </div>
-                                
-                                {/* Rank Change Indieator (Mock/Future Proofing) - If we had data, we'd show it here. 
-                                    For now, we just emphasize the LP change. 
-                                    User asked for "rank change" highlight. 
-                                    Since we don't store "Rank Up" event in Game, we can't show it reliably for past games.
-                                    But we can make the LP change look "impactful". 
-                                */}
+                            </div>
+                         ) : isRanked && (
+                            <div className="flex flex-col items-center">
+                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Status</span>
+                                <span className="text-sm font-black text-indigo-400 font-paytone uppercase tracking-wider">Placement</span>
                             </div>
                          )}
                      </div>
