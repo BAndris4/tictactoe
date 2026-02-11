@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { authApi } from "../api/auth";
 import { useToast } from "../context/ToastContext";
-import BackgroundShapes from "../components/BackgroundShapes";
+import BackgroundShapes from "../components/ui/BackgroundShapes";
 import TopBar from "../components/layout/TopBar";
 import CircularProgressBar from "../components/common/CircularProgressBar";
 

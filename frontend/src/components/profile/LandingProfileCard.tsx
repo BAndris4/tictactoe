@@ -1,4 +1,4 @@
-import type { UserProfile } from "../data/mockProfile";
+import type { UserProfile } from "../../data/mockProfile";
 
 interface LandingProfileCardProps {
   user: UserProfile;
@@ -8,7 +8,7 @@ interface LandingProfileCardProps {
   onLogout: () => void;
 }
 
-import CircularProgressBar from "./common/CircularProgressBar";
+import CircularProgressBar from "../common/CircularProgressBar";
 import Avatar from 'avataaars';
 
 export default function LandingProfileCard({

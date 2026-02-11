@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Table from "../components/game/board/Table";
-import BackgroundShapes from "../components/BackgroundShapes";
+import BackgroundShapes from "../components/ui/BackgroundShapes";
 
 import TutorialSidebar from "../components/tutorial/TutorialSidebar";
 import TutorialGameProvider from "../components/tutorial/TutorialGameProvider";

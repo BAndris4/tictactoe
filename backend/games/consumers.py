@@ -4,7 +4,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from .models import Game, GameMove, ChatMessage
 from .logic import GameLogic
-from .serializers import GameMoveSerializer
+from .api.serializers import GameMoveSerializer
 from users.tokens import get_user_from_access_token
 
 class GameConsumer(AsyncWebsocketConsumer):
@@ -48,7 +48,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                  user_id = self.user.id
                  is_player = (user_id == self.game.player_x_id or user_id == self.game.player_o_id)
                  if is_player:
-                     from .bot_service import BotService
+                     from .services.bot.manager import BotService
                      import asyncio
                      asyncio.create_task(BotService.process_bot_move(self.game_id, self.channel_layer, self.room_group_name))
 
@@ -105,7 +105,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                 # --- BOT INTEGRATION ---
                 if game.mode in ['bot_easy', 'bot_medium', 'bot_hard', 'bot_custom'] and game.status != 'finished':
                     # Trigger Bot Turn if game is active
-                    from .bot_service import BotService
+                    from .services.bot.manager import BotService
                     # Run in background (don't await strictly? or await is fine)
                     import asyncio
                     asyncio.create_task(BotService.process_bot_move(self.game_id, self.channel_layer, self.room_group_name))

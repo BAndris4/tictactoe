@@ -31,7 +31,7 @@ class BroadcastService:
             
             # Process Ranking (MMR & LP) - ONLY if game is rated
             if game.rated:
-                from users.ranking_service import RankingService
+                from users.services import RankingService
                 ranking_results = await database_sync_to_async(RankingService.process_game_end)(game)
                 mmr_results = ranking_results.get('mmr', {})
                 lp_results = ranking_results.get('lp', {})

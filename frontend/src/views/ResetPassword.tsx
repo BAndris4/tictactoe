@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import BackgroundShapes from "../components/BackgroundShapes";
+import BackgroundShapes from "../components/ui/BackgroundShapes";
 import PasswordField from "../components/auth/PasswordField";
 import { authApi } from "../api/auth";
 import { getPasswordChecks } from "../rules/validation";

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import RegisterCard from "../components/auth/RegisterCard";
-import BackgroundShapes from "../components/BackgroundShapes";
+import BackgroundShapes from "../components/ui/BackgroundShapes";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Register() {

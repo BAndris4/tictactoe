@@ -21,7 +21,8 @@ from ..services import (
     send_friend_request,
     respond_to_friend_request,
     unfriend_user,
-    block_user
+    block_user,
+    send_password_reset_email
 )
 from ..tokens import (
     create_access_token, 
@@ -489,7 +490,7 @@ class PasswordResetRequestView(APIView):
     )
     def post(self, request):
         from ..models import PasswordResetToken
-        from ..email_service import send_password_reset_email
+        # from ..services import send_password_reset_email # Already imported at top now
         
         email = request.data.get("email")
         if not email:

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import BackgroundShapes from "../components/BackgroundShapes";
+import BackgroundShapes from "../components/ui/BackgroundShapes";
 import { getUserGames, type Game } from "../api/game";
 import { useAuth } from "../hooks/useAuth";
 import UserAvatar from "../components/common/UserAvatar";

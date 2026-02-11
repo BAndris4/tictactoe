@@ -1,4 +1,4 @@
-import type { MatchHistoryItem } from "../data/mockProfile";
+import type { MatchHistoryItem } from "../../data/mockProfile";
 
 interface RankMatchHistoryProps {
   history: MatchHistoryItem[];

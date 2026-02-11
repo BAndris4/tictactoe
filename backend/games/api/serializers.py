@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from .models import Game, GameMove, GameMode, GameStatus, GameInvitation, ChatMessage
-from .bot_config import BOT_CONFIGS
+from ..models import Game, GameMove, GameMode, GameStatus, GameInvitation, ChatMessage
+from ..bot_config import BOT_CONFIGS
 
 class ChatMessageSerializer(serializers.ModelSerializer):
     class Meta:

@@ -3,8 +3,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.db.models import Count, Q
-from .models import Game, GameStatus, GameMode, GameInvitation, GameInvitationStatus, GameMove
+from ..models import Game, GameStatus, GameMode, GameInvitation, GameInvitationStatus, GameMove
 from .serializers import CreateGameSerializer, JoinGameSerializer, GameSerializer, GameInvitationSerializer
+from ..auth_utils import get_user_from_request
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from django.utils import timezone
 
 class GameInvitationView(APIView):
     def post(self, request):
@@ -102,10 +106,6 @@ class GameInvitationActionView(APIView):
             return Response(GameInvitationSerializer(invitation).data)
             
         return Response({"error": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
-from .auth_utils import get_user_from_request
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
-from django.utils import timezone
 
 class CreateGameView(APIView):
     permission_classes = [] # Manual handling
@@ -275,7 +275,7 @@ class ForfeitGameView(APIView):
         xp_results = LevelingService.process_game_end(game)
         
         # Calculate Ranking (MMR & LP)
-        from users.ranking_service import RankingService
+        from users.services import RankingService
         ranking_results = RankingService.process_game_end(game)
         mmr_results = ranking_results.get('mmr', {})
         lp_results = ranking_results.get('lp', {})
@@ -395,7 +395,7 @@ class GameEvaluationView(APIView):
             if not Game.objects.filter(pk=pk).exists():
                  return Response({"error": "Game not found"}, status=404)
             
-            from .bot_service import EvaluationService
+            from ..services.evaluation import EvaluationService
             results = EvaluationService.calculate_game_analysis(pk)
             return Response(results)
         except Exception as e:

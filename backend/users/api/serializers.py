@@ -58,7 +58,7 @@ class UserSerializer(serializers.ModelSerializer):
         from ..services import LevelingService
         profile, _ = PlayerProfile.objects.get_or_create(user=obj)
         
-        from ..ranking_service import RankingService
+        from ..services import RankingService
         
         if profile.total_lp is None:
             rank_name = "Unranked"
@@ -137,7 +137,7 @@ class PublicUserSerializer(serializers.ModelSerializer):
     def get_profile(self, obj):
         from ..models import PlayerProfile
         from ..services import LevelingService
-        from ..ranking_service import RankingService
+        from ..services import RankingService
         
         profile, _ = PlayerProfile.objects.get_or_create(user=obj)
         

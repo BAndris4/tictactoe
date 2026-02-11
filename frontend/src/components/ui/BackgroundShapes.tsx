@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import OShape from "../assets/O.svg";
-import XShape from "../assets/X.svg";
+import OShape from "../../assets/O.svg";
+import XShape from "../../assets/X.svg";
 
 type Parallax = {
   x: number;

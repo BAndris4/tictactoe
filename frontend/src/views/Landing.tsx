@@ -1,19 +1,19 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import BackgroundShapes from "../components/BackgroundShapes";
+import BackgroundShapes from "../components/ui/BackgroundShapes";
 import UnrankedIconRaw from "../assets/unranked.svg?raw";
 import AiIconRaw from "../assets/ai.svg?raw";
 import CustomIconRaw from "../assets/custom.svg?raw";
 import LocalIcon from "../assets/local.svg";
-import LandingProfileCard from "../components/LandingProfileCard";
-import RankedGameCard from "../components/RankedGameCard";
-import GameModeCard from "../components/GameModeCard";
+import LandingProfileCard from "../components/profile/LandingProfileCard";
+import RankedGameCard from "../components/ranked/RankedGameCard";
+import GameModeCard from "../components/ui/GameModeCard";
 import TopBar from "../components/layout/TopBar";
 import { useAuth } from "../hooks/useAuth";
 
 import MatchmakingModal from "../components/modals/MatchmakingModal";
-import MatchmakingWidget from "../components/MatchmakingWidget";
-import RankedOverviewModal from "../components/modals/RankedOverviewModal";
+import MatchmakingWidget from "../components/social/MatchmakingWidget";
+import RankedOverviewModal from "../components/ranked/RankedOverviewModal";
 import AIOverviewModal from "../components/modals/AIOverviewModal";
 import { useGame } from "../context/GameContext";
 

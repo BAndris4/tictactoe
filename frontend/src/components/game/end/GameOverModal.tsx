@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGameResults } from "../../hooks/useGameResults";
-import { useAuth } from "../../hooks/useAuth";
-import ProgressBar from "../common/ProgressBar";
-import LPProgressBar from "../common/LPProgressBar";
-import { getRankImage, getRankTextColor } from "../../utils/rankUtils";
+import { useGameResults } from "../../../hooks/useGameResults";
+import { useAuth } from "../../../hooks/useAuth";
+
+// Sub-components
+import GameEndRankDisplay from "./GameEndRankDisplay";
+import GameEndStatusBanners from "./GameEndStatusBanners";
+import GameEndXPBar from "./GameEndXPBar";
 
 function GameOverModal() {
   const game = useGameResults();
@@ -18,7 +20,7 @@ function GameOverModal() {
   // Staged animation states
   const [showNewRank, setShowNewRank] = useState(false);
   const [isRankTransitioning, setIsRankTransitioning] = useState(false);
-
+ 
   // XP/Rank Result lookup for the current user
   const myXpResult = (user && game.xpResults) ? (game.xpResults[user.id] || game.xpResults[String(user.id)]) : null;
   
@@ -98,7 +100,6 @@ function GameOverModal() {
   const rankInfo = myXpResult?.rank_info;
   const rankToShow = (isRankedGame && rankInfo) ? (showNewRank ? rankInfo.new_rank : rankInfo.old_rank) : null;
   const lpChange = (isRankedGame && myXpResult?.lp_change) ? myXpResult.lp_change : 0;
-  
   const isPromotion = isRankedGame && rankInfo?.is_change && lpChange > 0;
 
   return (
@@ -125,7 +126,6 @@ function GameOverModal() {
           
           {/* Top Bar: Close Button */}
           <div className="absolute top-6 right-6 flex items-center gap-3 z-10">
-              {/* Close Button is enough here, removed Performance Status and Streak as requested */}
               <button 
                 onClick={handleClose}
                 className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 hover:text-deepblue hover:bg-slate-100 transition-all flex items-center justify-center active:scale-90"
@@ -150,99 +150,37 @@ function GameOverModal() {
 
           {/* Main Content Area */}
           <div className="space-y-4 mb-8">
-              {/* Rank Display - The "Hero" Element - ONLY IF RANKED */}
+              {/* Rank Display (Ranked Only) */}
               {isRankedGame && rankInfo && (
-                <div className="flex flex-col items-center">
-                    {/* Floating Rank Image */}
-                    <div className="relative mb-2">
-                         {/* Glow effect behind the image */}
-                         <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full blur-2xl opacity-20 ${
-                             isPromotion ? 'bg-mint' : 'bg-deepblue'
-                         }`}></div>
-                         
-                         <img 
-                            src={getRankImage(rankToShow || "Unranked")} 
-                            alt={rankToShow || "Rank"} 
-                            className={`relative w-28 h-28 object-contain drop-shadow-2xl transition-all duration-700 ${
-                                isRankTransitioning && !showNewRank ? 'animate-pulse scale-105 opacity-80' : 
-                                showNewRank ? 'animate-[bounce_0.6s_cubic-bezier(0.34,1.56,0.64,1)]' : ''
-                            }`}
-                        />
-                        
-                        {/* Promotion Indicator */}
-                        {rankInfo.is_change && showNewRank && (
-                            <div className={`absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider text-white shadow-lg animate-fadeInUp ${
-                                isPromotion ? 'bg-mint' : 'bg-coral'
-                            }`}>
-                                {isPromotion ? 'Promoted' : 'Demoted'}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="text-center mb-4">
-                        <h3 className={`text-2xl font-black text-deepblue leading-none mb-1 ${getRankTextColor(rankToShow || "")}`}>
-                            {rankToShow}
-                        </h3>
-                        <p className="text-deepblue/30 text-[10px] font-bold uppercase tracking-widest">Current Season Rank</p>
-                    </div>
-
-                    <div className="w-full max-w-sm flex flex-col items-center gap-3">
-                        <LPProgressBar 
-                            previousLp={rankInfo.old_lp_div}
-                            newLp={rankInfo.new_lp_div}
-                            lpChange={lpChange}
-                            rank={rankToShow || "Unranked"}
-                        />
-                        
-                        {/* Shield & Streak Context Labels */}
-                        <div className="flex flex-col items-center gap-2">
-                            {rankInfo.shield > 0 && (
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className="flex gap-1 bg-red-50 px-3 py-1 rounded-full border border-red-100 animate-pulse">
-                                        <div className="flex gap-0.5 items-center mr-1">
-                                            {[...Array(3)].map((_, i) => (
-                                                <svg key={i} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={`w-3.5 h-3.5 ${i < rankInfo.shield ? 'text-red-500' : 'text-red-200'}`}>
-                                                    <path fillRule="evenodd" d="M10.338 1.59a.75.75 0 00-.676 0l-6.25 3a.75.75 0 00-.362.648v5.5c0 3.03 1.906 5.757 4.661 6.84a.75.75 0 00.578 0c2.755-1.083 4.661-3.81 4.661-6.84v-5.5a.75.75 0 00-.362-.648l-6.25-3zM10 3.178l4.75 2.28v4.792c0 2.21-1.385 4.198-3.374 4.98a.75.75 0 00-.022.007L10 15.792l-.354-.555a.75.75 0 00-.022-.007c-1.99-.782-3.374-2.77-3.374-4.98V5.458L10 3.178z" clipRule="evenodd" />
-                                                </svg>
-                                            ))}
-                                        </div>
-                                        <span className="text-[10px] font-black text-red-500 uppercase tracking-wider">Shield Protected</span>
-                                    </div>
-                                    <span className="text-[9px] font-bold text-red-400 uppercase tracking-tighter">No LP reduction for shield active</span>
-                                </div>
-                            )}
-
-                            {rankInfo.placement_games <= 10 && (
-                                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
-                                    Placement Phase: {rankInfo.placement_games}/10
-                                </span>
-                            )}
-
-                            {rankInfo.streak >= 3 && lpChange > 0 && (
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className="flex items-center gap-1.5 bg-orange-50 px-3 py-1 rounded-full border border-orange-100 animate-bounce">
-                                        <span className="text-sm">🔥</span>
-                                        <span className="text-[10px] font-black text-orange-600 uppercase tracking-wider">Hot Streak Bonus</span>
-                                    </div>
-                                    <span className="text-[9px] font-bold text-orange-400 uppercase tracking-tighter">Earning bonus LP while on Hot Streak!</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                <>
+                  <GameEndRankDisplay 
+                    rankToShow={rankToShow}
+                    oldLpDiv={rankInfo.old_lp_div}
+                    newLpDiv={rankInfo.new_lp_div}
+                    lpChange={lpChange}
+                    isRankTransitioning={isRankTransitioning}
+                    showNewRank={showNewRank}
+                    isPromotion={isPromotion}
+                    rankIsChange={rankInfo.is_change}
+                  />
+                  <GameEndStatusBanners 
+                    shield={rankInfo.shield}
+                    placementGames={rankInfo.placement_games}
+                    streak={rankInfo.streak}
+                    lpChange={lpChange}
+                  />
+                </>
               )}
 
-              {/* XP Display - Subtle Footer Card - Always Visible */}
+              {/* XP Display (Always Visible) */}
               {myXpResult && (
-                <div className="mt-6 bg-slate-50/80 rounded-2xl p-4 border border-slate-100/50">
-                    <ProgressBar 
-                        currentXp={myXpResult.new_xp} 
-                        nextLevelXp={myXpResult.xp_to_next_level} 
-                        xpGained={myXpResult.xp_gained}
-                        level={myXpResult.new_level}
-                        leveledUp={myXpResult.leveled_up}
-                    />
-                </div>
+                <GameEndXPBar 
+                    newXp={myXpResult.new_xp}
+                    xpToNextLevel={myXpResult.xp_to_next_level}
+                    xpGained={myXpResult.xp_gained}
+                    newLevel={myXpResult.new_level}
+                    leveledUp={myXpResult.leveled_up}
+                />
               )}
           </div>
 
