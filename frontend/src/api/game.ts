@@ -97,8 +97,21 @@ export const forfeitGame = async (gameId: string): Promise<Game> => {
   return response.json();
 };
 
-export const getUserGames = async (): Promise<Game[]> => {
-  const response = await fetch(`${API_URL}/games/my-games/`, {
+export interface PaginatedResponse<T> {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: T[];
+}
+
+export const getUserGames = async (page = 1, mode = 'all', pageSize = 10): Promise<PaginatedResponse<Game>> => {
+  const queryParams = new URLSearchParams({
+      page: page.toString(),
+      mode: mode,
+      page_size: pageSize.toString()
+  });
+  
+  const response = await fetch(`${API_URL}/games/my-games/?${queryParams.toString()}`, {
     method: "GET",
     headers: getHeaders(),
   });

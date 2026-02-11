@@ -300,8 +300,16 @@ class ForfeitGameView(APIView):
         
         return Response(GameSerializer(game).data)
 
+from rest_framework.pagination import PageNumberPagination
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 class UserGameListView(generics.ListAPIView):
     serializer_class = GameSerializer
+    pagination_class = StandardResultsSetPagination
     permission_classes = [] # Manual handling
 
     def get_queryset(self):
@@ -310,15 +318,25 @@ class UserGameListView(generics.ListAPIView):
             return Game.objects.none()
         
         from django.db.models import Q
-        return Game.objects.filter(
+        qs = Game.objects.filter(
             Q(player_x=user) | Q(player_o=user)
         ).order_by('-created_at')
 
-    def list(self, request, *args, **kwargs):
-        user, error_response = get_user_from_request(request)
-        if error_response:
-            return error_response
-        return super().list(request, *args, **kwargs)
+        # Mode Filter
+        mode_param = self.request.query_params.get('mode', 'all').lower()
+        if mode_param == 'ranked':
+             qs = qs.filter(mode=GameMode.RANKED)
+        elif mode_param == 'bot':
+             qs = qs.filter(mode__in=[
+                 GameMode.BOT_EASY, GameMode.BOT_MEDIUM, 
+                 GameMode.BOT_HARD, GameMode.BOT_CUSTOM, GameMode.AI
+             ])
+        elif mode_param == 'casual':
+             qs = qs.filter(mode__in=[
+                 GameMode.UNRANKED, GameMode.CUSTOM, GameMode.LOCAL
+             ])
+        
+        return qs
 
 class BotStatsView(APIView):
     permission_classes = [] # Manual handling for auth
