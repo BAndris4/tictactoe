@@ -15,7 +15,6 @@ export default function ChatPanel({ className = "" }: ChatPanelProps) {
   const { user } = useAuth();
   const [inputText, setInputText] = useState("");
   const [analysisData, setAnalysisData] = useState<EvaluationNode[] | null>(null);
-  const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -29,11 +28,9 @@ export default function ChatPanel({ className = "" }: ChatPanelProps) {
   // Fetch analysis if game is finished
   useEffect(() => {
     if (status === 'finished' && gameId) {
-        setIsLoadingAnalysis(true);
         getGameEvaluation(gameId)
             .then(data => setAnalysisData(data))
-            .catch(err => console.error("Failed to load analysis", err))
-            .finally(() => setIsLoadingAnalysis(false));
+            .catch(err => console.error("Failed to load analysis", err));
     }
   }, [gameId, status]);
 

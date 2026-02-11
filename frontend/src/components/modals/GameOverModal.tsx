@@ -123,53 +123,9 @@ function GameOverModal() {
           {/* Subtle Background Ambient Light */}
           <div className={`absolute top-0 left-0 right-0 h-64 bg-gradient-to-b ${bgGradient} opacity-50 pointer-events-none`} />
           
-          {/* Top Bar: Mini Icons & Close */}
+          {/* Top Bar: Close Button */}
           <div className="absolute top-6 right-6 flex items-center gap-3 z-10">
-              {/* Streak Badge - ONLY SHOW IF RANKED */}
-              {isRankedGame && rankInfo && typeof rankInfo.streak !== 'undefined' && (
-                  <div className="group relative">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md border transition-all duration-300 hover:scale-105 ${
-                          rankInfo.streak > 0 ? "bg-sunshine/5 text-sunshine border-sunshine/20" : 
-                          rankInfo.streak < 0 ? "bg-sky-400/5 text-sky-400 border-sky-400/20" : 
-                          "bg-slate-100/50 text-slate-400 border-slate-200/50"
-                      }`}>
-                          {rankInfo.streak > 0 ? (
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.66 11.2c-.23-.3-.51-.56-.83-.77-1.01-.67-1.1-1.26-1.1-1.73 0-.47.1-.92.25-1.33a.41.41 0 00-.02-.36.41.41 0 00-.31-.18c-.01 0-.01 0-.02 0-2.33.02-4.69 1.15-5.99 3.22-1.23 1.96-1.09 4.38.35 6.19a4.805 4.805 0 003.69 1.78c2.61 0 4.73-2.13 4.73-4.73 0-1.13-.39-2.17-1.05-2.99z" /></svg>
-                          ) : rankInfo.streak < 0 ? (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                          ) : (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" /></svg>
-                          )}
-                      </div>
-                      <div className="absolute top-full right-0 mt-2 px-3 py-1.5 bg-deepblue text-white text-[10px] font-bold tracking-widest uppercase rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none shadow-xl">
-                          {Math.abs(rankInfo.streak)} {rankInfo.streak > 0 ? "Win" : rankInfo.streak < 0 ? "Loss" : ""} Streak
-                      </div>
-                  </div>
-              )}
-
-              {/* Skill Badge - ONLY SHOW IF RANKED */}
-              {isRankedGame && rankInfo && (
-                  <div className="group relative">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md border transition-all duration-300 hover:scale-105 ${
-                          rankInfo.performance_status === 'Climbing' ? "bg-mint/5 text-mint border-mint/20" : 
-                          rankInfo.performance_status === 'High LP' ? "bg-sky-400/5 text-sky-400 border-sky-400/20" : 
-                          "bg-slate-100/50 text-slate-400 border-slate-200/50"
-                      }`}>
-                          {rankInfo.performance_status === 'Climbing' ? (
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"/></svg>
-                          ) : rankInfo.performance_status === 'High LP' ? (
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                          ) : (
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M5 13h14v-2H5v2z"/></svg>
-                          )}
-                      </div>
-                      <div className="absolute top-full right-0 mt-2 px-3 py-1.5 bg-deepblue text-white text-[10px] font-bold tracking-widest uppercase rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none shadow-xl">
-                          {rankInfo.performance_status}
-                      </div>
-                  </div>
-              )}
-
-              {/* Close Button */}
+              {/* Close Button is enough here, removed Performance Status and Streak as requested */}
               <button 
                 onClick={handleClose}
                 className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 hover:text-deepblue hover:bg-slate-100 transition-all flex items-center justify-center active:scale-90"
@@ -230,14 +186,48 @@ function GameOverModal() {
                         <p className="text-deepblue/30 text-[10px] font-bold uppercase tracking-widest">Current Season Rank</p>
                     </div>
 
-                    {/* LP Bar - Slimmer & Cleaner */}
-                    <div className="w-full max-w-sm">
+                    <div className="w-full max-w-sm flex flex-col items-center gap-3">
                         <LPProgressBar 
                             previousLp={rankInfo.old_lp_div}
                             newLp={rankInfo.new_lp_div}
                             lpChange={lpChange}
                             rank={rankToShow || "Unranked"}
                         />
+                        
+                        {/* Shield & Streak Context Labels */}
+                        <div className="flex flex-col items-center gap-2">
+                            {rankInfo.shield > 0 && (
+                                <div className="flex flex-col items-center gap-1">
+                                    <div className="flex gap-1 bg-red-50 px-3 py-1 rounded-full border border-red-100 animate-pulse">
+                                        <div className="flex gap-0.5 items-center mr-1">
+                                            {[...Array(3)].map((_, i) => (
+                                                <svg key={i} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={`w-3.5 h-3.5 ${i < rankInfo.shield ? 'text-red-500' : 'text-red-200'}`}>
+                                                    <path fillRule="evenodd" d="M10.338 1.59a.75.75 0 00-.676 0l-6.25 3a.75.75 0 00-.362.648v5.5c0 3.03 1.906 5.757 4.661 6.84a.75.75 0 00.578 0c2.755-1.083 4.661-3.81 4.661-6.84v-5.5a.75.75 0 00-.362-.648l-6.25-3zM10 3.178l4.75 2.28v4.792c0 2.21-1.385 4.198-3.374 4.98a.75.75 0 00-.022.007L10 15.792l-.354-.555a.75.75 0 00-.022-.007c-1.99-.782-3.374-2.77-3.374-4.98V5.458L10 3.178z" clipRule="evenodd" />
+                                                </svg>
+                                            ))}
+                                        </div>
+                                        <span className="text-[10px] font-black text-red-500 uppercase tracking-wider">Shield Protected</span>
+                                    </div>
+                                    <span className="text-[9px] font-bold text-red-400 uppercase tracking-tighter">No LP reduction for shield active</span>
+                                </div>
+                            )}
+
+                            {rankInfo.placement_games <= 10 && (
+                                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+                                    Placement Phase: {rankInfo.placement_games}/10
+                                </span>
+                            )}
+
+                            {rankInfo.streak >= 3 && lpChange > 0 && (
+                                <div className="flex flex-col items-center gap-1">
+                                    <div className="flex items-center gap-1.5 bg-orange-50 px-3 py-1 rounded-full border border-orange-100 animate-bounce">
+                                        <span className="text-sm">🔥</span>
+                                        <span className="text-[10px] font-black text-orange-600 uppercase tracking-wider">Hot Streak Bonus</span>
+                                    </div>
+                                    <span className="text-[9px] font-bold text-orange-400 uppercase tracking-tighter">Earning bonus LP while on Hot Streak!</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
               )}
