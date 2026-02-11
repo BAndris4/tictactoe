@@ -25,10 +25,7 @@ export default function LoginCard({ onSuccess }: LoginCardProps) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const success = await login();
-    if (!success) {
-      alert("Login failed. Please check your credentials."); // Maintaining existing behavior for now, though error state is available
-    }
+    await login();
   };
 
   return (
@@ -65,7 +62,12 @@ export default function LoginCard({ onSuccess }: LoginCardProps) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <TextField label="Username" value={username} onChange={setUsername} />
+          <TextField 
+            label="Username" 
+            value={username} 
+            onChange={setUsername}
+            aria-label="Username" 
+          />
 
           <div>
             <PasswordField
@@ -74,6 +76,7 @@ export default function LoginCard({ onSuccess }: LoginCardProps) {
               onChange={setPassword}
               mode="login"
               disabled={loading}
+              aria-label="Password"
             />
 
             <div className="mt-1 flex justify-end">

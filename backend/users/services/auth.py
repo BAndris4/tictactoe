@@ -36,12 +36,14 @@ def register_user(
         # Profile creation
         final_avatar = avatar_config or AvatarService.generate_random_avatar(gender)
         
-        PlayerProfile.objects.create(
-            user=user,
-            phone_number=phone_number,
-            gender=gender,
-            avatar_config=final_avatar
-        )
+        from ..models import PlayerProfile
+        
+        # Check if profile already exists (e.g. from signal)
+        profile, created = PlayerProfile.objects.get_or_create(user=user)
+        
+        profile.gender = gender
+        profile.avatar_config = final_avatar
+        profile.save()
         
         return user
 
