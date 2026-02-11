@@ -27,6 +27,17 @@ export interface Game {
   player_o_lp_change?: number;
   player_x_avatar?: any;
   player_o_avatar?: any;
+  chat_messages?: ChatMessage[];
+}
+
+export interface ChatMessage {
+    id: number;
+    sender: number | null;
+    sender_name: string;
+    content: string;
+    is_bot: boolean;
+    timestamp: string;
+    message_type?: 'chat' | 'evaluation';
 }
 
 export const createGame = async (payload: string | { mode: string; [key: string]: any }): Promise<Game> => {
@@ -86,8 +97,21 @@ export const forfeitGame = async (gameId: string): Promise<Game> => {
   return response.json();
 };
 
-export const getUserGames = async (): Promise<Game[]> => {
-  const response = await fetch(`${API_URL}/games/my-games/`, {
+export interface PaginatedResponse<T> {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: T[];
+}
+
+export const getUserGames = async (page = 1, mode = 'all', pageSize = 10): Promise<PaginatedResponse<Game>> => {
+  const queryParams = new URLSearchParams({
+      page: page.toString(),
+      mode: mode,
+      page_size: pageSize.toString()
+  });
+  
+  const response = await fetch(`${API_URL}/games/my-games/?${queryParams.toString()}`, {
     method: "GET",
     headers: getHeaders(),
   });
@@ -160,6 +184,31 @@ export const getBotStats = async (): Promise<any> => {
 
     if (!response.ok) {
         throw new Error("Failed to fetch bot stats");
+    }
+
+    return response.json();
+};
+
+export interface EvaluationNode {
+    move_no: number;
+    player: 'X' | 'O';
+    score: number;
+    best_score: number;
+    diff: number;
+    classification: 'best' | 'good' | 'inaccuracy' | 'mistake' | 'blunder' | 'forced' | 'brilliant';
+    feedback: string;
+    best_move?: [number, number];   // (cell, subcell) of best move
+    notation: string; // e.g. "e5"
+    refutation?: string; // e.g. "Allows f6"
+}
+
+export const getGameEvaluation = async (gameId: string): Promise<EvaluationNode[]> => {
+    const response = await fetch(`${API_URL}/games/${gameId}/evaluation/`, {
+        headers: getHeaders(),
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch game evaluation");
     }
 
     return response.json();

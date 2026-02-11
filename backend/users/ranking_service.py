@@ -112,13 +112,18 @@ class RankingService:
             
             # 2. LP Calculations
             def calculate_lp_change(score, current_mmr, current_lp):
-                if score == 0.5: return 0 
                 lp_val = current_lp if current_lp is not None else cls.STARTING_LP
                 mmr_val = current_mmr if current_mmr is not None else cls.STARTING_MMR
-                base = cls.BASE_LP_CHANGE if score == 1.0 else -cls.BASE_LP_CHANGE
                 expected_mmr = cls.calculate_expected_mmr_for_lp(lp_val)
                 diff = mmr_val - expected_mmr
-                correction = int(diff / 20) 
+                correction = int(diff / 20)
+                
+                if score == 0.5:
+                    # Draw: Just the correction (drift towards MMR)
+                    # "lp szempontjából az mmr felé tolódik, nem sok tehát az alap az +0 LP + tolódás"
+                    return correction 
+                
+                base = cls.BASE_LP_CHANGE if score == 1.0 else -cls.BASE_LP_CHANGE
                 lp_change = base + correction
                 return max(10, lp_change) if score == 1.0 else min(-10, lp_change)
 

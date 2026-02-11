@@ -80,6 +80,7 @@ class GameLogic:
         for m in moves:
             grid[m.subcell] = m.player
         
+        # 1. Check for actual winner
         # Rows
         for i in range(0, 9, 3):
             w = GameLogic.check_line(grid[i:i+3])
@@ -94,27 +95,92 @@ class GameLogic:
         w = GameLogic.check_line([grid[2], grid[4], grid[6]])
         if w: return w
         
+        # 2. Check for Draw / Dead Board
+        # A board is dead if it's full (implied by above) OR if no one CAN win.
+        if None not in grid:
+            return 'D'
+            
+        # Check if X likely to win? Check if O likely to win?
+        # If neither can complete a line, it is a draw.
+        x_can_win = GameLogic.can_player_win(grid, 'X')
+        o_can_win = GameLogic.can_player_win(grid, 'O')
+        
+        if not x_can_win and not o_can_win:
+             return 'D'
+
         return None
 
     @staticmethod
+    def can_player_win(grid, player):
+        # Returns True if 'player' can potentially win this 3x3 grid
+        # considering the current state.
+        # A line is winnable if it doesn't contain the opponent's mark.
+        opponent = 'O' if player == 'X' else 'X'
+        
+        lines = [
+            [0,1,2],[3,4,5],[6,7,8],
+            [0,3,6],[1,4,7],[2,5,8],
+            [0,4,8],[2,4,6]
+        ]
+        
+        for line in lines:
+            # If any line has NO opponent marks, it's potentially winnable
+            if not any(grid[i] == opponent for i in line):
+                return True
+        return False
+
+    @staticmethod
     def check_global_winner(small_winners):
-        # small_winners is list of 9 (X, O, or None)
+        # small_winners is list of 9 (X, O, D, or None)
         # Same logic as subboard
         grid = small_winners
-         # Rows
+        
+        # Rows
         for i in range(0, 9, 3):
             w = GameLogic.check_line(grid[i:i+3])
-            if w: return w
+            if w and w != 'D': return w
         # Cols
         for i in range(3):
             w = GameLogic.check_line([grid[i], grid[i+3], grid[i+6]])
-            if w: return w
+            if w and w != 'D': return w
         # Diagonals
         w = GameLogic.check_line([grid[0], grid[4], grid[8]])
-        if w: return w
+        if w and w != 'D': return w
         w = GameLogic.check_line([grid[2], grid[4], grid[6]])
-        if w: return w
+        if w and w != 'D': return w
         return None
+
+    @staticmethod
+    def check_global_draw(small_winners):
+        # Check if the GLOBAL board is dead (no one can win)
+        # Treat 'D' as a blocker (like an opponent mark, but for BOTH players)
+        
+        # X can win if there is a line without 'O' AND without 'D' (unless D is somehow beneficial? No tictactoe rules say D is just dead space)
+        # Actually, in Ultimate Tictactoe, a 'D' usually counts as nothing for winning, effectively a block for lines passing through it.
+        
+        x_can_win = False
+        o_can_win = False
+        
+        lines = [
+            [0,1,2],[3,4,5],[6,7,8],
+            [0,3,6],[1,4,7],[2,5,8],
+            [0,4,8],[2,4,6]
+        ]
+        
+        # Check X
+        for line in lines:
+            # Winnable if line has no 'O' and no 'D'
+             if not any(small_winners[i] in ['O', 'D'] for i in line):
+                 x_can_win = True
+                 break
+        
+        # Check O
+        for line in lines:
+             if not any(small_winners[i] in ['X', 'D'] for i in line):
+                 o_can_win = True
+                 break
+                 
+        return not x_can_win and not o_can_win
 
     @staticmethod
     def update_game_state(game, move):
@@ -142,25 +208,42 @@ class GameLogic:
             small_winners[i] = GameLogic.check_subboard_winner(game.id, i)
         
         # 2. Check global winner
+        # Note: check_subboard_winner now returns 'D' for draws.
+        # check_global_winner handles 'D' by ignoring it (it's not X or O).
+        
         game_winner = GameLogic.check_global_winner(small_winners)
+        
         if game_winner:
             game.winner = game_winner
             game.status = 'finished'
             game.finished_at = move.created_at # approximate
-        elif game.move_count + 1 >= 81:
-            # Board is full, and no global winner
-            game.winner = 'D'
-            game.status = 'finished'
-            game.finished_at = move.created_at
+        else:
+            # Check for Global Draw
+            # 1. Board physically full? (81 moves) - Fallback
+            # 2. Or "Dead Board" (No one can win)
+            
+            is_global_draw = GameLogic.check_global_draw(small_winners)
+            
+            # Additional check: If board is full but check_global_draw didn't catch it for some reason?
+            # check_global_draw logic (no lines possible) COVERS full board case (if full with no winner -> no lines possible)
+            
+            if is_global_draw or game.move_count + 1 >= 81:
+                 game.winner = 'D'
+                 game.status = 'finished'
+                 game.finished_at = move.created_at
 
         # 3. Update constraint for NEXT player
         # The next player must play in 'move.subcell'
         target_subboard = move.subcell
         
-        # If that subboard is full OR won, then constraint is NULL (free choice)
-        # New rule: If someone already won that subboard, you can play anywhere too.
-        is_target_won = small_winners[target_subboard] is not None
-        if is_target_won or GameLogic.is_subboard_full(game.id, target_subboard):
+        # If that subboard is full OR won OR draw, then constraint is NULL
+        # small_winners[i] is 'X', 'O', or 'D'. All mean "closed".
+        is_target_closed = small_winners[target_subboard] is not None
+        
+        # Note: We rely on small_winners, but just to be safe about race conditions or state:
+        # check_subboard_winner calculates freshly.
+        
+        if is_target_closed:
              game.next_board_constraint = None
         else:
              game.next_board_constraint = target_subboard

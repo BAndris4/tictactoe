@@ -13,6 +13,11 @@ import PlayerCard from "../components/game/PlayerCard";
 import { useGameAutoJoin } from "../hooks/useGameAutoJoin";
 import { getAuthToken } from "../hooks/useAuth";
 import GameSidebar from "../components/game/GameSidebar";
+import MoveHistory from "../components/game/MoveHistory";
+import HistoryNavigationControls from "../components/game/HistoryNavigationControls";
+
+import EvaluationBar from "../components/game/EvaluationBar";
+import ChatPanel from "../components/game/ChatPanel";
 
 function GameContent() {
   const game = useGame();
@@ -179,8 +184,15 @@ function GameContent() {
     >
       <BackgroundShapes activePlayer={game.currentPlayer} />
 
-      <div className="relative flex flex-col md:flex-row gap-6 items-stretch justify-center z-10 p-4 md:p-8 w-full max-w-7xl h-full max-h-[900px]">
+      <div className="relative flex flex-col xl:flex-row gap-6 items-stretch justify-center z-10 p-4 md:p-8 w-full max-w-[1600px] h-full max-h-[900px]">
         
+        {/* Left Sidebar - Chat */}
+        {!isLocalGame && (
+            <div className="hidden xl:flex flex-col w-80 h-full flex-shrink-0">
+                <ChatPanel className="h-full" />
+            </div>
+        )}
+
         {/* Main Game Area */}
         <div className="flex flex-col items-center justify-center gap-8 flex-[1.5] py-4">
           {/* Opponent Info */}
@@ -189,7 +201,12 @@ function GameContent() {
           </div>
 
           {/* Board Container - scales to fit available space */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 flex items-center justify-center gap-4 sm:gap-6 h-full max-h-[600px]">
+            {/* Evaluation Bar - Only visible when game finished */}
+            <div className="h-[80%] sm:h-[90%] flex-shrink-0">
+                <EvaluationBar className="w-4 sm:w-6 shadow-xl" />
+            </div>
+
             <div className="p-2 sm:p-3 bg-white/30 backdrop-blur-xl rounded-[32px] sm:rounded-[40px] shadow-2xl border border-white/40 transform origin-center scale-90 sm:scale-100 transition-transform">
               <Table />
             </div>
@@ -209,12 +226,25 @@ function GameContent() {
            )}
         </div>
 
-        {/* Sidebar */}
-        <GameSidebar 
-          onExit={handleExitClick}
-          onResign={game.status !== 'finished' ? handleResignClick : undefined}
-          isLocalGame={isLocalGame}
-        />
+        {/* Right Sidebar - History Navigation & Game Controls */}
+        <div className="flex flex-col gap-4 flex-1 min-w-[280px]">
+          <GameSidebar onExit={handleExitClick} />
+          <HistoryNavigationControls />
+          <MoveHistory />
+          
+          {/* Resign Button - Only for online games */}
+          {!isLocalGame && game.status !== 'finished' && (
+            <button 
+              onClick={handleResignClick}
+              className="w-full flex items-center justify-center gap-2 bg-white/80 hover:bg-white text-coral px-6 py-4 rounded-2xl font-bold shadow-sm transition-all hover:scale-[1.01] active:scale-95 border border-white flex-shrink-0"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
+              </svg>
+              Resign Game
+            </button>
+          )}
+        </div>
 
       </div>
 

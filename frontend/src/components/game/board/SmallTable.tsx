@@ -31,6 +31,8 @@ export default function SmallTable({
   }, [game.previousMove, game.cells, game.smallWinners, blockRow, blockCol, game.winner]);
 
   const handleCellClick = (row: number, col: number) => {
+
+    
     if (game.winner) return;
 
     const move: Move = {

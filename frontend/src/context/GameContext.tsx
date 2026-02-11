@@ -5,8 +5,9 @@ import { isMoveValid } from "../rules/gameRule";
 import { toGlobalCoord } from "../utils";
 import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
 import { getAuthToken, useAuth } from "../hooks/useAuth";
-import { getGame } from "../api/game";
+import { getGame, getGameEvaluation, type EvaluationNode } from "../api/game";
 import { useToast } from "./ToastContext";
+import { reconstructGameStateAtMove } from "../utils/gameStateUtils";
 
 type Player = "X" | "O";
 
@@ -50,6 +51,31 @@ interface GameContextType {
   setMatchFoundData: (data: any) => void;
   opponentStatus: 'active' | 'away';
   updatePlayerStatus: (status: 'active' | 'away') => void;
+  // Move History Navigation
+  currentHistoryIndex: number | null; // null = live position, number = reviewing history
+  isReviewingHistory: boolean;
+  goToMove: (index: number) => void;
+  stepForward: () => void;
+  stepBackward: () => void;
+  goToLive: () => void;
+  goToStart: () => void;
+  // Evaluation
+  evaluationData: EvaluationNode[] | null;
+  currentEvaluation: number | null;
+  // Chat
+  chatMessages: ChatMessage[];
+  sendChatMessage: (content: string) => void;
+  game: any | null; // Full game object for status check
+}
+
+export interface ChatMessage {
+  id: number;
+  sender: number | null;
+  sender_name: string;
+  content: string;
+  is_bot: boolean;
+  timestamp: string;
+  message_type?: 'chat' | 'evaluation';
 }
 
 export const GameContext = createContext<GameContextType | undefined>(
@@ -83,6 +109,9 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   const [error, setError] = useState<string | null>(null);
   const [flash, setFlash] = useState(false);
   const [shake, setShake] = useState(false);
+  
+  // Chat State
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   // Matchmaking State
   const [isSearching, setIsSearching] = useState(false);
@@ -94,6 +123,13 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   const [matchFoundData, setMatchFoundData] = useState<{ gameId: string; opponent: string; opponentUsername?: string; opponentAvatar?: any; mySymbol?: 'X' | 'O' } | null>(null);
   const [opponentStatus, setOpponentStatus] = useState<'active' | 'away'>('active');
   
+  // Move History Navigation
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState<number | null>(null);
+  
+  // Evaluation
+  const [evaluationData, setEvaluationData] = useState<EvaluationNode[] | null>(null);
+  const [game, setGame] = useState<any | null>(null);
+
   const { user } = useAuth();
   const userRef = useRef(user);
 
@@ -200,6 +236,15 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
 
   const ws = useRef<WebSocket | null>(null);
 
+  const sendChatMessage = (content: string) => {
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+          ws.current.send(JSON.stringify({
+              action: 'chat_message',
+              content: content
+          }));
+      }
+  };
+
   const triggerFlash = () => {
     setFlash(true);
     setTimeout(() => setFlash(false), 180);
@@ -214,6 +259,7 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   useEffect(() => {
     if (gameId) {
       getGame(gameId).then((g) => {
+        setGame(g);
         setStatus(g.status);
         setMode(g.mode);
         setPlayers({
@@ -240,9 +286,19 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
             });
         }
 
+        if (g.chat_messages) {
+             setChatMessages(g.chat_messages);
+        }
+
+        // Fetch Evaluation if finished
+        if (g.status === 'finished') {
+             getGameEvaluation(gameId).then(setEvaluationData).catch(console.error);
+        }
+
       }).catch(console.error);
 
       setXpResults(null);
+      setEvaluationData(null);
     }
   }, [gameId]);
 
@@ -306,6 +362,14 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
           if (data.mode) {
              setMode(data.mode);
           }
+          if (game) {
+              setGame({ ...game, status: "finished" });
+          }
+          
+          // Fetch evaluation
+          if (gameId) {
+              getGameEvaluation(gameId).then(setEvaluationData).catch(console.error);
+          }
 
           if (data.data && data.data.winner) {
             setWinner(data.data.winner);
@@ -357,6 +421,8 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
           showToast(data.message || "An error occurred", "error");
           triggerShake();
           triggerFlash();
+      } else if (data.type === 'chat_message') {
+          setChatMessages(prev => [...prev, data.message]);
       }
     };
 
@@ -432,7 +498,16 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
   };
 
   const makeMove = (move: Move) => {
-    if (winner) return;
+    if (isReviewingHistory) {
+      showToast("Cannot move while reviewing history", "error");
+      triggerShake();
+      return;
+    }
+    if (winner) {
+       showToast("The game is already over!", "error");
+       triggerShake();
+       return;
+    }
 
     try {
         isMoveValid(cells, move, previousMove, smallWinners);
@@ -487,6 +562,57 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
       }
   };
 
+  // History Navigation Methods
+  const goToMove = (index: number) => {
+    if (index < -1 || index >= moves.length) return;
+    setCurrentHistoryIndex(index);
+    
+    // Reconstruct board state at this move
+    const reconstructed = reconstructGameStateAtMove(moves, index);
+    setCells(reconstructed.cells);
+    setSmallWinners(reconstructed.smallWinners);
+    setCurrentPlayer(reconstructed.currentPlayer);
+    setPreviousMove(reconstructed.previousMove);
+    setWinner(reconstructed.winner);
+  };
+
+  const stepBackward = () => {
+    const newIndex = currentHistoryIndex === null 
+      ? moves.length - 2  // From live, go to second-to-last
+      : currentHistoryIndex - 1;
+    
+    if (newIndex >= -1) {
+      goToMove(newIndex);
+    }
+  };
+
+  const stepForward = () => {
+    if (currentHistoryIndex === null || currentHistoryIndex >= moves.length - 1) {
+      goToLive();
+      return;
+    }
+    goToMove(currentHistoryIndex + 1);
+  };
+
+  const goToStart = () => {
+    goToMove(-1); // -1 represents initial empty board
+  };
+
+  const goToLive = () => {
+    setCurrentHistoryIndex(null);
+    // Reconstruct current live state
+    if (moves.length > 0) {
+      const reconstructed = reconstructGameStateAtMove(moves, moves.length - 1);
+      setCells(reconstructed.cells);
+      setSmallWinners(reconstructed.smallWinners);
+      setCurrentPlayer(reconstructed.currentPlayer);
+      setPreviousMove(reconstructed.previousMove);
+      setWinner(reconstructed.winner);
+    }
+  };
+
+  const isReviewingHistory = currentHistoryIndex !== null;
+
   return (
     <GameContext.Provider
       value={{
@@ -520,7 +646,23 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
         matchFoundData,
         setMatchFoundData,
         opponentStatus,
-        updatePlayerStatus
+        updatePlayerStatus,
+        // History Navigation
+        currentHistoryIndex,
+        isReviewingHistory,
+        goToMove,
+        stepForward,
+        stepBackward,
+        goToLive,
+        goToStart,
+        // Evaluation
+        evaluationData,
+        currentEvaluation: evaluationData && currentHistoryIndex !== null
+            ? (currentHistoryIndex === -1 ? 0 : (evaluationData.find(e => e.move_no === currentHistoryIndex + 1)?.score ?? 0))
+            : (evaluationData && evaluationData.length > 0 ? evaluationData[evaluationData.length - 1].score : 0),
+        game,
+        chatMessages,
+        sendChatMessage
       }}
     >
       {children}

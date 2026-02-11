@@ -33,9 +33,10 @@ export default function RankedOverviewModal({ isOpen, onClose, onFindGame }: Ran
     if (isOpen && user) {
       setLoading(true);
       setShowLadder(false); 
-      getUserGames()
+      // Fetch up to 100 ranked games for stats
+      getUserGames(1, 'ranked', 100)
         .then(data => {
-            setGames(data.filter(g => g.mode === 'ranked'));
+            setGames(data.results);
         })
         .finally(() => setLoading(false));
     }

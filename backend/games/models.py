@@ -77,3 +77,15 @@ class GameInvitation(models.Model):
     class Meta:
         unique_together = ('game', 'to_user')
         ordering = ['-created_at']
+
+class ChatMessage(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='chat_messages')
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    sender_name = models.CharField(max_length=100, blank=True, null=True) # For bots or fallback
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_bot = models.BooleanField(default=False)
+    message_type = models.CharField(max_length=20, default='chat', choices=[('chat', 'Chat'), ('evaluation', 'Evaluation')])
+
+    def __str__(self):
+        return f"{self.sender_name} ({self.message_type}): {self.content[:20]}"
