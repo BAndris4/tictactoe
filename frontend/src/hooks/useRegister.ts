@@ -28,7 +28,7 @@ type TouchedState = Partial<Record<keyof RegisterFormValues, boolean>>;
 
 const STEP_FIELDS: Record<RegisterStep, (keyof RegisterFormValues)[]> = {
   1: ["username", "email", "password"],
-  2: ["firstName", "lastName", "phone", "termsAccepted", "gender"],
+  2: ["firstName", "lastName", "country", "phone", "termsAccepted", "gender"],
   3: ["playTutorial"],
 };
 

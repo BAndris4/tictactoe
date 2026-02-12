@@ -72,15 +72,26 @@ export const validateRegisterStep = (
 
   if (step === 2) {
     const firstName = norm(values.firstName);
+    if (!firstName) {
+      errors.firstName = "First name is required";
+    }
+
     const lastName = norm(values.lastName);
-    // Personal fields are optional, but we can still trim them
+    if (!lastName) {
+      errors.lastName = "Last name is required";
+    }
+
+    if (!values.country) {
+      errors.country = "Please select a country";
+    }
     
     const fullPhoneRaw = values.phone ?? "";
     const fullPhone = norm(fullPhoneRaw).replace(/\s+/g, " ");
     const digits = fullPhone.replace(/[^\d]/g, "");
 
-    // Only validate phone if it's provided
-    if (fullPhone && digits.length < MIN_PHONE_DIGITS) {
+    if (!fullPhone) {
+      errors.phone = "Phone number is required";
+    } else if (digits.length < MIN_PHONE_DIGITS) {
       errors.phone = "Please enter a valid phone number";
     }
 

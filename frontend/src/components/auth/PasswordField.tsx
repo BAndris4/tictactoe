@@ -97,6 +97,7 @@ export default function PasswordField({
 
         <div className="mt-1 flex items-center gap-2">
           <input
+            aria-label={label}
             {...rest}
             name={name}
             type={show ? "text" : "password"}

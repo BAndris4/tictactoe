@@ -103,6 +103,7 @@ export default function PhoneField({
 
         <input
           ref={ref}
+          aria-label={label}
           name="tel"
           type="tel"
           autoComplete="tel"
