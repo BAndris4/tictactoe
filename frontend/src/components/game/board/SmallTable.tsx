@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useGame } from "../../../context/GameContext";
 import type { Move } from "../../../models/Move";
 import { isFull } from "../../../rules/gameRule";
-import { toGlobalCoord } from "../../../utils";
+import { toGlobalCoord } from "../../../utils/gameStateUtils";
 import SmallTableWinningLine from "./SmallTableWinningLine";
 
 export default function SmallTable({

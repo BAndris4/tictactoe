@@ -69,6 +69,7 @@ export default function TextField({
         </div>
 
         <input
+          aria-label={label}
           {...rest}
           name={name}
           autoComplete={autoComplete}

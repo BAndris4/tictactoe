@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { GameContext } from "../../context/GameContext";
 import type { Move } from "../../models/Move";
-import { toGlobalCoord } from "../../utils";
+import { toGlobalCoord } from "../../utils/gameStateUtils";
 import { getSmallTableWinner } from "../../rules/victoryWatcher";
 import { TUTORIAL_STEPS } from "../../data/tutorialSteps";
 

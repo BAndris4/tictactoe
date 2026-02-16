@@ -1,6 +1,6 @@
 import type { Coord } from "../models/Coord";
 import type { Move } from "../models/Move";
-import { toGlobalCoord } from "../utils";
+import { toGlobalCoord } from "../utils/gameStateUtils";
 
 export function isFull(cells: (string | null)[][], blockCoord: Coord) {
     for (let row = 0; row < 3; row++) {

@@ -1,4 +1,4 @@
-import type { UserProfile } from "../../data/mockProfile";
+import type { UserProfile } from "../../types/user";
 
 interface LandingProfileCardProps {
   user: UserProfile;

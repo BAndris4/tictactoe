@@ -105,6 +105,7 @@ export default function SearchableSelect({
           ${isOpen ? "bg-[#E9ECF8] shadow-[0_14px_35px_rgba(15,23,42,0.18)] border-[#5570F1]/70" : ""}
           ${disabled ? "opacity-60 cursor-not-allowed" : "hover:border-[#5570F1]/40"}
         `}
+        aria-label={label}
         onClick={() => !disabled && setIsOpen(!isOpen)}
       >
         <div

@@ -12,13 +12,15 @@ export default function CheckboxField({
   error,
   label,
   disabled,
-}: Props) {
+  ...rest
+}: Props & { "aria-label"?: string }) {
   const hasError = !!error;
 
   return (
     <div className={`mt-3 ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}>
       <label className={`flex items-start gap-2 text-xs text-[#4B4B5C] select-none ${disabled ? "pointer-events-none" : "cursor-pointer"}`}>
         <input
+          {...rest}
           type="checkbox"
           checked={checked}
           disabled={disabled}

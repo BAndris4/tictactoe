@@ -4,13 +4,12 @@ import Avatar from 'avataaars';
 interface UserAvatarProps {
   username?: string;
   avatarConfig?: any;
-  config?: any; // Added for compatibility
   className?: string;
   size?: number | string;
 }
 
-export default function UserAvatar({ username, avatarConfig, config, className = "", size = "100%" }: UserAvatarProps) {
-  const finalConfig = avatarConfig || config;
+export default function UserAvatar({ username, avatarConfig, className = "", size = "100%" }: UserAvatarProps) {
+  const finalConfig = avatarConfig;
 
   const hasAvatar = useMemo(() => {
     return finalConfig && typeof finalConfig === 'object' && Object.keys(finalConfig).length > 0;

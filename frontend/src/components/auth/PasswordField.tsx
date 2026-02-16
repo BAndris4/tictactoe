@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, type InputHTMLAttributes } from "react";
 import type { PasswordChecks } from "../../rules/validation";
 import PasswordHint from "./PasswordHint";
 
@@ -19,7 +19,7 @@ type Props = {
   name?: string;
   disabled?: boolean;
   required?: boolean;
-};
+} & Omit<InputHTMLAttributes<HTMLInputElement>, "className" | "onChange" | "value">;
 
 export default function PasswordField({
   label,
@@ -33,6 +33,7 @@ export default function PasswordField({
   name,
   disabled,
   required,
+  ...rest
 }: Props) {
   const [show, setShow] = useState(false);
 
@@ -96,6 +97,8 @@ export default function PasswordField({
 
         <div className="mt-1 flex items-center gap-2">
           <input
+            aria-label={label}
+            {...rest}
             name={name}
             type={show ? "text" : "password"}
             value={value}
