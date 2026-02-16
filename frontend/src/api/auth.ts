@@ -1,6 +1,6 @@
 import { API_URL, getHeaders } from "./client";
 import type { RegisterFormValues } from "../rules/validation";
-import { serializePhone } from "../utils";
+import { serializePhone } from "../utils/authUtils";
 
 export const authApi = {
   login: async (username: string, password: string, keepSigned: boolean) => {

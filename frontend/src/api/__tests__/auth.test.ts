@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { authApi } from '../auth';
+import type { RegisterFormValues } from '../../rules/validation';
 
 // Mock client.ts to avoid import issues and control values
 vi.mock('../client', () => ({
@@ -42,7 +43,7 @@ describe('Auth API', () => {
   });
 
   it('register calls correct endpoint', async () => {
-    const mockData = {
+    const mockData: RegisterFormValues = {
         username: 'newuser',
         email: 'new@example.com',
         password: 'password',

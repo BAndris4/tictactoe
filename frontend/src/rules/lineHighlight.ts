@@ -1,4 +1,4 @@
-import { toGlobalCoord } from "../utils";
+import { toGlobalCoord } from "../utils/gameStateUtils";
 
 export type WinningLine =
   | { type: "row"; index: number }

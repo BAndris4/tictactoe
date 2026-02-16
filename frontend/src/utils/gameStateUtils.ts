@@ -1,6 +1,17 @@
 import type { Move } from "../models/Move";
-import { toGlobalCoord } from "../utils";
+import type { Coord } from "../models/Coord";
 import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
+
+export function toGlobalCoord(block: Coord, cell: Coord) {
+  return { row: block.row * 3 + cell.row, col: block.col * 3 + cell.col };
+}
+
+export function formatMove(move?: Move) {
+  if (!move) return "None";
+  return `(${move.block.row + 1}, ${move.block.col + 1}) -> (${
+    move.cell.row + 1
+  }, ${move.cell.col + 1})`;
+}
 
 export interface ReconstructedGameState {
   cells: (string | null)[][];

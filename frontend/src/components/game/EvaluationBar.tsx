@@ -14,12 +14,6 @@ export default function EvaluationBar({ className = "" }: Props) {
   }
 
   // Determine perspective
-  // Default (Local or X): Bottom is X (Mint), Top is O (Coral)
-  // If User is O: Bottom is O (Coral), Top is X (Mint)
-  // In backend: game.player_o is the ID or object? 
-  // Let's check logic: usually game.player_o is the ID in some serializers or object in others.
-  // We safe check:
-  
   const isPlayerO = user && game && (
       (typeof game.player_o === 'string' && game.player_o === user.id) ||
       (typeof game.player_o === 'object' && game.player_o?.id === user.id) ||
@@ -46,7 +40,6 @@ export default function EvaluationBar({ className = "" }: Props) {
   // Score text logic
   // Check for Mate
   let scoreLabel = "";
-  let isMate = false;
   
   // Check if we are at the very last move of the history
   // currentHistoryIndex is null if we are "live" (at the end), or a number if reviewing.
@@ -56,7 +49,6 @@ export default function EvaluationBar({ className = "" }: Props) {
   );
 
   if (Math.abs(currentEvaluation) > 90000) {
-      isMate = true;
       const absScore = Math.abs(currentEvaluation);
       const isMyMate = (currentEvaluation > 0 && !isPlayerO) || (currentEvaluation < 0 && isPlayerO);
       

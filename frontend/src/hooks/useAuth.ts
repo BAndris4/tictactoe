@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import type { UserProfile } from "../data/mockProfile";
+import type { UserProfile } from "../types/user";
 import { authApi } from "../api/auth";
 import { getAuthToken as getClientToken } from "../api/client";
 

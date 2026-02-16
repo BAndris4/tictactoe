@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef } from "react";
 import type { ReactNode } from "react";
 import type { Move } from "../models/Move";
 import { isMoveValid } from "../rules/gameRule";
-import { toGlobalCoord } from "../utils";
+import { toGlobalCoord } from "../utils/gameStateUtils";
 import { getSmallTableWinner, getWinner } from "../rules/victoryWatcher";
 import { getAuthToken, useAuth } from "../hooks/useAuth";
 import { getGame, getGameEvaluation, type EvaluationNode } from "../api/game";

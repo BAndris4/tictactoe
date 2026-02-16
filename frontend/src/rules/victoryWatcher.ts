@@ -1,5 +1,5 @@
 import type { Coord } from "../models/Coord";
-import { toGlobalCoord } from "../utils";
+import { toGlobalCoord } from "../utils/gameStateUtils";
 
 type CellValue = string | null;
 

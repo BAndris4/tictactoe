@@ -2,7 +2,6 @@ import { useState } from "react";
 import Avatar from 'avataaars';
 import {
     TOP_TYPES,
-    UNISEX_TOP_TYPES,
     MALE_TOP_TYPES,
     FEMALE_TOP_TYPES,
     ACCESSORIES_TYPES,
@@ -13,7 +12,8 @@ import {
     EYEBROW_TYPES,
     MOUTH_TYPES,
     SKIN_COLORS,
-    CLOTHE_COLORS
+    CLOTHE_COLORS,
+    UNISEX_TOP_TYPES
 } from "../../data/avatarOptions";
 
 interface AvatarEditorProps {
@@ -100,7 +100,7 @@ export default function AvatarEditor({ config, gender, onChange }: AvatarEditorP
                                 options={HAIR_COLORS} 
                                 onChange={(v) => handleChange('hairColor', v)} 
                             />
-                            {(config.topType && (config.topType.includes("Hat") || config.topType.includes("Hijab") || config.topType.includes("Turban"))) && (
+                            {config.topType && UNISEX_TOP_TYPES.includes(config.topType) && (
                                  <ColorPicker 
                                     label="Hat Color" 
                                     selected={config.hatColor} 
@@ -260,7 +260,6 @@ function getColorCode(name: string): string {
         "Yellow": "#F8D25C",
         "Pale": "#FFDBB4",
         "Light": "#EDB98A",
-        // "Brown": "#D08B5B", // Conflict, prioritizing hair brown
         "DarkBrown": "#AE5D29",
         // Clothes colors
         "Blue01": "#65C9FF",

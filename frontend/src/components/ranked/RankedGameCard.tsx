@@ -1,5 +1,5 @@
 import RankedIconRaw from "../../assets/ranked.svg?raw";
-import type { UserProfile } from "../../data/mockProfile";
+import type { UserProfile } from "../../types/user";
 
 interface RankedGameCardProps {
   onClick: () => void;
