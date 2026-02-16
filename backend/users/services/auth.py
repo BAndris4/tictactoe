@@ -36,14 +36,27 @@ def register_user(
         # Profile creation
         final_avatar = avatar_config or AvatarService.generate_random_avatar(gender)
         
-        from ..models import PlayerProfile
+        from ..models import PlayerProfile, AvatarConfig
         
         # Check if profile already exists (e.g. from signal)
         profile, created = PlayerProfile.objects.get_or_create(user=user)
         
         profile.gender = gender
-        profile.avatar_config = final_avatar
         profile.save()
+
+        # Create AvatarConfig
+        AvatarConfig.objects.create(
+            player_profile=profile,
+            top_type=final_avatar.get('topType', ''),
+            accessories_type=final_avatar.get('accessoriesType', ''),
+            hair_color=final_avatar.get('hairColor', ''),
+            facial_hair_type=final_avatar.get('facialHairType', ''),
+            clothe_type=final_avatar.get('clotheType', ''),
+            eye_type=final_avatar.get('eyeType', ''),
+            eyebrow_type=final_avatar.get('eyebrowType', ''),
+            mouth_type=final_avatar.get('mouthType', ''),
+            skin_color=final_avatar.get('skinColor', ''),
+        )
         
         return user
 

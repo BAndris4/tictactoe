@@ -37,28 +37,40 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
     def update(self, instance, validated_data):
-        avatar_config = validated_data.pop('avatar_config', None)
+        avatar_data = validated_data.pop('avatar_config', None)
         gender = validated_data.pop('gender', None)
         instance = super().update(instance, validated_data)
         
-        if avatar_config is not None or gender is not None:
-             from ..models import PlayerProfile
+        if avatar_data is not None or gender is not None:
+             from ..models import PlayerProfile, AvatarConfig
              profile, _ = PlayerProfile.objects.get_or_create(user=instance)
-             if avatar_config is not None:
-                 profile.avatar_config = avatar_config
              if gender is not None:
                  profile.gender = gender
-             profile.save()
+                 profile.save()
+             
+             if avatar_data is not None:
+                 avatar_config, _ = AvatarConfig.objects.get_or_create(player_profile=profile)
+                 avatar_config.top_type = avatar_data.get('topType', avatar_config.top_type)
+                 avatar_config.accessories_type = avatar_data.get('accessoriesType', avatar_config.accessories_type)
+                 avatar_config.hair_color = avatar_data.get('hairColor', avatar_config.hair_color)
+                 avatar_config.facial_hair_type = avatar_data.get('facialHairType', avatar_config.facial_hair_type)
+                 avatar_config.clothe_type = avatar_data.get('clotheType', avatar_config.clothe_type)
+                 avatar_config.eye_type = avatar_data.get('eyeType', avatar_config.eye_type)
+                 avatar_config.eyebrow_type = avatar_data.get('eyebrowType', avatar_config.eyebrow_type)
+                 avatar_config.mouth_type = avatar_data.get('mouthType', avatar_config.mouth_type)
+                 avatar_config.skin_color = avatar_data.get('skinColor', avatar_config.skin_color)
+                 avatar_config.save()
         
         return instance
 
     def get_profile(self, obj):
-        # Ensure profile exists
         from ..models import PlayerProfile
         from ..services import LevelingService
-        profile, _ = PlayerProfile.objects.get_or_create(user=obj)
-        
         from ..services import RankingService
+        
+        profile, _ = PlayerProfile.objects.get_or_create(user=obj)
+        level = LevelingService.get_level_from_total_xp(profile.total_xp)
+        current_xp = LevelingService.get_xp_in_level_from_total_xp(profile.total_xp)
         
         if profile.total_lp is None:
             rank_name = "Unranked"
@@ -69,16 +81,16 @@ class UserSerializer(serializers.ModelSerializer):
             total_lp = profile.total_lp
         
         return {
-            "level": profile.level,
-            "current_xp": profile.current_xp,
-            "next_level_xp": LevelingService.get_xp_required_for_level(profile.level),
+            "level": level,
+            "current_xp": current_xp,
+            "next_level_xp": LevelingService.get_xp_required_for_level(level),
             "mmr": profile.mmr, # Can be None
             "placement_games_played": profile.placement_games_played,
             "total_lp": total_lp,
             "rank": rank_name,
             "lp_in_division": lp_in_division,
             "gender": profile.gender,
-            "avatar_config": profile.avatar_config,
+            "avatar_config": profile.get_avatar_config(),
             "demotion_shield": profile.demotion_shield,
             "current_streak": profile.current_streak
         }
@@ -94,10 +106,10 @@ class SimpleUserSerializer(serializers.ModelSerializer):
     def get_profile(self, obj):
         from ..models import PlayerProfile
         profile, _ = PlayerProfile.objects.get_or_create(user=obj)
+        
         return {
-            "avatar_config": profile.avatar_config,
+            "avatar_config": profile.get_avatar_config(),
             "gender": profile.gender,
-            # "rank": profile.rank  # Removed as it does not exist on model
         }
 
 class LoginSerializer(serializers.Serializer):
@@ -140,6 +152,8 @@ class PublicUserSerializer(serializers.ModelSerializer):
         from ..services import RankingService
         
         profile, _ = PlayerProfile.objects.get_or_create(user=obj)
+        level = LevelingService.get_level_from_total_xp(profile.total_xp)
+        current_xp = LevelingService.get_xp_in_level_from_total_xp(profile.total_xp)
         
         if profile.total_lp is None:
             rank_name = "Unranked"
@@ -150,14 +164,14 @@ class PublicUserSerializer(serializers.ModelSerializer):
             total_lp = profile.total_lp
         
         return {
-            "level": profile.level,
-            "current_xp": profile.current_xp,
-            "next_level_xp": LevelingService.get_xp_required_for_level(profile.level),
+            "level": level,
+            "current_xp": current_xp,
+            "next_level_xp": LevelingService.get_xp_required_for_level(level),
             "total_lp": total_lp,
             "lp_in_division": lp_in_division,
             "rank": rank_name,
             "gender": profile.gender,
-            "avatar_config": profile.avatar_config,
+            "avatar_config": profile.get_avatar_config(),
             "demotion_shield": profile.demotion_shield,
             "current_streak": profile.current_streak
         }
@@ -184,13 +198,15 @@ class PublicUserSerializer(serializers.ModelSerializer):
         unrated_played = unrated_games.count()
         
         if unrated_played > 0:
+            from games.logic import GameLogic
             for g in unrated_games:
-                if g.winner == 'D':
+                g_winner = GameLogic.get_winner(g.id)
+                if g_winner == 'D':
                     draws += 1
                     continue
                 
-                if (g.winner == 'X' and g.player_x == obj) or \
-                   (g.winner == 'O' and g.player_o == obj):
+                if (g_winner == 'X' and g.player_x == obj) or \
+                   (g_winner == 'O' and g.player_o == obj):
                     wins += 1
                 else:
                     losses += 1

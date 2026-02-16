@@ -29,12 +29,7 @@ class Game(models.Model):
     player_x = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='games_as_x')
     player_o = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='games_as_o')
 
-    current_turn = models.CharField(max_length=1, default='X')
     bot_difficulty = models.IntegerField(default=0, help_text="0-100, probability of random move (for custom bot)")
-    next_board_constraint = models.IntegerField(null=True, blank=True, help_text="Cache: Which sub-board must be played? NULL = any")
-    move_count = models.IntegerField(default=0)
-    last_move_at = models.DateTimeField(null=True, blank=True)
-    winner = models.CharField(max_length=1, null=True, blank=True, help_text="Cache: X, O or D")
     
     player_x_xp_gained = models.IntegerField(null=True, blank=True)
     player_o_xp_gained = models.IntegerField(null=True, blank=True)

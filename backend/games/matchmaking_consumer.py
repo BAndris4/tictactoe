@@ -76,7 +76,7 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         
         # JAVÍTÁS: Itt tároljuk el a username-t stringként, hogy könnyebb legyen kezelni
         profile, _ = await database_sync_to_async(PlayerProfile.objects.get_or_create)(user=self.user)
-        avatar_config = profile.avatar_config
+        avatar_config = await database_sync_to_async(profile.get_avatar_config)()
 
         entry = {
             'channel_name': self.channel_name,
@@ -125,7 +125,6 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
             player_x=user1,
             player_o=user2,
             status='active',
-            current_turn='X',
             rated=(mode == 'ranked')
         )
         return game.id

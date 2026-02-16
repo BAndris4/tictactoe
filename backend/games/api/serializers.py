@@ -21,12 +21,12 @@ class GameInvitationSerializer(serializers.ModelSerializer):
     def get_from_user_avatar(self, obj):
         from users.models import PlayerProfile
         profile, _ = PlayerProfile.objects.get_or_create(user=obj.from_user)
-        return profile.avatar_config
+        return profile.get_avatar_config()
 
     def get_to_user_avatar(self, obj):
         from users.models import PlayerProfile
         profile, _ = PlayerProfile.objects.get_or_create(user=obj.to_user)
-        return profile.avatar_config
+        return profile.get_avatar_config()
 
 class CreateGameSerializer(serializers.ModelSerializer):
     class Meta:
@@ -50,6 +50,12 @@ class GameSerializer(serializers.ModelSerializer):
     player_x_avatar = serializers.SerializerMethodField()
     player_o_avatar = serializers.SerializerMethodField()
     
+    current_turn = serializers.SerializerMethodField()
+    next_board_constraint = serializers.SerializerMethodField()
+    winner = serializers.SerializerMethodField()
+    move_count = serializers.SerializerMethodField()
+    last_move_at = serializers.SerializerMethodField()
+    
     class Meta:
         model = Game
         fields = [
@@ -59,10 +65,32 @@ class GameSerializer(serializers.ModelSerializer):
             'player_x_avatar', 'player_o_avatar',
             'current_turn', 'next_board_constraint', 
             'winner', 'moves', 'chat_messages', 'created_at',
+            'move_count', 'last_move_at',
             'player_x_xp_gained', 'player_o_xp_gained',
             'player_x_mmr_change', 'player_o_mmr_change',
             'player_x_lp_change', 'player_o_lp_change'
         ]
+
+    def get_current_turn(self, obj):
+        from ..logic import GameLogic
+        return GameLogic.get_current_turn(obj.id)
+
+    def get_next_board_constraint(self, obj):
+        from ..logic import GameLogic
+        return GameLogic.get_next_board_constraint(obj.id)
+
+    def get_winner(self, obj):
+        from ..logic import GameLogic
+        return GameLogic.get_winner(obj.id)
+
+    def get_move_count(self, obj):
+        from ..logic import GameLogic
+        return GameLogic.get_move_count(obj.id)
+
+    def get_last_move_at(self, obj):
+        from ..logic import GameLogic
+        last_move = GameLogic.get_last_move(obj.id)
+        return last_move.created_at if last_move else None
 
     def get_player_x_name(self, obj):
         if obj.mode == 'local' and obj.player_x:
@@ -86,7 +114,7 @@ class GameSerializer(serializers.ModelSerializer):
             return None
         from users.models import PlayerProfile
         profile, _ = PlayerProfile.objects.get_or_create(user=obj.player_x)
-        return profile.avatar_config
+        return profile.get_avatar_config()
 
     def get_player_o_avatar(self, obj):
         if not obj.player_o:
@@ -95,4 +123,4 @@ class GameSerializer(serializers.ModelSerializer):
             return None
         from users.models import PlayerProfile
         profile, _ = PlayerProfile.objects.get_or_create(user=obj.player_o)
-        return profile.avatar_config
+        return profile.get_avatar_config()

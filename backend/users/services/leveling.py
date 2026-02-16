@@ -1,5 +1,4 @@
 from django.db import transaction
-from ..models import PlayerProfile
 
 class LevelingService:
     X_PARAM = 0.0063
@@ -8,6 +7,32 @@ class LevelingService:
     @classmethod
     def get_xp_required_for_level(cls, level):
         return min([int((level / cls.X_PARAM) ** cls.Y_PARAM), 5000])
+
+    @classmethod
+    def get_level_from_total_xp(cls, total_xp):
+        level = 1
+        remaining_xp = total_xp
+        while True:
+            needed = cls.get_xp_required_for_level(level)
+            if remaining_xp >= needed:
+                remaining_xp -= needed
+                level += 1
+            else:
+                break
+        return level
+
+    @classmethod
+    def get_xp_in_level_from_total_xp(cls, total_xp):
+        level = 1
+        remaining_xp = total_xp
+        while True:
+            needed = cls.get_xp_required_for_level(level)
+            if remaining_xp >= needed:
+                remaining_xp -= needed
+                level += 1
+            else:
+                break
+        return remaining_xp
 
     @staticmethod
     def calculate_stats_and_xp(game, player_char):
@@ -22,9 +47,12 @@ class LevelingService:
                 
         xp = moves_count * 5 + mini_wins * 20      
         
-        if game.winner == player_char:
+        from games.logic import GameLogic
+        winner = GameLogic.get_winner(game.id)
+        
+        if winner == player_char:
             xp += 100
-        elif game.winner == 'D':
+        elif winner == 'D':
             xp += 75
         else:
             xp += 50
@@ -44,11 +72,11 @@ class LevelingService:
         if game.player_o: players.append((game.player_o, 'O'))
 
         for user, char in players:
+            from ..models import PlayerProfile
             profile, _ = PlayerProfile.objects.get_or_create(user=user)
             
             with transaction.atomic():
                 xp_gained = cls.calculate_stats_and_xp(game, char)
-                profile.current_xp += xp_gained
                 profile.total_xp += xp_gained
                 
                 if char == 'X':
@@ -56,25 +84,14 @@ class LevelingService:
                 else:
                     game.player_o_xp_gained = xp_gained
                 
-                leveled_up = False
-                while True:
-                    needed = cls.get_xp_required_for_level(profile.level)
-                    if profile.current_xp >= needed:
-                        profile.current_xp -= needed
-                        profile.level += 1
-                        leveled_up = True
-                    else:
-                        break
-                
                 profile.save()
 
                 results[user.id] = {
                     'xp_gained': xp_gained,
                     'new_level': profile.level,
-                    'leveled_up': leveled_up,
-                    'current_xp': profile.current_xp,
+                    'current_xp': profile.xp_in_level,
                     'next_level_xp': cls.get_xp_required_for_level(profile.level),
-                    'xp_to_next': cls.get_xp_required_for_level(profile.level) - profile.current_xp,
+                    'xp_to_next': cls.get_xp_required_for_level(profile.level) - profile.xp_in_level,
                     'can_play_ranked': profile.can_play_ranked
                 }
         

@@ -204,7 +204,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         if game.mode == 'local' and user == game.player_x:
              # In local mode, the creator plays both sides (or hotseat)
              # We assume the move is for the current turn if validated
-             player_char = game.current_turn
+             player_char = GameLogic.get_current_turn(game.id)
         elif game.mode in ['bot_easy', 'bot_medium', 'bot_hard', 'bot_custom']:
              # Allow move if user is the assigned player
              if user == game.player_x:
@@ -227,7 +227,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         # Create move
         move = GameMove.objects.create(
             game=game,
-            move_no=game.move_count + 1,
+            move_no=GameLogic.get_move_count(game.id) + 1,
             player=player_char,
             cell=cell,
             subcell=subcell

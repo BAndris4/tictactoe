@@ -27,7 +27,7 @@ class EasyBotLogic:
         """
         # 1. Identify valid moves
         valid_moves = []
-        target_subboard = game.next_board_constraint
+        target_subboard = GameLogic.get_next_board_constraint(game.id)
         
         possible_boards = []
         if target_subboard is not None:
@@ -126,7 +126,7 @@ class EasyBotLogic:
         game = Game.objects.get(id=game_id)
         bot_symbol = 'X' if game.player_x is None else 'O'
         
-        if game.current_turn != bot_symbol:
+        if GameLogic.get_current_turn(game.id) != bot_symbol:
             return None
 
         move_coords = EasyBotLogic.calculate_move(game, bot_symbol)
@@ -137,7 +137,7 @@ class EasyBotLogic:
         
         move = GameMove.objects.create(
             game=game,
-            move_no=game.move_count + 1,
+            move_no=GameLogic.get_move_count(game.id) + 1,
             player=bot_symbol,
             cell=cell,
             subcell=subcell

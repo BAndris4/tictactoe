@@ -22,7 +22,7 @@ class TestAuthServices:
         # Check profile creation
         profile = PlayerProfile.objects.get(user=user)
         assert profile.gender == "F"
-        assert profile.avatar_config is not None
+        assert profile.get_avatar_config() != {}
 
     def test_register_user_duplicate_username(self, create_user):
         create_user(username="taken_user")

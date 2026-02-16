@@ -59,7 +59,7 @@ class MediumBotLogic:
     @staticmethod
     def minimax_root(game, bot_symbol, board, small_board_winners):
         opponent_symbol = 'X' if bot_symbol == 'O' else 'O'
-        constraint = game.next_board_constraint
+        constraint = GameLogic.get_next_board_constraint(game.id)
         
         valid_moves = MediumBotLogic.get_valid_moves(board, small_board_winners, constraint)
         
@@ -211,7 +211,7 @@ class MediumBotLogic:
         game = Game.objects.get(id=game_id)
         bot_symbol = 'X' if game.player_x is None else 'O'
         
-        if game.current_turn != bot_symbol: return None
+        if GameLogic.get_current_turn(game.id) != bot_symbol: return None
 
         move_coords = MediumBotLogic.calculate_move(game, bot_symbol)
         if not move_coords: return None 
@@ -220,7 +220,7 @@ class MediumBotLogic:
         
         move = GameMove.objects.create(
             game=game,
-            move_no=game.move_count + 1,
+            move_no=GameLogic.get_move_count(game.id) + 1,
             player=bot_symbol,
             cell=cell,
             subcell=subcell

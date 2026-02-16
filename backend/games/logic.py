@@ -2,20 +2,44 @@ from .models import Game, GameMove
 
 class GameLogic:
     @staticmethod
-    def get_cell_owner(game_id, cell, subcell):
-        # We need to reconstruct the board state. 
-        # For efficiency, we can fetch all moves.
-        # Ideally, we would cache the board state, but for now we reconstruct.
-        moves = GameMove.objects.filter(game_id=game_id)
-        # 9x9 board representation
-        # Mapping: cell (0-8) -> row/col of 3x3 block
-        #          subcell (0-8) -> row/col within block
+    def get_move_count(game_id):
+        return GameMove.objects.filter(game_id=game_id).count()
+
+    @staticmethod
+    def get_current_turn(game_id):
+        return 'O' if GameLogic.get_move_count(game_id) % 2 != 0 else 'X'
+
+    @staticmethod
+    def get_last_move(game_id):
+        return GameMove.objects.filter(game_id=game_id).order_by('-move_no').first()
+
+    @staticmethod
+    def get_next_board_constraint(game_id):
+        last_move = GameLogic.get_last_move(game_id)
+        if not last_move:
+            return None
         
-        # Or simpler: validation checks if spot is taken
-        for m in moves:
-            if m.cell == cell and m.subcell == subcell:
-                return m.player
+        target_subboard = last_move.subcell
+        winner = GameLogic.check_subboard_winner(game_id, target_subboard)
+        if winner is not None: # Won or Draw
+            return None
+        return target_subboard
+
+    @staticmethod
+    def get_winner(game_id):
+        small_winners = [GameLogic.check_subboard_winner(game_id, i) for i in range(9)]
+        global_winner = GameLogic.check_global_winner(small_winners)
+        if global_winner:
+            return global_winner
+        
+        if GameLogic.check_global_draw(small_winners) or GameLogic.get_move_count(game_id) >= 81:
+            return 'D'
         return None
+
+    @staticmethod
+    def get_cell_owner(game_id, cell, subcell):
+        move = GameMove.objects.filter(game_id=game_id, cell=cell, subcell=subcell).first()
+        return move.player if move else None
 
     @staticmethod
     def is_occupied(game_id, cell, subcell):
@@ -30,7 +54,7 @@ class GameLogic:
     @staticmethod
     def validate_move(game, player_char, cell, subcell):
         # 1. Turn check
-        if game.current_turn != player_char:
+        if GameLogic.get_current_turn(game.id) != player_char:
             raise ValueError("Not your turn.")
 
         # 2. Game status check
@@ -40,11 +64,12 @@ class GameLogic:
             # If creating game makes it active immediately? No, wait for P2.
             pass
             # For now, let's just check if it's finished
-        if game.winner:
+        if GameLogic.get_winner(game.id):
              raise ValueError("Game already finished.")
 
         # 3. Constraint check (next_board_constraint)
-        if game.next_board_constraint is not None:
+        constraint = GameLogic.get_next_board_constraint(game.id)
+        if constraint is not None:
             # Must play in this subboard
             # UNLESS that subboard is full? 
             # The constraint should theoretically be cleared if full.
@@ -54,8 +79,8 @@ class GameLogic:
             
             # Since we store constraint, we expect it to be correct.
             # If constraint is set, we MUST play there.
-            if cell != game.next_board_constraint:
-                raise ValueError(f"Must play in subboard {game.next_board_constraint}")
+            if cell != constraint:
+                raise ValueError(f"Must play in subboard {constraint}")
         
         # 4. Occupancy check
         if GameLogic.is_occupied(game.id, cell, subcell):
@@ -184,73 +209,10 @@ class GameLogic:
 
     @staticmethod
     def update_game_state(game, move):
-        # 1. Update subboard state (did someone win a subboard?)
-        # We need to track small board winners. 
-        # Models don't store small board winners explicitly?
-        # The DBML didn't have a field for 'small_board_winners'. 
-        # It had 'cache fields'. Maybe we should check dynamically or store it.
-        # "Note: Event Sourcing model - Cache fields optimized"
-        # Since we don't have a field, we calculate it on the fly every time?
-        # Or maybe we rely on client? No, server must validate.
-        # Let's calculate on fly.
-        
-        # Calculate all subboard winners to check global win
-        # (Optimisation: Only check validity of the currently played subboard)
-        # But for global win, we need all.
-        
-        small_winners = [None] * 9
-        # Check JUST the cell we played in? 
-        # Yes, previous moves couldn't have changed other boards.
-        # But we need the ARRAY of small winners for global check.
-        # So we iterate 0..8
-        
-        for i in range(9):
-            small_winners[i] = GameLogic.check_subboard_winner(game.id, i)
-        
-        # 2. Check global winner
-        # Note: check_subboard_winner now returns 'D' for draws.
-        # check_global_winner handles 'D' by ignoring it (it's not X or O).
-        
-        game_winner = GameLogic.check_global_winner(small_winners)
-        
-        if game_winner:
-            game.winner = game_winner
+        winner = GameLogic.get_winner(game.id)
+        if winner:
+            game.winner = winner
             game.status = 'finished'
-            game.finished_at = move.created_at # approximate
-        else:
-            # Check for Global Draw
-            # 1. Board physically full? (81 moves) - Fallback
-            # 2. Or "Dead Board" (No one can win)
-            
-            is_global_draw = GameLogic.check_global_draw(small_winners)
-            
-            # Additional check: If board is full but check_global_draw didn't catch it for some reason?
-            # check_global_draw logic (no lines possible) COVERS full board case (if full with no winner -> no lines possible)
-            
-            if is_global_draw or game.move_count + 1 >= 81:
-                 game.winner = 'D'
-                 game.status = 'finished'
-                 game.finished_at = move.created_at
-
-        # 3. Update constraint for NEXT player
-        # The next player must play in 'move.subcell'
-        target_subboard = move.subcell
-        
-        # If that subboard is full OR won OR draw, then constraint is NULL
-        # small_winners[i] is 'X', 'O', or 'D'. All mean "closed".
-        is_target_closed = small_winners[target_subboard] is not None
-        
-        # Note: We rely on small_winners, but just to be safe about race conditions or state:
-        # check_subboard_winner calculates freshly.
-        
-        if is_target_closed:
-             game.next_board_constraint = None
-        else:
-             game.next_board_constraint = target_subboard
-
-        # 4. Turn & Stats
-        game.current_turn = 'O' if game.current_turn == 'X' else 'X'
-        game.move_count += 1
-        game.last_move_at = move.created_at
+            game.finished_at = move.created_at
         
         game.save()

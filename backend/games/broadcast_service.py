@@ -41,6 +41,9 @@ class BroadcastService:
             print(f"CRITICAL ERROR in game end processing broadcast: {e}")
             # We still proceed to send game_over even if stats fail
             
+        from .logic import GameLogic
+        game_winner = await database_sync_to_async(GameLogic.get_winner)(game_id)
+
         await channel_layer.group_send(
             room_group_name,
             {
@@ -48,8 +51,8 @@ class BroadcastService:
                 'data': {
                     'type': 'game_over',
                     'mode': game.mode,
-                    'winner': game.winner,
-                    'reason': 'board_full' if game.winner == 'D' else 'regular',
+                    'winner': game_winner,
+                    'reason': 'board_full' if game_winner == 'D' else 'regular',
                     'xp_results': xp_results,
                     'mmr_results': mmr_results,
                     'lp_results': lp_results,

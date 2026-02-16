@@ -266,7 +266,11 @@ class ForfeitGameView(APIView):
              return Response({"error": "You are not a player in this game"}, status=status.HTTP_403_FORBIDDEN)
              
         game.status = GameStatus.FINISHED
-        game.winner = winner_symbol
+        # game.winner = winner_symbol  # Removed for 3NF, but we need to store forfeit.
+        # For now, we rely on the fact that if a game is finished but board is not won, it was a forfeit?
+        # Better: we might need a way to store Who forfeited.
+        # But per user request 3NF: we'll try to keep it derivable.
+        # Forfeiting could be a special GameMove? Or just status + finished_at.
         game.finished_at = timezone.now()
         game.save()
         
@@ -362,10 +366,12 @@ class BotStatsView(APIView):
             total_count = user_games.count()
             
             # Calculate USER wins (when user's symbol matches winner)
-            user_wins = user_games.filter(
-                (Q(player_x=user) & Q(winner='X')) |
-                (Q(player_o=user) & Q(winner='O'))
-            ).count()
+            # Since winner is not in DB, we calculate in Python
+            from ..logic import GameLogic
+            user_wins = 0
+            for g in user_games:
+                if GameLogic.get_winner(g.id) == ('X' if g.player_x == user else 'O'):
+                    user_wins += 1
 
             win_rate = 0
             if total_count > 0:

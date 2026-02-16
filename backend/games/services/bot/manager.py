@@ -22,14 +22,16 @@ class BotService:
         is_bot_x = game.player_x_id is None
         is_bot_o = game.player_o_id is None
         
-        is_bot_turn = (game.current_turn == 'X' and is_bot_x) or (game.current_turn == 'O' and is_bot_o)
+        current_turn = GameLogic.get_current_turn(game.id)
+        is_bot_turn = (current_turn == 'X' and is_bot_x) or (current_turn == 'O' and is_bot_o)
         
         if not is_bot_turn:
             return
 
         # --- BOT CHAT AGENT (Greeting & Chatter) ---
-        bot_symbol = game.current_turn
-        if game.move_count <= 1:
+        bot_symbol = current_turn
+        move_count = GameLogic.get_move_count(game.id)
+        if move_count <= 1:
              await BotChatService.maybe_send_chat(game, bot_symbol, 'greeting', channel_layer, group_name)
         
         # --- REACTION TO OPPONENT MOVE ---
@@ -84,11 +86,12 @@ class BotService:
             
             # Reload game to check winner
             updated_game = await database_sync_to_async(Game.objects.get)(id=game_id)
+            game_winner = await database_sync_to_async(GameLogic.get_winner)(game_id)
 
             if updated_game.status == 'finished':
-                if updated_game.winner == 'D':
+                if game_winner == 'D':
                      await BotChatService.maybe_send_chat(updated_game, move.player, 'draw', channel_layer, group_name)
-                elif updated_game.winner == move.player:
+                elif game_winner == move.player:
                      await BotChatService.maybe_send_chat(updated_game, move.player, 'gg_win', channel_layer, group_name)
                 else:
                      await BotChatService.maybe_send_chat(updated_game, move.player, 'gg_loss', channel_layer, group_name)

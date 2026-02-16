@@ -41,8 +41,6 @@ class Friendship(models.Model):
 
 class PlayerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='player_profile')
-    level = models.IntegerField(default=1)
-    current_xp = models.IntegerField(default=0)
     total_xp = models.IntegerField(default=0)
     
     # Ranked System
@@ -58,14 +56,47 @@ class PlayerProfile(models.Model):
         ('F', 'Female'),
     ]
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')
-    avatar_config = models.JSONField(default=dict, blank=True)
     
-    def __str__(self) -> str:
-        return f"{self.user} (Lvl {self.level})"
-
     @property
     def can_play_ranked(self) -> bool:
-        return self.level >= 10
+        from .services.leveling import LevelingService
+        return LevelingService.get_level_from_total_xp(self.total_xp) >= 10
+
+    def get_avatar_config(self) -> dict:
+        try:
+            config = self.avatar_config
+            return {
+                "topType": config.top_type,
+                "accessoriesType": config.accessories_type,
+                "hairColor": config.hair_color,
+                "facialHairType": config.facial_hair_type,
+                "clotheType": config.clothe_type,
+                "eyeType": config.eye_type,
+                "eyebrowType": config.eyebrow_type,
+                "mouthType": config.mouth_type,
+                "skinColor": config.skin_color,
+            }
+        except Exception:
+            return {}
+
+    def __str__(self) -> str:
+        from .services.leveling import LevelingService
+        return f"{self.user} (Lvl {LevelingService.get_level_from_total_xp(self.total_xp)})"
+
+class AvatarConfig(models.Model):
+    player_profile = models.OneToOneField(PlayerProfile, on_delete=models.CASCADE, related_name='avatar_config')
+    top_type = models.CharField(max_length=100)
+    accessories_type = models.CharField(max_length=100)
+    hair_color = models.CharField(max_length=100)
+    facial_hair_type = models.CharField(max_length=100)
+    clothe_type = models.CharField(max_length=100)
+    eye_type = models.CharField(max_length=100)
+    eyebrow_type = models.CharField(max_length=100)
+    mouth_type = models.CharField(max_length=100)
+    skin_color = models.CharField(max_length=100)
+
+    def __str__(self) -> str:
+        return f"Avatar for {self.player_profile.user.username}"
 
 class PasswordResetToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

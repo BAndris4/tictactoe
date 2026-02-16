@@ -130,7 +130,7 @@ class HardBotLogic:
         bot_symbol = 'X' if game.player_x is None else 'O'
         opp_symbol = 'O' if bot_symbol == 'X' else 'X'
         
-        if game.current_turn != bot_symbol:
+        if GameLogic.get_current_turn(game.id) != bot_symbol:
             return None
 
         moves_qs = GameMove.objects.filter(game_id=game.id)
@@ -139,13 +139,13 @@ class HardBotLogic:
         for m in moves_qs: board[m.cell*9+m.subcell] = m.player
         for i in range(9): winners[i] = HardBotLogic.check_line_local_array(board[i*9:(i+1)*9])
 
-        valid = HardBotLogic.get_valid_moves(board, winners, game.next_board_constraint)
+        valid = HardBotLogic.get_valid_moves(board, winners, GameLogic.get_next_board_constraint(game.id))
         if not valid:
             return None
         
         if difficulty > 0 and random.randint(1, 100) <= difficulty:
             best_move = random.choice(valid)
-            return GameMove.objects.create(game=game, move_no=game.move_count+1, player=bot_symbol, cell=best_move[0], subcell=best_move[1])
+            return GameMove.objects.create(game=game, move_no=GameLogic.get_move_count(game.id)+1, player=bot_symbol, cell=best_move[0], subcell=best_move[1])
 
         best_move = valid[0]
         for depth in range(1, 6):
@@ -163,4 +163,4 @@ class HardBotLogic:
                     best_val, best_move = val, (b, s)
                 alpha = max(alpha, best_val)
         
-        return GameMove.objects.create(game=game, move_no=game.move_count+1, player=bot_symbol, cell=best_move[0], subcell=best_move[1])
+        return GameMove.objects.create(game=game, move_no=GameLogic.get_move_count(game.id)+1, player=bot_symbol, cell=best_move[0], subcell=best_move[1])

@@ -3,17 +3,6 @@ from games.logic import GameLogic
 from games.models import Game, GameMove
 from users.models import User
 
-@pytest.fixture
-def players(db):
-    p1 = User.objects.create_user(username='p1', password='password')
-    p2 = User.objects.create_user(username='p2', password='password')
-    return p1, p2
-
-@pytest.fixture
-def game(db, players):
-    p1, p2 = players
-    return Game.objects.create(player_x=p1, player_o=p2, current_turn='X', status='active')
-
 @pytest.mark.django_db
 class TestGameLogicValidation:
     def test_valid_move(self, game):
@@ -27,24 +16,25 @@ class TestGameLogicValidation:
             GameLogic.validate_move(game, 'O', 0, 0)
 
     def test_occupied_cell(self, game):
-        # X plays at (0,0)
-        GameMove.objects.create(game=game, player='X', cell=0, subcell=0, move_no=1)
+        # X plays at (0,0) (move 0)
+        GameMove.objects.create(game=game, player='X', cell=0, subcell=0, move_no=0)
         
-        # X tries to play there again
+        # O tries to play there again (it is O's turn, so turn check passes)
         with pytest.raises(ValueError, match="Cell already occupied"):
-            GameLogic.validate_move(game, 'X', 0, 0)
+            GameLogic.validate_move(game, 'O', 0, 0)
 
     def test_constraint_violation(self, game):
-        # Constraint set to subboard 5
-        game.next_board_constraint = 5
-        game.save()
+        # Constraint is set by the previous move. 
+        # X moves first (move 0). Targets subcell 5.
+        GameMove.objects.create(game=game, player='X', cell=0, subcell=5, move_no=0)
 
+        # Now it is O's turn (move_count=1). O MUST play in subboard 5.
         # Try to play in subboard 0
         with pytest.raises(ValueError, match="Must play in subboard 5"):
-            GameLogic.validate_move(game, 'X', 0, 0)
+            GameLogic.validate_move(game, 'O', 0, 0)
 
         # Play in subboard 5 (valid)
-        GameLogic.validate_move(game, 'X', 5, 0)
+        GameLogic.validate_move(game, 'O', 5, 0)
 
 @pytest.mark.django_db
 class TestGameLogicWin:
