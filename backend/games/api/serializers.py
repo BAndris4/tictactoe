@@ -80,8 +80,11 @@ class GameSerializer(serializers.ModelSerializer):
         return GameLogic.get_next_board_constraint(obj.id)
 
     def get_winner(self, obj):
+        if obj.winner:
+            return obj.winner
         from ..logic import GameLogic
         return GameLogic.get_winner(obj.id)
+
 
     def get_move_count(self, obj):
         from ..logic import GameLogic

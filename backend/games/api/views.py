@@ -267,11 +267,7 @@ class ForfeitGameView(APIView):
              return Response({"error": "You are not a player in this game"}, status=status.HTTP_403_FORBIDDEN)
              
         game.status = GameStatus.FINISHED
-        # game.winner = winner_symbol  # Removed for 3NF, but we need to store forfeit.
-        # For now, we rely on the fact that if a game is finished but board is not won, it was a forfeit?
-        # Better: we might need a way to store Who forfeited.
-        # But per user request 3NF: we'll try to keep it derivable.
-        # Forfeiting could be a special GameMove? Or just status + finished_at.
+        game.winner = winner_symbol
         game.finished_at = timezone.now()
         game.save()
         

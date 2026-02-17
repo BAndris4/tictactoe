@@ -25,6 +25,7 @@ class Game(models.Model):
     mode = models.CharField(max_length=10, choices=GameMode.choices)
     status = models.CharField(max_length=10, choices=GameStatus.choices, default=GameStatus.WAITING)
     rated = models.BooleanField(default=False)
+    winner = models.CharField(max_length=1, null=True, blank=True, help_text="X, O, or D")
     
     player_x = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='games_as_x')
     player_o = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='games_as_o')

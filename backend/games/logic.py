@@ -214,5 +214,6 @@ class GameLogic:
             game.winner = winner
             game.status = 'finished'
             game.finished_at = move.created_at
+
         
         game.save()

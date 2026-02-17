@@ -141,7 +141,22 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         print(f"Checking queue for {me['username']} (Mode: {me['mode']})...")
 
         # 2. Keresünk ellenfelet
-        candidates = [p for p in MATCHMAKING_QUEUE if p['user_id'] != me['user_id'] and p['mode'] == me['mode']]
+        # 2. Keresünk ellenfelet (MMR threshold 200 ranked esetén)
+        candidates = []
+        for p in MATCHMAKING_QUEUE:
+            if p['user_id'] == me['user_id']:
+                continue
+            if p['mode'] != me['mode']:
+                continue
+            
+            # Ranked MMR check
+            if me['mode'] == 'ranked':
+                diff = abs(me['rating'] - p['rating'])
+                if diff > 300:
+                    continue
+            
+            candidates.append(p)
+
         
         if not candidates:
             # print("No candidates found yet.")

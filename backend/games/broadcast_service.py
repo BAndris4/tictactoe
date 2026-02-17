@@ -30,7 +30,8 @@ class BroadcastService:
             xp_results = await database_sync_to_async(LevelingService.process_game_end)(game)
             
             from .logic import GameLogic
-            game_winner = await database_sync_to_async(GameLogic.get_winner)(game_id)
+            game_winner = game.winner if game.winner else await database_sync_to_async(GameLogic.get_winner)(game_id)
+
             
             # Process Ranking (MMR & LP) - ONLY if game is rated
             if game.rated:

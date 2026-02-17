@@ -22,9 +22,10 @@ class RankingService:
         return 1 / (1 + 10 ** ((rating_b - rating_a) / 400))
 
     STARTING_LP = 200
-    BASE_LP_CHANGE = 20
+    BASE_LP_CHANGE = 15
     LP_PER_DIVISION = 100
-    STREAK_BONUS = 5
+    STREAK_BONUS = 3 # Slightly reduced streak bonus too
+
     
     RANKS = [
         "Bronze 1", "Bronze 2", "Bronze 3",
@@ -108,16 +109,29 @@ class RankingService:
                     return seeded_lp - current_lp, False
 
                 expected_mmr = cls.calculate_expected_mmr_for_lp(current_lp)
-                mmr_diff = (current_mmr + change_mmr) - expected_mmr
-                correction = int(mmr_diff / 25)
                 
+                # 1. Correction based on current alignment (Static) ~70% influence
+                alignment_diff = current_mmr - expected_mmr
+                alignment_correction = int(alignment_diff / 20) # Stronger correction (was 50)
+                
+                # 2. Performance based on this match (Dynamic) ~30% influence
+                performance_bonus = int(change_mmr * 0.2) # Weaker bonus (was 0.3)
+
                 if score == 0.5:
-                    return correction, False 
+                    return alignment_correction, False 
                 
                 base = cls.BASE_LP_CHANGE if score == 1.0 else -cls.BASE_LP_CHANGE
                 streak_bonus = cls.STREAK_BONUS if score == 1.0 and profile.current_streak >= 2 else 0
-                lp_change = base + correction + streak_bonus
-                final_change = max(10, lp_change) if score == 1.0 else min(-10, lp_change)
+                
+                raw_lp_change = base + alignment_correction + performance_bonus
+                
+                # Clamp the main change to +/- 30 (excluding streak)
+                if raw_lp_change > 30: raw_lp_change = 30
+                if raw_lp_change < -30: raw_lp_change = -30
+                
+                lp_change = raw_lp_change + streak_bonus
+                
+                final_change = max(5, lp_change) if score == 1.0 else min(-5, lp_change)
                 
                 new_total_lp = current_lp + final_change
                 old_tier_floor = cls.get_tier_floor(current_lp)

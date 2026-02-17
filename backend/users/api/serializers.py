@@ -185,35 +185,38 @@ class PublicUserSerializer(serializers.ModelSerializer):
             status=GameStatus.FINISHED
         ).count()
         
-        unrated_games = Game.objects.filter(
+        relevant_games = Game.objects.filter(
             (Q(player_x=obj) | Q(player_o=obj)),
             status=GameStatus.FINISHED,
-            rated=False
+            mode__in=[GameMode.RANKED, GameMode.UNRANKED]
         )
         
         wins = 0
         losses = 0
         draws = 0
 
-        unrated_played = unrated_games.count()
+        relevant_played = relevant_games.count()
         
-        if unrated_played > 0:
+        if relevant_played > 0:
             from games.logic import GameLogic
-            for g in unrated_games:
-                g_winner = GameLogic.get_winner(g.id)
+            for g in relevant_games:
+                # Use stored winner if available, fallback to Logic for old games
+                g_winner = g.winner
+                if not g_winner:
+                     g_winner = GameLogic.get_winner(g.id)
+
                 if g_winner == 'D':
                     draws += 1
-                    continue
-                
-                if (g_winner == 'X' and g.player_x == obj) or \
-                   (g_winner == 'O' and g.player_o == obj):
+                elif (g_winner == 'X' and g.player_x == obj) or \
+                     (g_winner == 'O' and g.player_o == obj):
                     wins += 1
                 else:
                     losses += 1
             
-            winrate = (wins / unrated_played) * 100
+            winrate = (wins / relevant_played) * 100
         else:
             winrate = 0.0
+
 
         return {
             "total_games_played": games_played_count,
