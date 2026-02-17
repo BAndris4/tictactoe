@@ -3,6 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import Table from "../components/game/board/Table";
 import { GameProvider, useGame } from "../context/GameContext";
 import GameOverModal from "../components/game/end/GameOverModal";
+import MatchFoundModal from "../components/modals/MatchFoundModal";
+
+// ... existing imports ...
+
 import InviteModal from "../components/modals/InviteModal";
 import BackgroundShapes from "../components/ui/BackgroundShapes";
 import ResignModal from "../components/modals/ResignModal";
@@ -249,6 +253,7 @@ function GameContent() {
       </div>
 
       <GameOverModal />
+      <MatchFoundModal />
       <InviteModal />
 
       <ResignModal 

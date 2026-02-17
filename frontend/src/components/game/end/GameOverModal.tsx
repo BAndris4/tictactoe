@@ -175,8 +175,8 @@ function GameOverModal() {
               {/* XP Display (Always Visible) */}
               {myXpResult && (
                 <GameEndXPBar 
-                    newXp={myXpResult.new_xp}
-                    xpToNextLevel={myXpResult.xp_to_next_level}
+                    newXp={myXpResult.current_xp}
+                    xpToNextLevel={myXpResult.next_level_xp}
                     xpGained={myXpResult.xp_gained}
                     newLevel={myXpResult.new_level}
                     leveledUp={myXpResult.leveled_up}

@@ -137,6 +137,17 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
     userRef.current = user;
   }, [user]);
 
+  const playersRef = useRef(players);
+  const statusRef = useRef(status);
+
+  useEffect(() => {
+    playersRef.current = players;
+  }, [players]);
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+
   // --- MATCHMAKING LOGIC START ---
   
   // 1. Javított startSearch: Ellenőrzi, hogy a bemenet string-e
@@ -348,15 +359,34 @@ export function GameProvider({ children, gameId }: { children: ReactNode; gameId
           if (data.mode) {
               setMode(data.mode);
           }
+          
+          const oName = data.player_o_name || data.player_o;
+          const oAvatar = data.player_o_avatar;
+
           setPlayers(prev => ({
               ...prev,
-              x: data.player_x_id || data.player_x,
-              o: data.player_o_id || data.player_o,
-              xName: data.player_x_name || data.player_x,
-              oName: data.player_o_name || data.player_o,
-              xAvatar: data.player_x_avatar,
-              oAvatar: data.player_o_avatar
+              x: data.player_x_id || data.player_x || prev.x,
+              o: data.player_o_id || data.player_o || prev.o,
+              xName: data.player_x_name || data.player_x || prev.xName,
+              oName: oName || prev.oName,
+              xAvatar: data.player_x_avatar || prev.xAvatar,
+              oAvatar: oAvatar || prev.oAvatar
           }));
+
+          // Trigger Match Found for Inviter
+          // We check if we are Player X (creator) and if we were waiting
+          if (userRef.current && playersRef.current.x && String(userRef.current.id) === String(playersRef.current.x)) {
+
+                   triggerFlash();
+                   triggerShake();
+                   setMatchFoundData({
+                       gameId: gameId!,
+                       opponent: oName || "Opponent",
+                       opponentUsername: oName || "Opponent",
+                       opponentAvatar: oAvatar,
+                       mySymbol: 'X'
+                   });
+          }
       } else if (data.type === "game_over") {
           setStatus("finished");
           if (data.mode) {

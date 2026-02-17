@@ -55,9 +55,19 @@ class RankingService:
         return (1000 - cls.STARTING_LP) + total_lp
 
     @classmethod
-    def process_game_end(cls, game):
+    def process_game_end(cls, game, winner=None):
         if game.status != 'finished':
             return {}
+        
+        # Resolve winner
+        if winner is None:
+            winner = getattr(game, 'winner', None)
+        
+        if winner is None:
+            # Fallback to Logic if not provided
+            from games.logic import GameLogic
+            winner = GameLogic.get_winner(game.id)
+
         profile_x = None
         profile_o = None
         if game.player_x:
@@ -71,7 +81,7 @@ class RankingService:
         change_o_lp = 0
 
         if game.rated and profile_x and profile_o:
-            score_x = 1.0 if game.winner == 'X' else (0.5 if game.winner == 'D' else 0.0)
+            score_x = 1.0 if winner == 'X' else (0.5 if winner == 'D' else 0.0)
             score_o = 1.0 - score_x
             
             mmr_x = profile_x.mmr if profile_x.mmr is not None else cls.STARTING_MMR
@@ -129,13 +139,13 @@ class RankingService:
                     if p.mmr is None: p.mmr = cls.STARTING_MMR
                     if p.total_lp is None: p.total_lp = cls.STARTING_LP
                 
-                if game.winner == 'X':
+                if winner == 'X':
                     profile_x.current_streak = (profile_x.current_streak + 1) if profile_x.current_streak >= 0 else 1
                     profile_o.current_streak = (profile_o.current_streak - 1) if profile_o.current_streak <= 0 else -1
-                elif game.winner == 'O':
+                elif winner == 'O':
                     profile_o.current_streak = (profile_o.current_streak + 1) if profile_o.current_streak >= 0 else 1
                     profile_x.current_streak = (profile_x.current_streak - 1) if profile_x.current_streak <= 0 else -1
-                elif game.winner == 'D':
+                elif winner == 'D':
                     profile_x.current_streak = 0
                     profile_o.current_streak = 0
 

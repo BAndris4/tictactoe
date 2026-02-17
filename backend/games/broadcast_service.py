@@ -29,10 +29,13 @@ class BroadcastService:
             # Process Leveling (XP) - This runs for all modes
             xp_results = await database_sync_to_async(LevelingService.process_game_end)(game)
             
+            from .logic import GameLogic
+            game_winner = await database_sync_to_async(GameLogic.get_winner)(game_id)
+            
             # Process Ranking (MMR & LP) - ONLY if game is rated
             if game.rated:
                 from users.services import RankingService
-                ranking_results = await database_sync_to_async(RankingService.process_game_end)(game)
+                ranking_results = await database_sync_to_async(RankingService.process_game_end)(game, winner=game_winner)
                 mmr_results = ranking_results.get('mmr', {})
                 lp_results = ranking_results.get('lp', {})
                 ranks = ranking_results.get('ranks', {})
@@ -40,9 +43,13 @@ class BroadcastService:
         except Exception as e:
             print(f"CRITICAL ERROR in game end processing broadcast: {e}")
             # We still proceed to send game_over even if stats fail
-            
-        from .logic import GameLogic
-        game_winner = await database_sync_to_async(GameLogic.get_winner)(game_id)
+            # Ensure game_winner is defined if exception occurred before
+            from .logic import GameLogic
+            try:
+                 game_winner = await database_sync_to_async(GameLogic.get_winner)(game_id)
+            except:
+                 game_winner = None
+
 
         await channel_layer.group_send(
             room_group_name,

@@ -86,13 +86,19 @@ class LevelingService:
                 
                 profile.save()
 
+                current_level = cls.get_level_from_total_xp(profile.total_xp)
+                old_level = cls.get_level_from_total_xp(profile.total_xp - xp_gained)
+                current_xp_in_level = cls.get_xp_in_level_from_total_xp(profile.total_xp)
+                next_level_xp = cls.get_xp_required_for_level(current_level)
+
                 results[user.id] = {
                     'xp_gained': xp_gained,
-                    'new_level': profile.level,
-                    'current_xp': profile.xp_in_level,
-                    'next_level_xp': cls.get_xp_required_for_level(profile.level),
-                    'xp_to_next': cls.get_xp_required_for_level(profile.level) - profile.xp_in_level,
-                    'can_play_ranked': profile.can_play_ranked
+                    'new_level': current_level,
+                    'current_xp': current_xp_in_level,
+                    'next_level_xp': next_level_xp,
+                    'xp_to_next': next_level_xp - current_xp_in_level,
+                    'can_play_ranked': profile.can_play_ranked,
+                    'leveled_up': current_level > old_level
                 }
         
         game.save()

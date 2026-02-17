@@ -81,7 +81,8 @@ class GameInvitationActionView(APIView):
                         'data': {
                             'type': 'game_started',
                             'player_o_id': str(user.id),
-                            'player_o_name': user.username
+                            'player_o_name': user.username,
+                            'player_o_avatar': user.player_profile.get_avatar_config()
                         }
                     }
                 )
@@ -279,8 +280,9 @@ class ForfeitGameView(APIView):
         xp_results = LevelingService.process_game_end(game)
         
         # Calculate Ranking (MMR & LP)
+        # Calculate Ranking (MMR & LP)
         from users.services import RankingService
-        ranking_results = RankingService.process_game_end(game)
+        ranking_results = RankingService.process_game_end(game, winner=winner_symbol)
         mmr_results = ranking_results.get('mmr', {})
         lp_results = ranking_results.get('lp', {})
         

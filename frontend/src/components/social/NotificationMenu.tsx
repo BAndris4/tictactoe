@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getPendingRequests, respondToFriendRequest, type Friendship } from "../../api/social";
 import { getPendingInvitations, respondToGameInvitation, type GameInvitation } from "../../api/game";
 import { useToast } from "../../context/ToastContext";
+import { useGame } from "../../context/GameContext";
 import UserAvatar from "../common/UserAvatar";
 
 type Notification = 
@@ -14,6 +15,7 @@ export default function NotificationMenu() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { setMatchFoundData, triggerFlash, triggerShake } = useGame();
 
   const fetchAll = async () => {
     try {
@@ -50,12 +52,22 @@ export default function NotificationMenu() {
     }
   };
 
-  const handleGameResponse = async (id: number, action: 'accepted' | 'rejected', gameId?: string) => {
+  const handleGameResponse = async (id: number, action: 'accepted' | 'rejected', gameId?: string, opponentName?: string, opponentAvatar?: any) => {
     try {
       await respondToGameInvitation(id, action);
       setNotifications(prev => prev.filter(n => !(n.type === 'game_invite' && n.data.id === id)));
       if (action === 'accepted' && gameId) {
-        navigate(`/game/${gameId}`);
+          // Trigger Match Found Modal for the joiner
+          triggerFlash();
+          triggerShake();
+          setMatchFoundData({
+              gameId: gameId,
+              opponent: opponentName || "Opponent",
+              opponentUsername: opponentName || "Opponent",
+              opponentAvatar: opponentAvatar,
+              mySymbol: 'O'
+          });
+          // Note: navigation is handled by the MatchFoundModal after countdown
         setIsOpen(false);
       }
     } catch (err: any) {
@@ -151,7 +163,7 @@ export default function NotificationMenu() {
                         </div>
                         <div className="flex gap-2">
                           <button 
-                            onClick={() => handleGameResponse(notif.data.id, 'accepted', notif.data.game)}
+                            onClick={() => handleGameResponse(notif.data.id, 'accepted', notif.data.game, notif.data.from_user_name, notif.data.from_user_avatar)}
                             className="flex-1 py-2 rounded-xl bg-deepblue text-white text-[10px] font-bold font-paytone shadow-sm shadow-deepblue/20 hover:scale-[1.02] transition-transform active:scale-95"
                           >
                             Play

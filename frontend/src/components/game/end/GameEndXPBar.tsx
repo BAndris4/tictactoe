@@ -9,10 +9,12 @@ interface GameEndXPBarProps {
 }
 
 export default function GameEndXPBar({ newXp, xpToNextLevel, xpGained, newLevel, leveledUp }: GameEndXPBarProps) {
+  const safeXp = typeof newXp === 'number' ? newXp : 0;
+  
   return (
     <div className="mt-6 bg-slate-50/80 rounded-2xl p-4 border border-slate-100/50">
       <ProgressBar 
-        currentXp={newXp} 
+        currentXp={safeXp} 
         nextLevelXp={xpToNextLevel} 
         xpGained={xpGained}
         level={newLevel}

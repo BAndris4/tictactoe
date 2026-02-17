@@ -22,7 +22,7 @@ class BotService:
         is_bot_x = game.player_x_id is None
         is_bot_o = game.player_o_id is None
         
-        current_turn = GameLogic.get_current_turn(game.id)
+        current_turn = await database_sync_to_async(GameLogic.get_current_turn)(game.id)
         is_bot_turn = (current_turn == 'X' and is_bot_x) or (current_turn == 'O' and is_bot_o)
         
         if not is_bot_turn:
@@ -30,7 +30,7 @@ class BotService:
 
         # --- BOT CHAT AGENT (Greeting & Chatter) ---
         bot_symbol = current_turn
-        move_count = GameLogic.get_move_count(game.id)
+        move_count = await database_sync_to_async(GameLogic.get_move_count)(game.id)
         if move_count <= 1:
              await BotChatService.maybe_send_chat(game, bot_symbol, 'greeting', channel_layer, group_name)
         
@@ -100,5 +100,5 @@ class BotService:
 
     @staticmethod
     async def check_game_over_broadcast(game_id, channel_layer, group_name):
-         from ..broadcast_service import BroadcastService
+         from ...broadcast_service import BroadcastService
          await BroadcastService.broadcast_game_over(game_id)
